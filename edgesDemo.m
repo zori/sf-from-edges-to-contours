@@ -58,6 +58,7 @@ model.opts.nms=0;                 % set to true to enable nms (fairly slow)
 %if(0), [ODS,OIS,AP]=edgesEval( model ); end
 fprintf('evaluation on images');
 tic, [ODS,OIS,AP]=edgesEval( model ); toc;
+matlabpool close;
 
 %% detect edge and visualize results
 I = imread('peppers.png');
