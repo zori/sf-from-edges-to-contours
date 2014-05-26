@@ -35,6 +35,7 @@
 % Please email me if you find bugs, or have suggestions or questions!
 % Licensed under the MSR-LA Full Rights License [see license.txt]
 
+close_matlabpool = 0;
 %% set opts for training (see edgesTrain.m)
 opts=edgesTrain();                % default options (good settings)
 opts.modelDir='models/';          % model will be in models/forest
@@ -44,8 +45,10 @@ opts.useParfor=1;                 % parallelize if sufficient memory
 
 %% train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
 opts.bsdsDir='/BS/kostadinova/work/BSR/BSDS500/data/';
-matlabpool open 8;
-matlabpool('addattachedfiles', {'video_segm/private/edgesDetectMex.mexw64'});
+if (opts.useParfor && ~matlabpool('size'))
+    matlabpool open 8;
+    matlabpool('addattachedfiles', {'video_segm/private/edgesDetectMex.mexw64'});
+end;
 tic, model=edgesTrain(opts); toc; % will load model if already trained
 
 %% set detection parameters (can set after training)
@@ -57,8 +60,8 @@ model.opts.nms=0;                 % set to true to enable nms (fairly slow)
 %% evaluate edge detector on BSDS500 (see edgesEval.m)
 %if(0), [ODS,OIS,AP]=edgesEval( model ); end
 fprintf('evaluation on images');
-tic, [ODS,OIS,AP]=edgesEval( model ); toc;
-matlabpool close;
+tic, [ODS,OIS,AP]=segmEval( model ); toc;
+if (close_matlabpoll && matlabpool('size')), matlabpool close; end;
 
 %% detect edge and visualize results
 I = imread('peppers.png');
