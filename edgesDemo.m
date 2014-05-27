@@ -39,12 +39,13 @@ close_matlabpool = 0;
 %% set opts for training (see edgesTrain.m)
 opts=edgesTrain();                % default options (good settings)
 opts.modelDir='models/';          % model will be in models/forest
-opts.modelFnm='modelFinal';       % model name
+opts.modelFnm='modelVSB100_40';   % model name
 opts.nPos=5e5; opts.nNeg=5e5;     % decrease to speedup training
 opts.useParfor=1;                 % parallelize if sufficient memory
 
 %% train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
-opts.bsdsDir='/BS/kostadinova/work/BSR/BSDS500/data/';
+% opts.bsdsDir='/BS/kostadinova/work/BSR/BSDS500/data/';
+opts.bsdsDir='/BS/kostadinova/work/video_segm/evaluation/VSB100_40_train_test/train/';
 if (opts.useParfor && ~matlabpool('size'))
     matlabpool open 12;
     matlabpool('addattachedfiles', {'video_segm/private/edgesDetectMex.mexw64'});

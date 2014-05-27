@@ -160,10 +160,10 @@ function trainTree( opts, stream, treeInd )
 % Train a single tree in forest model.
 
 % location of ground truth
-trnImgDir = [opts.bsdsDir '/images/train/'];
-trnDepDir = [opts.bsdsDir '/depth/train/'];
-trnGtDir = [opts.bsdsDir '/groundTruth/train/'];
-imgIds=dir([trnImgDir '*.jpg']); imgIds={imgIds.name};
+trnImgDir = fullfile(opts.bsdsDir, 'Images/'); 
+trnDepDir = [opts.bsdsDir '/depth/train/']; % TODO: deprecate or remove
+trnGtDir = fullfile(opts.bsdsDir, 'Groundtruth/');
+imgIds=Listacrossfolders(trnImgDir, 'jpg', 1); imgIds={imgIds.name};
 nImgs=length(imgIds); for i=1:nImgs, imgIds{i}=imgIds{i}(1:end-4); end
 
 % extract commonly used options
