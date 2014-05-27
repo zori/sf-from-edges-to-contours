@@ -46,7 +46,7 @@ opts.useParfor=1;                 % parallelize if sufficient memory
 %% train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
 opts.bsdsDir='/BS/kostadinova/work/BSR/BSDS500/data/';
 if (opts.useParfor && ~matlabpool('size'))
-    matlabpool open 8;
+    matlabpool open 12;
     matlabpool('addattachedfiles', {'video_segm/private/edgesDetectMex.mexw64'});
 end;
 tic, model=edgesTrain(opts); toc; % will load model if already trained
