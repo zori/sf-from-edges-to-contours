@@ -9,12 +9,11 @@ function [ODS,OIS,AP] = segmEval( model, varargin )
 % INPUTS
 %  model      - structured edge model trained with edgesTrain
 %  parameters - parameters (struct or name/value pairs)
-%   .dataType   - ['test'] should be either 'test' or 'val'
 %   .nThresh    - [99] number of thresholds for evaluation
 %   .cleanup    - [0] if true delete temporary files
-%   .show       - [0] figure for displaying results (or 0)
+%   .show       - [0] figure for displaying results (or 0 - none)
 %   .modelDir   - [] directory for storing models
-%   .bsdsDir    - [] directory of BSDS dataset
+%   .dsDir      - [] directory of dataset
 %   .name       - [''] name to append to evaluation
 %   .stride     - [] stride at which to compute edges
 %   .nTreesEval - [] number of trees to evaluate per location
@@ -36,26 +35,24 @@ function [ODS,OIS,AP] = segmEval( model, varargin )
 % Licensed under the MSR-LA Full Rights License [see license.txt]
 
 % get default parameters
-% dfs={'dataType','test', 'nThresh',99, 'cleanup',0, 'show',0, ...
-dfs={'dataType','test', 'nThresh',99, 'cleanup',0, 'show',3, ...
-  'modelDir',[], 'bsdsDir',[], 'name','VSB100', 'stride',[], ...
+dfs={'nThresh',99, 'cleanup',0, 'show',3, ...
+  'modelDir',[], 'dsDir','REQ', 'name','VSB100', 'stride',[], ...
   'nTreesEval',[], 'multiscale',[], 'pDistr',{{'type','parfor'}} };
+dataType='test';
 p=getPrmDflt(varargin,dfs,1);
 if( ischar(model) ), model=load(model); model=model.model; end
 if( isempty(p.modelDir )), p.modelDir=model.opts.modelDir; end
-if( isempty(p.bsdsDir )), p.bsdsDir=model.opts.bsdsDir; end
+% if( isempty(p.dsDir )), p.dsDir=model.opts.dsDir; end % TODO: provide a
+% meaningful default
 if( ~isempty(p.stride) ), model.opts.stride=p.stride; end
 if( ~isempty(p.nTreesEval) ), model.opts.nTreesEval=p.nTreesEval; end
 if( ~isempty(p.multiscale) ), model.opts.multiscale=p.multiscale; end
-p.modelDir = [p.modelDir filesep p.dataType filesep];
+p.modelDir = fullfile(p.modelDir, [dataType filesep]);
 
 % eval on either validation set or test set
-% imgDir = [p.bsdsDir '/images/' p.dataType '/'];
-% TODO
-imgDir = '/BS/kostadinova/work/VSB100/General_test_fullres/Images/';
-depDir = [p.bsdsDir '/depth/' p.dataType '/']; % TODO remove
-%gtDir = [p.bsdsDir '/groundTruth/' p.dataType '/'];
-gtDir = '/BS/kostadinova/work/VSB100/General_test_fullres/Groundtruth/';
+imgDir = fullfile(p.dsDir, 'Images/');
+depDir = [p.dsDir '/depth/' dataType '/']; % TODO remove
+gtDir = fullfile(p.dsDir, 'Groundtruth/');
 % evalDir = '/BS/kostadinova/work/video_segm/models/test/modelFinalVSB100-eval';
 evalDir = [p.modelDir model.opts.modelFnm p.name '-eval/'];
 % resDir = '/BS/kostadinova/work/video_segm/models/test/modelFinalVSB100';

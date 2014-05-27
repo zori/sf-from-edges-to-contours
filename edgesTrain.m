@@ -46,7 +46,7 @@ function model = edgesTrain( varargin )
 %   .useParfor  - [0] if true train trees in parallel (memory intensive)
 %   .modelDir   - ['models/'] target directory for storing models
 %   .modelFnm   - ['model'] model filename
-%   .bsdsDir    - ['BSR/BSDS500/data/'] location of BSDS dataset
+%   .dsDir    -   ['BSR/BSDS500/data/'] location of training dataset
 %
 % OUTPUTS
 %  model      - trained structured edge detector w the following fields
@@ -76,7 +76,7 @@ dfs={'imWidth',32, 'gtWidth',16, 'nEdgeBins',1, 'nPos',1e5, 'nNeg',1e5, ...
   'simSmooth',8, 'normRad',4, 'shrink',2, 'nCells',5, 'rgbd',0, ...
   'stride',2, 'multiscale',1, 'nTreesEval',4, 'nThreads',4, 'nms',0, ...
   'seed',1, 'useParfor',0, 'modelDir','models/', 'modelFnm','model', ...
-  'bsdsDir','BSR/BSDS500/data/'};
+  'dsDir','BSR/BSDS500/data/'};
 opts = getPrmDflt(varargin,dfs,1);
 if(nargin==0), model=opts; return; end
 
@@ -160,9 +160,9 @@ function trainTree( opts, stream, treeInd )
 % Train a single tree in forest model.
 
 % location of ground truth
-trnImgDir = fullfile(opts.bsdsDir, 'Images/'); 
-trnDepDir = [opts.bsdsDir '/depth/train/']; % TODO: deprecate or remove
-trnGtDir = fullfile(opts.bsdsDir, 'Groundtruth/');
+trnImgDir = fullfile(opts.dsDir, 'Images/');
+trnDepDir = [opts.dsDir '/depth/train/']; % TODO: deprecate or remove
+trnGtDir = fullfile(opts.dsDir, 'Groundtruth/');
 imgIds=Listacrossfolders(trnImgDir, 'jpg', 1); imgIds={imgIds.name};
 nImgs=length(imgIds); for i=1:nImgs, imgIds{i}=imgIds{i}(1:end-4); end
 

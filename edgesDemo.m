@@ -44,8 +44,8 @@ opts.nPos=5e5; opts.nNeg=5e5;     % decrease to speedup training
 opts.useParfor=1;                 % parallelize if sufficient memory
 
 %% train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
-% opts.bsdsDir='/BS/kostadinova/work/BSR/BSDS500/data/';
-opts.bsdsDir='/BS/kostadinova/work/video_segm/evaluation/VSB100_40_train_test/train/';
+% opts.dsDir='/BS/kostadinova/work/BSR/BSDS500/data/';
+opts.dsDir='/BS/kostadinova/work/video_segm/evaluation/VSB100_40_train_test/train/';
 if (opts.useParfor && ~matlabpool('size'))
     matlabpool open 12;
     matlabpool('addattachedfiles', {'video_segm/private/edgesDetectMex.mexw64'});
@@ -61,7 +61,8 @@ model.opts.nms=0;                 % set to true to enable nms (fairly slow)
 %% evaluate edge detector on BSDS500 (see edgesEval.m)
 %if(0), [ODS,OIS,AP]=edgesEval( model ); end
 fprintf('evaluation on images');
-tic, [ODS,OIS,AP]=segmEval( model ); toc;
+ev_opts = {'dsDir', '/BS/kostadinova/work/video_segm/evaluation/VSB100_40_train_test/test/'};
+tic, [ODS,OIS,AP]=segmEval( model, ev_opts ); toc;
 if (close_matlabpoll && matlabpool('size')), matlabpool close; end;
 
 %% detect edge and visualize results
