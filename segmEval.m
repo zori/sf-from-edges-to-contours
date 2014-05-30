@@ -85,14 +85,18 @@ end
 if(~exist(resDir,'dir')), mkdir(resDir); end; do=false(1,n);
 for i=1:n, do(i)=~exist([resDir ids(i).video filesep ids(i).name '.png'],'file'); end
 do=find(do); m=length(do); rgbd=model.opts.rgbd; model.opts.nms=1;
-parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
+%TODO: why non-maximum suppression breaks the watershed?
+%parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
+for i=1:m, id=ids(do(i)); %#ok<PFBNS>
   I = imread([imgDir id.video filesep id.name '.jpg']);
   D=[]; if(rgbd), D=single(imread([depDir id.video filesep id.name '.png']))/1e4; end
   if(rgbd==1), I=D; elseif(rgbd==2), I=cat(3,single(I)/255,D); end
   E = edgesDetect(I,model);
+  ws = watershed(E);
   % TODO run watershed here, or within the edgesDetect
   if (~exist([resDir id.video], 'dir')), mkdir([resDir id.video]); end;
-  imwrite(uint8(E*255),[resDir id.video filesep id.name '.png']);
+  %imwrite(uint8(E*255),[resDir id.video filesep id.name '.png']);
+  imwrite(ws,[resDir id.video filesep id.name '.png']);
 end
 
 % perform evaluation on each image (Linux only, slow)

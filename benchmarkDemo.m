@@ -1,7 +1,7 @@
 %Use the command Computerpimvid computes the Precision-Recall curves
 
 benchmarkpath = '/BS/kostadinova/work/video_segm/evaluation/'; %The directory where all results directory are contained
-benchmarkdir= 'SRF_VSB100'; %One the computed results set up for benchmark, here the output of the algorithm of Dollar (Ucm2 folder) set up for the general benchmark (Images and Groundtruth folders)
+benchmarkdir= 'VSB100_40_train_test/test'; %One the computed results set up for benchmark, here the output of the algorithm of Dollar (Ucm2 folder) set up for the general benchmark (Images and Groundtruth folders)
 requestdelconf=true; %boolean which allows overwriting without prompting a message. By default the user is input for deletion of previous calculations
 nthresh=51; %Number of hierarchical levels to include when benchmarking image segmentation
 superposegraph=false; %When false a new graph is initialized, otherwise the new curves are added to the graph
