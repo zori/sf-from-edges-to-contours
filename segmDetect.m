@@ -1,10 +1,10 @@
-function [] = segmEval( model, varargin )
+function [] = segmDetect( model, varargin )
 % Evaluate structured forest edge detector on VSB100.
 %
 % For an introductory tutorial please see edgesDemo.m.
 % 
 % USAGE
-%  [] = segmEval( model, parameters )
+%  [] = segmDetect( model, parameters )
 %
 % INPUTS
 %  model      - structured edge model trained with edgesTrain
