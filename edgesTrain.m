@@ -34,7 +34,6 @@ function model = edgesTrain( varargin )
 %   .normRad    - [4] gradient normalization radius (see gradientMag)
 %   .shrink     - [2] amount to shrink channels
 %   .nCells     - [5] number of self similarity cells
-%   .rgbd       - [0] 0:RGB, 1:depth, 2:RBG+depth (for NYU data only)
 %   (4) detection parameters (can be altered after training):
 %   .stride     - [2] stride at which to compute edges
 %   .multiscale - [1] if true run multiscale edge detector
@@ -73,7 +72,7 @@ dfs={'imWidth',32, 'gtWidth',16, 'nEdgeBins',1, 'nPos',1e5, 'nNeg',1e5, ...
   'nImgs',inf, 'nTrees',8, 'fracFtrs',1/2, 'minCount',1, 'minChild',8, ...
   'maxDepth',64, 'discretize','pca', 'nSamples',256, 'nClasses',2, ...
   'split','gini', 'nOrients',4, 'grdSmooth',0, 'chnSmooth',2, ...
-  'simSmooth',8, 'normRad',4, 'shrink',2, 'nCells',5, 'rgbd',0, ...
+  'simSmooth',8, 'normRad',4, 'shrink',2, 'nCells',5, ...
   'stride',2, 'multiscale',1, 'nTreesEval',4, 'nThreads',4, 'nms',0, ...
   'seed',1, 'useParfor',0, 'modelDir','models/', 'modelFnm','model', ...
   'dsDir','BSR/BSDS500/data/'};
@@ -82,7 +81,7 @@ if(nargin==0), model=opts; return; end
 
 % if forest exists load it and return
 cd(fileparts(mfilename('fullpath')));
-forestDir = [opts.modelDir '/forest/'];
+forestDir = fullfile(opts.modelDir, 'forest/');
 forestFn = [forestDir opts.modelFnm];
 if(exist([forestFn '.mat'], 'file'))
   load([forestFn '.mat']); return; end
@@ -96,8 +95,6 @@ imWidth=opts.imWidth; gtWidth=opts.gtWidth;
 imWidth=round(max(gtWidth,imWidth)/shrink/2)*shrink*2;
 opts.imWidth=imWidth; opts.gtWidth=gtWidth;
 nChnsGrad=(opts.nOrients+1)*2; nChnsColor=3;
-if(opts.rgbd==1), nChnsColor=1; end
-if(opts.rgbd==2), nChnsGrad=nChnsGrad*2; nChnsColor=nChnsColor+1; end
 nChns = nChnsGrad+nChnsColor; opts.nChns = nChns;
 opts.nChnFtrs = imWidth*imWidth*nChns/shrink/shrink;
 opts.nSimFtrs = (nCells*nCells)*(nCells*nCells-1)/2*nChns;
@@ -169,7 +166,7 @@ nImgs=length(imgIds); for i=1:nImgs, imgIds{i}=imgIds{i}(1:end-4); end
 % extract commonly used options
 imWidth=opts.imWidth; imRadius=imWidth/2;
 gtWidth=opts.gtWidth; gtRadius=gtWidth/2;
-nChns=opts.nChns; nTotFtrs=opts.nTotFtrs; rgbd=opts.rgbd;
+nChns=opts.nChns; nTotFtrs=opts.nTotFtrs;
 nPos=opts.nPos; nNeg=opts.nNeg; shrink=opts.shrink;
 
 % finalize setup
@@ -194,8 +191,6 @@ for i = 1:nImgs
   % get image and compute channels
   gt=load([trnGtDir imgIds{i} '.mat']); gt=gt.groundTruth;
   I=imread([trnImgDir imgIds{i} '.jpg']); siz=size(I);
-  if(rgbd), D=single(imread([trnDepDir imgIds{i} '.png']))/1e4; end
-  if(rgbd==1), I=D; elseif(rgbd==2), I=cat(3,single(I)/255,D); end
   p=zeros(1,4); p([2 4])=mod(4-mod(siz(1:2),4),4);
   if(any(p)), I=imPad(I,p,'symmetric'); end
   [chnsReg,chnsSim] = edgesChns(I,opts);
