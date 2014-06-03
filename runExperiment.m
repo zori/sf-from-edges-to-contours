@@ -33,9 +33,9 @@ if (tr_opts.useParfor && ~matlabpool('size'))
         {'/BS/kostadinova/work/video_segm/private/edgesDetectMex.mexw64'});
 end;
 
-tic;
+timeEdgesTrain = tic;
 model = edgesTrain(tr_opts); % will load model if already trained
-training_time=toc;
+training_time = toc(timeEdgesTrain);
 
 %% Detection
 
@@ -52,9 +52,9 @@ det_opts = {
     'resDir', fullfile(dsDir, 'test/Ucm2/'), ...  % 'resDir', fullfile(opts.modelDir, 'test/', [opts.modelFnm eval_name filesep]) ...
     };
 
-tic;
+timeSegmDetect = tic;
 segmDetect(model, det_opts);
-detection_time=toc;
+detection_time = toc(timeSegmDetect);
 
 %% Benchmark
 
@@ -75,14 +75,14 @@ metrics = {
     'all' ...         % computes all available
     };
 bm_opts.metric = metrics{end};
-bm_opts.outDir = log_.folder;
+bm_opts.outDir = [log_.timestamp '_output'];
 
-tic;
+timeBenchmark = tic;
 % Computerpimvid computes the Precision-Recall curves
 output = Computerpimvid(bm_opts.path, bm_opts.nthresh, bm_opts.dir, ...
     bm_opts.delPrompt, 0, 'r', bm_opts.superposeGraph, ...
     bm_opts.testTempConsistency, bm_opts.metric, [], bm_opts.outDir);
-benchmark_time=toc;
+benchmark_time = toc(timeBenchmark);
 
 fprintf(log_.fid, 'Training %s \nDetection %s \nBenchmark %s\n\n', ...
     seconds2human(training_time), ...
