@@ -5,7 +5,7 @@ close_matlabpool = false;
 to_log = true;
 
 log_.timestamp = datestr(clock,'yyyy-mm-dd_HH-MM-SS');
-log_.dir = '/BS/kostadinova/work/video_segm/evaluation/';
+log_.dir = '/BS/kostadinova/work/video_segm/evaluation/recordings/';
 log_.folder = fullfile(log_.dir, [log_.timestamp '_recordings']);
 log_.file = fullfile(log_.folder, 'recordings.txt');
 log_.fid = 1;    % default is stdout

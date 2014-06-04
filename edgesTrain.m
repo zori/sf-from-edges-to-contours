@@ -201,10 +201,10 @@ for i = 1:nImgs
   B(:,[1:imRadius end-imRadius:end])=0;
   for j=1:nGt
     M=gt{j}.Boundaries; M(bwdist(M)<gtRadius)=1;
-    [y,x]=find(M.*B); k2=min(length(y),ceil(nPos/nImgs/nGt));
+    [y,x]=find(M.*B); k2=min(length(y),ceil(nPos/nImgs/nGt));   % positive locations
     rp=randperm(length(y),k2); y=y(rp); x=x(rp);
     xy=[xy; x y ones(k2,1)*j]; k1=k1+k2; %#ok<AGROW>
-    [y,x]=find(~M.*B); k2=min(length(y),ceil(nNeg/nImgs/nGt));
+    [y,x]=find(~M.*B); k2=min(length(y),ceil(nNeg/nImgs/nGt));  % negative locations
     rp=randperm(length(y),k2); y=y(rp); x=x(rp);
     xy=[xy; x y ones(k2,1)*j]; k1=k1+k2; %#ok<AGROW>
   end
