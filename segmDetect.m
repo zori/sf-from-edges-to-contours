@@ -58,17 +58,19 @@ if(~exist(resDir,'dir')), mkdir(resDir); end; do=false(1,n);
 for i=1:n, do(i)=~exist([resDir ids(i).video filesep ids(i).name '.png'],'file'); end
 do=find(do); m=length(do);
 %TODO: why non-maximum suppression breaks the watershed?
-%parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
-for i=1:m, id=ids(do(i)); %#ok<PFBNS>
+model.opts.nms=1;
+parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
+% for i=1:m, id=ids(do(i)); %#ok<PFBNS>
   I = imread([imgDir id.video filesep id.name '.jpg']);
   E = edgesDetect(I,model);
-  ws = watershed(E);
-  % TODO run watershed here, or within the edgesDetect
   if (~exist([resDir id.video], 'dir')), mkdir([resDir id.video]); end;
-  segs{1} = Uintconv(ws);
-  save(fullfile(resDir, id.video, [id.name '.mat']),'segs');
-  % % save probability of boundary (pb) as a .png file:
-  % imwrite(uint8(E*255),[resDir id.video filesep id.name '.png']);
+%   % run vanilla watershed and save the oversegmentation
+%   ws = watershed(E);
+% % TODO: keep in a cell and save outside the parfor
+%   segs{1} = Uintconv(ws);
+%   save(fullfile(resDir, id.video, [id.name '.mat']),'segs');
+  % save probability of boundary (pb) as a .png file:
+  imwrite(uint8(E*255), fullfile(resDir, id.video, [id.name '.png']));
 end
 
 end
