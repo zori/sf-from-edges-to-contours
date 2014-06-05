@@ -1,0 +1,55 @@
+diff --git a/runExperiment.m b/runExperiment.m
+index d8c1ab7..345a668 100644
+--- a/runExperiment.m
++++ b/runExperiment.m
+@@ -82,7 +82,7 @@ metrics = {
+     'lengthsncl', ... % length statistics and number of clusters
+     'all' ...         % computes all available
+     };
+-bm_opts.metric = metrics{end};
++bm_opts.metric = metrics{1};
+ bm_opts.outDir = fullfile('recordings', log_.timestamp);
+ 
+ timeBenchmark = tic;
+diff --git a/segmDetect.m b/segmDetect.m
+index b02141f..e66c419 100644
+--- a/segmDetect.m
++++ b/segmDetect.m
+@@ -58,24 +58,24 @@ if(~exist(resDir,'dir')), mkdir(resDir); end; do=false(1,n);
+ for i=1:n, do(i)=~exist([resDir ids(i).video filesep ids(i).name '.png'],'file'); end
+ do=find(do); m=length(do);
+ % % TODO: why non-maximum suppression breaks the watershed?
+-% model.opts.nms=1;
+-segsCell = cell(1, m);
++model.opts.nms=1;
++% segsCell = cell(1, m);
+ parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
+     I = imread([imgDir id.video filesep id.name '.jpg']);
+     E = edgesDetect(I,model);
+     if (~exist([resDir id.video], 'dir')), mkdir([resDir id.video]); end;
+-    % run vanilla watershed and save the oversegmentation
+-    ws = watershed(E);
+-    segsCell{i} = struct( ...
+-        'file', fullfile(resDir, id.video, [id.name '.mat']), ...
+-        'segs', Uintconv(ws));
+-    %   % save probability of boundary (pb) as a .png file:
+-    %   imwrite(uint8(E*255), fullfile(resDir, id.video, [id.name '.png']));
++%     % run vanilla watershed and save the oversegmentation
++%     ws = watershed(E);
++%     segsCell{i} = struct( ...
++%         'file', fullfile(resDir, id.video, [id.name '.mat']), ...
++%         'segs', Uintconv(ws));
++      % save probability of boundary (pb) as a .png file:
++      imwrite(uint8(E*255), fullfile(resDir, id.video, [id.name '.png']));
+ end
+ 
+-for i=1:m
+-    segs{1} = segsCell{i}.segs; %#ok<NASGU>
+-    save(segsCell{i}.file,'segs');
+-end
++% for i=1:m
++%     segs{1} = segsCell{i}.segs; %#ok<NASGU>
++%     save(segsCell{i}.file,'segs');
++% end
+ 
+ end
