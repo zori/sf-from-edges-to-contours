@@ -4,12 +4,21 @@ function runExperiment()
 close_matlabpool = false;
 to_log = true;
 
+%% example log files:
+%% video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.txt - git version, runtimes
+%% video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.mat - training, detection and benchmark options; benchmark output
+
+log_.name = 'VSB100_40';
+log_.dsDir = fullfile('/BS/kostadinova/work/video_segm_evaluation', log_.name); % '/BS/kostadinova/work/BSR/BSDS500/data/';
+log_.recordings_dir = fullfile(log_.dsDir, 'test', 'recordings');
 log_.timestamp = datestr(clock,'yyyy-mm-dd_HH-MM-SS');
-log_.dir = '/BS/kostadinova/work/video_segm/evaluation/recordings/';
-log_.folder = fullfile(log_.dir, [log_.timestamp '_recordings']);
-log_.file = fullfile(log_.folder, 'recordings.txt');
+log_.timestamp_dir = fullfile(log_.recordings_dir, log_.timestamp);
+log_.file = fullfile(log_.timestamp_dir, '_recordings.txt');
 log_.fid = 1;    % default is stdout
-if (to_log), mkdir(log_.folder), log_.fid = fopen(log_.file, 'w'); end;
+if (to_log)
+    if (~exist(log_.recordings_dir, 'dir')), mkdir(log_.recordings_dir), end
+    mkdir(log_.timestamp_dir), log_.fid = fopen(log_.file, 'w');
+end
 cd(fileparts(mfilename('fullpath')));
 [status, git_commit_id] = system('git --no-pager log --format="%H" -n 1');
 if (status), warning('no git repository in %s', pwd); end
@@ -20,19 +29,18 @@ fprintf(log_.fid, 'Last git commit %s \n', git_commit_id);
 %% set opts for training (see edgesTrain.m)
 tr_opts=edgesTrain();                % default options (good settings)
 tr_opts.modelDir='models/';          % model will be in models/forest
-tr_opts.modelFnm='modelVSB100_40';   % model name
+tr_opts.modelFnm=['model' log_.name];% model name
 tr_opts.nPos=5e5;                    % decrease to speedup training
 tr_opts.nNeg=5e5;                    % decrease to speedup training
 tr_opts.useParfor=1;                 % parallelize if sufficient memory
-dsDir = '/BS/kostadinova/work/video_segm/evaluation/VSB100_40_train_test/'; % dsDir='/BS/kostadinova/work/BSR/BSDS500/data/';
-tr_opts.dsDir= fullfile(dsDir, 'train/');
+tr_opts.dsDir = fullfile(log_.dsDir, 'train', filesep);
 
 %% train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
 if (tr_opts.useParfor && ~matlabpool('size'))
     matlabpool open 12;
     matlabpool('addattachedfiles', ...
         {'/BS/kostadinova/work/video_segm/private/edgesDetectMex.mexw64'});
-end;
+end
 
 timeEdgesTrain = tic;
 model = edgesTrain(tr_opts); % will load model if already trained
@@ -48,9 +56,9 @@ model.opts.nms=false;             % set to true to enable nms (fairly slow)
 
 %% run edge/segment detector
 det_opts = {
-    'imgDir', fullfile(dsDir, 'test/Images/'), ...
-    'gtDir', fullfile(dsDir, 'test/Groundtruth/'), ...
-    'resDir', fullfile(dsDir, 'test/Ucm2/'), ...  % 'resDir', fullfile(opts.modelDir, 'test/', [opts.modelFnm eval_name filesep]) ...
+    'imgDir', fullfile(log_.dsDir, 'test/Images/'), ...
+    'gtDir', fullfile(log_.dsDir, 'test/Groundtruth/'), ...
+    'resDir', fullfile(log_.dsDir, 'test/Ucm2/'), ...  % 'resDir', fullfile(opts.modelDir, 'test/', [opts.modelFnm eval_name filesep]) ...
     };
 
 timeSegmDetect = tic;
@@ -59,9 +67,8 @@ detection_time = toc(timeSegmDetect);
 
 %% Benchmark
 
-bm_opts.path = dsDir;                   % path to bm_opts.dir
-bm_opts.dir = 'test';                   % contains the folders `Images', `Groundtruth' and `Ucm2' (computed results of the algorithm of Dollar)
-bm_opts.delPrompt = true;               % allows overwriting without prompting a message
+bm_opts.path = [log_.dsDir ];    % path to bm_opts.dir  % TODO: without filesep?
+bm_opts.dir = 'test';                   % contains the directories `Images', `Groundtruth' and `Ucm2' (computed results of the algorithm of Dollar)
 bm_opts.nthresh = 51;                   % number of hierarchical levels to include
 bm_opts.superposeGraph = false;         % true - new curves are added to the same graph; false - a new graph is initialized
 bm_opts.testTempConsistency = true;     % false for images
@@ -76,13 +83,13 @@ metrics = {
     'all' ...         % computes all available
     };
 bm_opts.metric = metrics{end};
-bm_opts.outDir = [log_.timestamp '_output'];
+bm_opts.outDir = fullfile('recordings', log_.timestamp);
 
 timeBenchmark = tic;
 % Computerpimvid computes the Precision-Recall curves
 output = Computerpimvid(bm_opts.path, bm_opts.nthresh, bm_opts.dir, ...
-    bm_opts.delPrompt, 0, 'r', bm_opts.superposeGraph, ...
-    bm_opts.testTempConsistency, bm_opts.metric, [], bm_opts.outDir); %#ok<NASGU>
+    false, 0, 'r', bm_opts.superposeGraph, bm_opts.testTempConsistency, ...
+    bm_opts.metric, [], bm_opts.outDir); %#ok<NASGU>
 benchmark_time = toc(timeBenchmark);
 
 fprintf(log_.fid, 'Training %s \nDetection %s \nBenchmark %s\n\n', ...
@@ -90,11 +97,11 @@ fprintf(log_.fid, 'Training %s \nDetection %s \nBenchmark %s\n\n', ...
     seconds2human(detection_time), ...
     seconds2human(benchmark_time));
 
-if (close_matlabpool && matlabpool('size')), matlabpool close; end;
+if (close_matlabpool && matlabpool('size')), matlabpool close; end
 
-if (to_log) 
-    save(fullfile(log_.folder, 'recordings'), ...
-        'tr_opts', 'det_opts', 'bm_opts', 'output');
+if (to_log)
     fclose(log_.fid);
+    save(fullfile(log_.timestamp_dir, '_recordings'), ...
+        'tr_opts', 'det_opts', 'bm_opts', 'output');
 end
 end
