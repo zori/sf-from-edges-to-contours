@@ -59,22 +59,23 @@ for i=1:n, do(i)=~exist([resDir ids(i).video filesep ids(i).name '.png'],'file')
 do=find(do); m=length(do);
 % % TODO: why non-maximum suppression breaks the watershed?
 % model.opts.nms=1;
-segs_ = cell(m);
+segsCell = cell(1, m);
 parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
     I = imread([imgDir id.video filesep id.name '.jpg']);
     E = edgesDetect(I,model);
     if (~exist([resDir id.video], 'dir')), mkdir([resDir id.video]); end;
     % run vanilla watershed and save the oversegmentation
     ws = watershed(E);
-    segs_{i} = struct('file', fullfile(resDir, id.video, [id.name '.mat']), ...
+    segsCell{i} = struct( ...
+        'file', fullfile(resDir, id.video, [id.name '.mat']), ...
         'segs', Uintconv(ws));
     %   % save probability of boundary (pb) as a .png file:
     %   imwrite(uint8(E*255), fullfile(resDir, id.video, [id.name '.png']));
 end
 
 for i=1:m
-    segs{1} = segs_{i}.segs; %#ok<NASGU>
-    save(segs_{i}.file,'segs');
+    segs{1} = segsCell{i}.segs; %#ok<NASGU>
+    save(segsCell{i}.file,'segs');
 end
 
 end
