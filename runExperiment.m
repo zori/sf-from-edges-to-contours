@@ -20,11 +20,11 @@ fprintf(log_.fid, 'Last git commit %s \n', git_commit_id);
 %% set opts for training (see edgesTrain.m)
 tr_opts=edgesTrain();                % default options (good settings)
 tr_opts.modelDir='models/';          % model will be in models/forest
-tr_opts.modelFnm='modelVSB100_full';   % model name
+tr_opts.modelFnm='modelVSB100_40';   % model name
 tr_opts.nPos=5e5;                    % decrease to speedup training
 tr_opts.nNeg=5e5;                    % decrease to speedup training
 tr_opts.useParfor=1;                 % parallelize if sufficient memory
-dsDir = '/BS/kostadinova/work/video_segm/evaluation/VSB100_full/'; % dsDir='/BS/kostadinova/work/BSR/BSDS500/data/';
+dsDir = '/BS/kostadinova/work/video_segm/evaluation/VSB100_40_train_test/'; % dsDir='/BS/kostadinova/work/BSR/BSDS500/data/';
 tr_opts.dsDir= fullfile(dsDir, 'train/');
 
 %% train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
