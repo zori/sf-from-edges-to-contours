@@ -75,7 +75,7 @@ metrics = {
     'lengthsncl', ... % length statistics and number of clusters
     'all' ...         % computes all available
     };
-bm_opts.metric = metrics{1};
+bm_opts.metric = metrics{end};
 bm_opts.outDir = [log_.timestamp '_output'];
 
 timeBenchmark = tic;
