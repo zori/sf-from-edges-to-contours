@@ -16,6 +16,7 @@ log_.timestamp_dir = fullfile(log_.recordings_dir, log_.timestamp);
 log_.file = fullfile(log_.timestamp_dir, '_recordings.txt');
 log_.fid = 1;    % default is stdout
 if (to_log)
+    disp(log_.timestamp);
     if (~exist(log_.recordings_dir, 'dir')), mkdir(log_.recordings_dir), end
     mkdir(log_.timestamp_dir), log_.fid = fopen(log_.file, 'w');
 end
