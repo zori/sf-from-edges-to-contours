@@ -144,6 +144,7 @@ save([forestFn '.mat'], 'model', '-v7.3');
 
 end
 
+% ----------------------------------------------------------------------
 function E = segToEdges( S, nEdgeBins )
 % Convert segmentation to binary edge map (optionally quatnized by angle).
 E=gradientMag(single(S))>.01; if(nEdgeBins==1), return; end
@@ -153,6 +154,7 @@ p=2; O=imPad(O(1+p:end-p,1+p:end-p),p,'replicate');
 E=gradientHist(single(E),O,1,nEdgeBins)>.01;
 end
 
+% ----------------------------------------------------------------------
 function trainTree( opts, stream, treeInd )
 % Train a single tree in forest model.
 
@@ -234,7 +236,9 @@ pTree=struct('minCount',opts.minCount, 'minChild',opts.minChild, ...
   'maxDepth',opts.maxDepth, 'H',opts.nClasses, 'split',opts.split);
 labels=mat2cell2(labels,[1 1 k]);
 pTree.discretize=@(hs,H) discretize(hs,H,opts.nSamples,opts.discretize);
-tree=forestTrain(ftrs,labels,pTree); tree.hs=cell2array(tree.hs);
+%% train each tree separately
+tree=forestTrain(ftrs,labels,pTree);
+tree.hs=cell2array(tree.hs);
 tree.fids(tree.child>0) = fids(tree.fids(tree.child>0)+1)-1;
 if(~exist(treeDir,'dir')), mkdir(treeDir); end
 save([treeFn int2str2(treeInd,3) '.mat'],'tree'); e=etime(clock,tStart);
@@ -243,6 +247,7 @@ RandStream.setGlobalStream( streamOrig );
 
 end
 
+% ----------------------------------------------------------------------
 function ftrs = stComputeSimFtrs( chns, opts )
 % Compute self-similarity features (order must be compatible w mex file).
 w=opts.imWidth/opts.shrink; n=opts.nCells; if(n==0), ftrs=[]; return; end
@@ -255,6 +260,7 @@ k=0; for i=1:n*n-1, k1=n*n-i; i1=ones(1,k1)*i;
 ftrs = reshape(ftrs,nSimFtrs,m)';
 end
 
+% ----------------------------------------------------------------------
 function [hs,seg] = discretize( segs, nClasses, nSamples, type )
 % Convert a set of segmentations into a set of labels in [1,nClasses].
 persistent cache; w=size(segs{1},1); assert(size(segs{1},2)==w);
