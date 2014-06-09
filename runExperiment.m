@@ -2,7 +2,7 @@ function runExperiment()
 % SRF training and evaluation (using the VSB100 benchmark)
 
 close_matlabpool = false;
-to_log = true;
+to_log = false;
 
 %% example log files:
 %% video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.txt - git version, runtimes
@@ -16,7 +16,7 @@ log_.timestamp_dir = fullfile(log_.recordings_dir, log_.timestamp);
 log_.file = fullfile(log_.timestamp_dir, '_recordings.txt');
 log_.fid = 1;    % default is stdout
 if (to_log)
-    disp(log_.timestamp);
+    disp(log_.timestamp); %#ok<UNRCH>
     if (~exist(log_.recordings_dir, 'dir')), mkdir(log_.recordings_dir), end
     mkdir(log_.timestamp_dir), log_.fid = fopen(log_.file, 'w');
 end
