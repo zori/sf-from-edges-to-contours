@@ -16,9 +16,9 @@ log_.timestamp_dir = fullfile(log_.recordings_dir, log_.timestamp);
 log_.file = fullfile(log_.timestamp_dir, '_recordings.txt');
 log_.fid = 1;    % default is stdout
 if (to_log)
-    disp(log_.timestamp); %#ok<UNRCH>
-    if (~exist(log_.recordings_dir, 'dir')), mkdir(log_.recordings_dir), end
-    mkdir(log_.timestamp_dir), log_.fid = fopen(log_.file, 'w');
+  disp(log_.timestamp); %#ok<UNRCH>
+  if (~exist(log_.recordings_dir, 'dir')), mkdir(log_.recordings_dir), end
+  mkdir(log_.timestamp_dir), log_.fid = fopen(log_.file, 'w');
 end
 cd(fileparts(mfilename('fullpath')));
 [status, git_commit_id] = system('git --no-pager log --format="%H" -n 1');
@@ -38,9 +38,9 @@ tr_opts.dsDir = fullfile(log_.dsDir, 'train', filesep);
 
 % train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
 if (tr_opts.useParfor && ~matlabpool('size'))
-    matlabpool open 12;
-    matlabpool('addattachedfiles', ...
-        {'/BS/kostadinova/work/video_segm/private/edgesDetectMex.mexw64'});
+  matlabpool open 12;
+  matlabpool('addattachedfiles', ...
+    {'/BS/kostadinova/work/video_segm/private/edgesDetectMex.mexw64'});
 end
 
 timeEdgesTrain = tic;
@@ -57,10 +57,10 @@ model.opts.nms=false;             % set to true to enable nms (fairly slow)
 
 % run edge/segment detector
 det_opts = {
-    'imgDir', fullfile(log_.dsDir, 'test/Images/'), ...
-    'gtDir', fullfile(log_.dsDir, 'test/Groundtruth/'), ...
-    'resDir', fullfile(log_.dsDir, 'test/Ucm2/'), ...  % 'resDir', fullfile(opts.modelDir, 'test/', [opts.modelFnm eval_name filesep]) ...
-    };
+  'imgDir', fullfile(log_.dsDir, 'test/Images/'), ...
+  'gtDir', fullfile(log_.dsDir, 'test/Groundtruth/'), ...
+  'resDir', fullfile(log_.dsDir, 'test/Ucm2/'), ...  % 'resDir', fullfile(opts.modelDir, 'test/', [opts.modelFnm eval_name filesep]) ...
+  };
 
 timeSegmDetect = tic;
 segmDetect(model, det_opts);
@@ -75,34 +75,34 @@ bm_opts.superposeGraph = false;         % true - new curves are added to the sam
 bm_opts.testTempConsistency = true;     % false for images
 % possible benchmark metrics
 metrics = {
-    'bdry', ...       % BPR - Boundary Precision-Recall
-    'regpr', ...      % VPR - Volumetric Precision-Recall
-    'sc', ...         % SC  - Segmentation Covering
-    'pri', ...        % PRI - Probabilistic Rand Index
-    'vi', ...         % VI  - Variation of Information
-    'lengthsncl', ... % length statistics and number of clusters
-    'all' ...         % computes all available
-    };
+  'bdry', ...       % BPR - Boundary Precision-Recall
+  'regpr', ...      % VPR - Volumetric Precision-Recall
+  'sc', ...         % SC  - Segmentation Covering
+  'pri', ...        % PRI - Probabilistic Rand Index
+  'vi', ...         % VI  - Variation of Information
+  'lengthsncl', ... % length statistics and number of clusters
+  'all' ...         % computes all available
+  };
 bm_opts.metric = metrics{1};
 bm_opts.outDir = fullfile('recordings', log_.timestamp);
 
 timeBenchmark = tic;
 % Computerpimvid computes the Precision-Recall curves
 output = Computerpimvid(bm_opts.path, bm_opts.nthresh, bm_opts.dir, ...
-    false, 0, 'r', bm_opts.superposeGraph, bm_opts.testTempConsistency, ...
-    bm_opts.metric, [], bm_opts.outDir); %#ok<NASGU>
+  false, 0, 'r', bm_opts.superposeGraph, bm_opts.testTempConsistency, ...
+  bm_opts.metric, [], bm_opts.outDir); %#ok<NASGU>
 benchmark_time = toc(timeBenchmark);
 
 fprintf(log_.fid, 'Training %s \nDetection %s \nBenchmark %s\n\n', ...
-    seconds2human(training_time), ...
-    seconds2human(detection_time), ...
-    seconds2human(benchmark_time));
+  seconds2human(training_time), ...
+  seconds2human(detection_time), ...
+  seconds2human(benchmark_time));
 
 if (close_matlabpool && matlabpool('size')), matlabpool close; end
 
 if (to_log)
-    fclose(log_.fid);
-    save(fullfile(log_.timestamp_dir, '_recordings'), ...
-        'tr_opts', 'det_opts', 'bm_opts', 'output');
+  fclose(log_.fid);
+  save(fullfile(log_.timestamp_dir, '_recordings'), ...
+    'tr_opts', 'det_opts', 'bm_opts', 'output');
 end
 end
