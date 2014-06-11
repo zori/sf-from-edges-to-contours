@@ -8,8 +8,9 @@ to_log = false;
 % video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.txt - git version, runtimes
 % video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.mat - training, detection and benchmark options; benchmark output
 
-log_.name = 'VSB100_40';
-log_.dsDir = fullfile('/BS/kostadinova/work/video_segm_evaluation', log_.name); % '/BS/kostadinova/work/BSR/BSDS500/data/';
+log_.dsFolder = 'VSB100_40';
+log_.model_name = [log_.dsFolder '_with_patches'];
+log_.dsDir = fullfile('/BS/kostadinova/work/video_segm_evaluation', log_.dsFolder); % '/BS/kostadinova/work/BSR/BSDS500/data/';
 log_.recordings_dir = fullfile(log_.dsDir, 'test', 'recordings');
 log_.timestamp = datestr(clock,'yyyy-mm-dd_HH-MM-SS');
 log_.timestamp_dir = fullfile(log_.recordings_dir, log_.timestamp);
@@ -28,12 +29,12 @@ fprintf(log_.fid, 'Last git commit %s \n', git_commit_id);
 %% Training
 
 % set opts for training (see edgesTrain.m)
-tr_opts=edgesTrain();                % default options (good settings)
-tr_opts.modelDir='models/';          % model will be in models/forest
-tr_opts.modelFnm=['model' log_.name];% model name
-tr_opts.nPos=5e5;                    % decrease to speedup training
-tr_opts.nNeg=5e5;                    % decrease to speedup training
-tr_opts.useParfor=to_log;            % parallelize if sufficient memory; true iff benchmarking
+tr_opts=edgesTrain();                       % default options (good settings)
+tr_opts.modelDir='models/';                 % model will be in models/forest
+tr_opts.modelFnm=['model' log_.model_name]; % model name
+tr_opts.nPos=5e5;                           % decrease to speedup training
+tr_opts.nNeg=5e5;                           % decrease to speedup training
+tr_opts.useParfor=to_log;                   % parallelize if sufficient memory; true iff benchmarking
 tr_opts.dsDir = fullfile(log_.dsDir, 'train', filesep);
 
 % train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
