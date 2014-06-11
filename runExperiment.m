@@ -33,7 +33,7 @@ tr_opts.modelDir='models/';          % model will be in models/forest
 tr_opts.modelFnm=['model' log_.name];% model name
 tr_opts.nPos=5e5;                    % decrease to speedup training
 tr_opts.nNeg=5e5;                    % decrease to speedup training
-tr_opts.useParfor=1;                 % parallelize if sufficient memory
+tr_opts.useParfor=to_log;            % parallelize if sufficient memory; true iff benchmarking
 tr_opts.dsDir = fullfile(log_.dsDir, 'train', filesep);
 
 % train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
