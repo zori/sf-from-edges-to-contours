@@ -4,9 +4,9 @@ function runExperiment()
 close_matlabpool = false;
 to_log = false;
 
-%% example log files:
-%% video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.txt - git version, runtimes
-%% video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.mat - training, detection and benchmark options; benchmark output
+% example log files:
+% video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.txt - git version, runtimes
+% video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.mat - training, detection and benchmark options; benchmark output
 
 log_.name = 'VSB100_40';
 log_.dsDir = fullfile('/BS/kostadinova/work/video_segm_evaluation', log_.name); % '/BS/kostadinova/work/BSR/BSDS500/data/';
@@ -27,7 +27,7 @@ fprintf(log_.fid, 'Last git commit %s \n', git_commit_id);
 
 %% Training
 
-%% set opts for training (see edgesTrain.m)
+% set opts for training (see edgesTrain.m)
 tr_opts=edgesTrain();                % default options (good settings)
 tr_opts.modelDir='models/';          % model will be in models/forest
 tr_opts.modelFnm=['model' log_.name];% model name
@@ -36,7 +36,7 @@ tr_opts.nNeg=5e5;                    % decrease to speedup training
 tr_opts.useParfor=1;                 % parallelize if sufficient memory
 tr_opts.dsDir = fullfile(log_.dsDir, 'train', filesep);
 
-%% train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
+% train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
 if (tr_opts.useParfor && ~matlabpool('size'))
     matlabpool open 12;
     matlabpool('addattachedfiles', ...
@@ -49,13 +49,13 @@ training_time = toc(timeEdgesTrain);
 
 %% Detection
 
-%% set detection parameters (can set after training)
+% set detection parameters (can set after training)
 model.opts.multiscale=false;      % for top accuracy set multiscale=true
 model.opts.nTreesEval=4;          % for top speed set nTreesEval=1
 model.opts.nThreads=4;            % max number threads for evaluation
 model.opts.nms=false;             % set to true to enable nms (fairly slow)
 
-%% run edge/segment detector
+% run edge/segment detector
 det_opts = {
     'imgDir', fullfile(log_.dsDir, 'test/Images/'), ...
     'gtDir', fullfile(log_.dsDir, 'test/Groundtruth/'), ...
