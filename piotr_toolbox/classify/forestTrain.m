@@ -139,9 +139,11 @@ end
 Ks=1:K-1;
 if(discr), hsn={hsn(Ks)}; else hsn=[hsn{Ks}]'; end
 % TODO: only save patches at the leaves
-hsAll=cell(K_UB,1);
-for k=Ks
-  hsAll{k}=hs(dids{k}); % hsAll 7.5GB
+hsAll=cell(K,1); %K_UB,1);
+leavesIds=find(~child(Ks));
+for l=leavesIds' %k=Ks
+  hsAll{l}=hs(dids{l});
+  %hsAll{k}=hs(dids{k}); % hsAll 7.5GB
 end
 % optionally display a few segs
 for i=1:0 % K-9:4:K-1
