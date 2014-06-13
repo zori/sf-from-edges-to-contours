@@ -1,7 +1,7 @@
 function runExperiment()
 % SRF training and evaluation (using the VSB100 benchmark)
 
-close_matlabpool=false;
+close_parpool=false;
 to_log=false;
 
 % example log files:
@@ -18,7 +18,7 @@ log_.file=fullfile(log_.timestamp_dir, '_recordings.txt');
 log_.fid=1; % default is stdout
 
 if (to_log)
-  disp(log_.timestamp); %#ok<UNRCH>
+  disp(log_.timestamp);
   if (~exist(log_.recordings_dir, 'dir')), mkdir(log_.recordings_dir), end
   mkdir(log_.timestamp_dir), log_.fid=fopen(log_.file, 'w');
 end
@@ -39,10 +39,9 @@ tr_opts.useParfor=to_log;                   % parallelize if sufficient memory; 
 tr_opts.dsDir=fullfile(log_.dsDir, 'train', filesep);
 
 % train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
-if (tr_opts.useParfor && ~matlabpool('size'))
-  matlabpool open 12;
-  matlabpool('addattachedfiles',...
-    {'/BS/kostadinova/work/video_segm/private/edgesDetectMex.mexw64'});
+if (tr_opts.useParfor && isempty(gcp('nocreate')))
+  pool=parpool(12);
+  addAttachedFiles(pool,'/BS/kostadinova/work/video_segm/private/edgesDetectMex.mexw64');
 end
 
 timeEdgesTrain=tic;
@@ -98,7 +97,7 @@ fprintf(log_.fid, 'Training %s \nDetection %s \nBenchmark %s\n\n',...
   seconds2human(detection_time),...
   seconds2human(benchmark_time));
 
-if (close_matlabpool && matlabpool('size')), matlabpool close; end
+if (close_parpool && ~isempty(gcp('nocreate'))), delete(gcp('nocreate')); end
 
 if (to_log)
   fclose(log_.fid);
