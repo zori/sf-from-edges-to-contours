@@ -10,8 +10,8 @@ function model = edgesTrain( varargin )
 % INPUTS
 %  opts       - parameters (struct or name/value pairs)
 %   (1) model parameters:
-%   .imWidth    - [32] width of image patches
-%   .gtWidth    - [16] width of ground truth patches
+%   .imWidth    - [32] width of image patches, i.e. x
+%   .gtWidth    - [16] width of ground truth patches, i.e. labels; y
 %   .nEdgeBins  - [1] number of edge orientation bins for output
 %   (2) tree parameters:
 %   .nPos       - [1e5] number of positive patches per tree
@@ -22,22 +22,34 @@ function model = edgesTrain( varargin )
 %   .minCount   - [1] minimum number of data points to allow split
 %   .minChild   - [8] minimum number of data points allowed at child nodes
 %   .maxDepth   - [64] maximum depth of tree
-%   .discretize - ['pca'] options include 'pca' and 'kmeans'
-%   .nSamples   - [256] number of samples for clustering structured labels
+%   .discretize - ['pca'] options include 'pca' and 'kmeans', i.e.
+%                         discretization type
+%   .nSamples   - [256] number of samples for clustering structured labels, i.e.
+%                       m (size of intermediate space Z in the reduced mapping Y->Z)
 %   .nClasses   - [2] number of classes (clusters) for binary splits
-%   .split      - ['gini'] options include 'gini', 'entropy' and 'twoing'
+%   .split      - ['gini'] options include 'gini', 'entropy' and 'twoing',
+%                          i.e. information gain
 %   (3) feature parameters:
 %   .nOrients   - [4] number of orientations per gradient scale
 %   .grdSmooth  - [0] radius for image gradient smoothing (using convTri)
-%   .chnSmooth  - [2] radius for reg channel smoothing (using convTri)
-%   .simSmooth  - [8] radius for sim channel smoothing (using convTri)
+%                     TODO: find in paper
+%   .chnSmooth  - [2] radius for reg channel smoothing (using convTri), i.e.
+%                     channel blur - triangle filter; for pixel lookups;
+%                     'reg' stands for 'regular'
+%   .simSmooth  - [8] radius for sim channel smoothing (using convTri),
+%                     i.e. self-similarity blur (large traingle blur to
+%                     each channel); for computing pairwise differences
+%                     later;
+%                     'sim' stands for 'similarity'
 %   .normRad    - [4] gradient normalization radius (see gradientMag)
-%   .shrink     - [2] amount to shrink channels
-%   .nCells     - [5] number of self similarity cells
+%   .shrink     - [2] amount to shrink channels, i.e. channel downsample
+%   .nCells     - [5] number of self similarity cells, i.e. grid cells
 %   (4) detection parameters (can be altered after training):
+%   TODO: Detection parameters are not used here; figure out how to
+%       incorporate these options in VSB100 benchmark and remove them here.
 %   .stride     - [2] stride at which to compute edges
 %   .multiscale - [1] if true run multiscale edge detector
-%   .nTreesEval - [4] number of trees to evaluate per location
+%   .nTreesEval - [4] number of trees to evaluate per location, i.e. nTrees/2
 %   .nThreads   - [4] number of threads for evaluation of trees
 %   .nms        - [0] if true apply non-maximum suppression to edges
 %   (5) other parameters:
@@ -55,8 +67,11 @@ function model = edgesTrain( varargin )
 %   .child      - [nNodes x nTrees] index of child for each node
 %   .count      - [nNodes x nTrees] number of data points at each node
 %   .depth      - [nNodes x nTrees] depth of each node
-%   .eBins      - data structure for storing all node edge maps
-%   .eBnds      - data structure for storing all node edge maps
+%   .eBins      - data structure for storing all node edge maps;
+%                 [5947957 <= nNodes*nTrees*gtWidth*gtWidth x 1 uint16],
+%                 values in [0;255]
+%   .eBnds      - data structure for storing all node edge maps;
+%                 [642489x1 uint32], values in [0;5947957]
 %
 % EXAMPLE
 %
@@ -96,9 +111,10 @@ imWidth=round(max(gtWidth,imWidth)/shrink/2)*shrink*2;
 opts.imWidth=imWidth; opts.gtWidth=gtWidth;
 nChnsGrad=(opts.nOrients+1)*2; nChnsColor=3;
 nChns = nChnsGrad+nChnsColor; opts.nChns = nChns;
-opts.nChnFtrs = imWidth*imWidth*nChns/shrink/shrink;
-opts.nSimFtrs = (nCells*nCells)*(nCells*nCells-1)/2*nChns;
-opts.nTotFtrs = opts.nChnFtrs + opts.nSimFtrs; disp(opts);
+opts.nChnFtrs = imWidth*imWidth*nChns/shrink/shrink; % 3328 = 32x32x13/4
+opts.nSimFtrs = (nCells*nCells)*(nCells*nCells-1)/2*nChns; % 3900 = 13x300
+opts.nTotFtrs = opts.nChnFtrs + opts.nSimFtrs; % 7228
+disp(opts);
 
 % generate stream for reproducibility of model
 stream=RandStream('mrg32k3a','Seed',opts.seed);
@@ -113,45 +129,45 @@ for i=1:nTrees
   t=load([treeFn int2str2(i,3) '.mat'],'tree'); t=t.tree;
   if(i==1), trees=t(ones(1,nTrees)); else trees(i)=t; end
 end
-nNodes=0; for i=1:nTrees, nNodes=max(nNodes,size(trees(i).fids,1)); end
-model.opts=opts; Z=zeros(nNodes,nTrees,'uint32');
+nNodes=0; % max number of nodes in the trees
+for i=1:nTrees, nNodes=max(nNodes,size(trees(i).fids,1)); end
+model.opts=opts;
 model.thrs=zeros(nNodes,nTrees,'single');
+Z=zeros(nNodes,nTrees,'uint32');
 model.fids=Z; model.child=Z; model.count=Z; model.depth=Z;
 if(0), model.segm=ones(gtWidth,gtWidth,nNodes,nTrees,'uint8'); end
 model.eBins=zeros(nNodes*nTrees*gtWidth*gtWidth,1,'uint16');
 model.eBnds=Z; nEdgeBins=opts.nEdgeBins; k=0;
 for i=1:nTrees, tree=trees(i); nNodes1=size(tree.fids,1);
-  model.fids(1:nNodes1,i) = tree.fids;
-  model.thrs(1:nNodes1,i) = tree.thrs;
-  model.child(1:nNodes1,i) = tree.child;
-  model.count(1:nNodes1,i) = tree.count;
-  model.depth(1:nNodes1,i) = tree.depth;
-  if(0), model.segm(:,:,1:nNodes1,i) = tree.hs; end
+  model.fids(1:nNodes1,i)=tree.fids; model.thrs(1:nNodes1,i)=tree.thrs;
+  model.child(1:nNodes1,i)=tree.child; model.count(1:nNodes1,i)=tree.count;
+  model.depth(1:nNodes1,i)=tree.depth;
+  if(0), model.segm(:,:,1:nNodes1,i)=tree.hs; end
   % store compact representation of sparse binary edge patches
   for j=1:nNodes
     if(j>nNodes1 || tree.child(j)), E=0; else
-      E=segToEdges(tree.hs(:,:,j),nEdgeBins); end
+      E=segToEdges(tree.hs(:,:,j),nEdgeBins); end % nEdgeBins=1
     eBins=uint32(find(E)-1); k1=k+length(eBins);
     model.eBins(k+1:k1)=eBins; k=k1; model.eBnds(j,i)=k;
   end
 end
 if(0), model.segmMax=squeeze(max(max(model.segm))); end
-model.eBnds=[0; model.eBnds(:)]; model.eBins=model.eBins(1:k);
-
+model.eBnds=[0; model.eBnds(:)]; % TODO: what is it
+model.eBins=model.eBins(1:k); % TODO: what is it
 % save model
 if(~exist(forestDir,'dir')), mkdir(forestDir); end
 save([forestFn '.mat'], 'model', '-v7.3');
-
-end
+end % edgesTrain
 
 % ----------------------------------------------------------------------
 function E = segToEdges( S, nEdgeBins )
 % Convert segmentation to binary edge map (optionally quatnized by angle).
 E=gradientMag(single(S))>.01; if(nEdgeBins==1), return; end
+% if (# orientation bins) > 1, quantize by angle
 [~,O]=gradientMag(convTri(single(S),2));
 O=mod(round(O/pi*nEdgeBins)/nEdgeBins*pi,pi);
 p=2; O=imPad(O(1+p:end-p,1+p:end-p),p,'replicate');
-E=gradientHist(single(E),O,1,nEdgeBins)>.01;
+E=gradientHist(single(E),O,1,nEdgeBins)>.01; % spatial bin size=1, number of orientation bins=nEdgeBins
 end
 
 % ----------------------------------------------------------------------
@@ -159,10 +175,9 @@ function trainTree( opts, stream, treeInd )
 % Train a single tree in forest model.
 
 % location of ground truth
-trnImgDir = fullfile(opts.dsDir, 'Images/');
-trnDepDir = [opts.dsDir '/depth/train/']; % TODO: deprecate or remove
-trnGtDir = fullfile(opts.dsDir, 'Groundtruth/');
-imgIds=Listacrossfolders(trnImgDir, 'jpg', 1); imgIds={imgIds.name};
+trnImDir=fullfile(opts.dsDir, 'Images/');
+trnGtDir=fullfile(opts.dsDir, 'Groundtruth/');
+imgIds=Listacrossfolders(trnImDir, 'jpg', 1); imgIds={imgIds.name};
 nImgs=length(imgIds); for i=1:nImgs, imgIds{i}=imgIds{i}(1:end-4); end
 
 % extract commonly used options
@@ -179,73 +194,89 @@ fprintf('\n-------------------------------------------\n');
 fprintf('Training tree %d of %d\n',treeInd,opts.nTrees); tStart=clock;
 
 % set global stream to stream with given substream (will undo at end)
-streamOrig = RandStream.getGlobalStream();
+streamOrig=RandStream.getGlobalStream();
 set(stream,'Substream',treeInd);
 RandStream.setGlobalStream( stream );
 
 % collect positive and negative patches and compute features
-fids=sort(randperm(nTotFtrs,round(nTotFtrs*opts.fracFtrs)));
-k = nPos+nNeg; nImgs=min(nImgs,opts.nImgs);
-ftrs = zeros(k,length(fids),'single');
-labels = zeros(gtWidth,gtWidth,k,'uint8'); k = 0;
-tid = ticStatus('Collecting data',1,1);
-for i = 1:nImgs
+fids=sort(randperm(nTotFtrs,round(nTotFtrs*opts.fracFtrs))); % for this tree, sample half (3614) out of nTotFtrs possible features
+nTrainPatches=nPos+nNeg; % 10^6
+nImgs=min(nImgs,opts.nImgs);
+ftrs=zeros(nTrainPatches,length(fids),'single');
+labels=zeros(gtWidth,gtWidth,nTrainPatches,'uint8');
+k=0; % # total samples (features and labels) sampled and computed; k<=nTrainPatches
+tid=ticStatus('Collecting data',1,1);
+for i=1:nImgs
   % get image and compute channels
   gt=load([trnGtDir imgIds{i} '.mat']); gt=gt.groundTruth;
-  I=imread([trnImgDir imgIds{i} '.jpg']); siz=size(I);
-  p=zeros(1,4); p([2 4])=mod(4-mod(siz(1:2),4),4);
+  I=imread([trnImDir imgIds{i} '.jpg']); sz=size(I);
+  p=zeros(1,4); p([2 4])=mod(4-mod(sz(1:2),4),4);
   if(any(p)), I=imPad(I,p,'symmetric'); end
-  [chnsReg,chnsSim] = edgesChns(I,opts);
+  [chnsReg,chnsSim]=edgesChns(I,opts); % regular and self-similarity channels, downsampled to 180x320
   % sample positive and negative locations
-  nGt=length(gt); xy=[]; k1=0; B=false(siz(1),siz(2));
+  nGt=length(gt);
+  k1=0; % # locations sampled from all gt segs for this image
+  k1_ub=ceil(nTrainPatches/nImgs/nGt)*nGt; % upper bound of k1, for preallocation
+  % xy is k1 x 3 matrix with the locations samples for the image
+  % each row is [x y gtId], gtId - id of the gt for the sample
+  xy=zeros(k1_ub,3);
+  B=false(sz(1),sz(2)); % mask for sampling locations
   B(shrink:shrink:end,shrink:shrink:end)=1;
-  B([1:imRadius end-imRadius:end],:)=0;
-  B(:,[1:imRadius end-imRadius:end])=0;
+  B([1:imRadius end-imRadius:end],:)=0; B(:,[1:imRadius end-imRadius:end])=0;
   for j=1:nGt
-    M=gt{j}.Boundaries; M(bwdist(M)<gtRadius)=1;
-    [y,x]=find(M.*B); k2=min(length(y),ceil(nPos/nImgs/nGt));   % positive locations
+    M=gt{j}.Boundaries; M(bwdist(M)<gtRadius)=1; % TODO: why is the mask called B and the boundary M
+    % sample positive locations
+    [y,x]=find(M.*B); k2=min(length(y),ceil(nPos/nImgs/nGt)); % k2 - # positive locations sampled for this gt segm
     rp=randperm(length(y),k2); y=y(rp); x=x(rp);
-    xy=[xy; x y ones(k2,1)*j]; k1=k1+k2; %#ok<AGROW>
-    [y,x]=find(~M.*B); k2=min(length(y),ceil(nNeg/nImgs/nGt));  % negative locations
+    xy(k1+1:k1+k2,:)=[x y ones(k2,1)*j]; k1=k1+k2;
+    % sample negative locations
+    [y,x]=find(~M.*B); k2=min(length(y),ceil(nNeg/nImgs/nGt));
     rp=randperm(length(y),k2); y=y(rp); x=x(rp);
-    xy=[xy; x y ones(k2,1)*j]; k1=k1+k2; %#ok<AGROW>
+    xy(k1+1:k1+k2,:)=[x y ones(k2,1)*j]; k1=k1+k2;
   end
   if(k1>size(ftrs,1)-k), k1=size(ftrs,1)-k; xy=xy(1:k1,:); end
   % crop patches and ground truth labels
-  psReg=zeros(imWidth/shrink,imWidth/shrink,nChns,k1,'single');
-  lbls=zeros(gtWidth,gtWidth,k1,'uint8');
-  psSim=psReg; ri=imRadius/shrink; rg=gtRadius;
+  % psReg - regular patches, psSim - similarity patches
+  % 'image' patches are cropped from chnsReg and chnsSim
+  % gt label patches are cropped from the gt seg that the location was sampled from
+  psReg=zeros(imWidth/shrink,imWidth/shrink,nChns,k1,'single'); psSim=psReg;
+  lbls=zeros(gtWidth,gtWidth,k1,'uint8'); ri=imRadius/shrink; rg=gtRadius;
   for j=1:k1, xy1=xy(j,:); xy2=xy1/shrink;
+    % for every sample location crop all the regular and self-similarity channels
     psReg(:,:,:,j)=chnsReg(xy2(2)-ri+1:xy2(2)+ri,xy2(1)-ri+1:xy2(1)+ri,:);
     psSim(:,:,:,j)=chnsSim(xy2(2)-ri+1:xy2(2)+ri,xy2(1)-ri+1:xy2(1)+ri,:);
-    t=gt{xy1(3)}.Segmentation(xy1(2)-rg+1:xy1(2)+rg,xy1(1)-rg+1:xy1(1)+rg);
+    t=gt{xy1(3)}.Segmentation(xy1(2)-rg+1:xy1(2)+rg,xy1(1)-rg+1:xy1(1)+rg); % 16x16 gt segm
+    % labels are unique up to a permutation, so relabel, e.g. a segment with
+    % labels '3' and '6' to have the labels '1' and '2' (use smallest
+    % integers) - more compact representation
     [~,~,t]=unique(t); lbls(:,:,j)=reshape(t,gtWidth,gtWidth);
   end
-  if(0), figure(1); montage2(squeeze(psReg(:,:,1,:))); drawnow; end
-  if(0), figure(2); montage2(lbls(:,:,:)); drawnow; end
-  % compute features and store
+  if(0), figure(1); montage2(squeeze(psReg(:,:,1,:))); drawnow; end % visualize the first output channel of the regular patches
+  if(0), figure(2); montage2(lbls(:,:,:)); drawnow; end % visualize gt labels
+  % compute features and store features and labels
   ftrs1=[reshape(psReg,[],k1)' stComputeSimFtrs(psSim,opts)];
   ftrs(k+1:k+k1,:)=ftrs1(:,fids); labels(:,:,k+1:k+k1)=lbls;
   k=k+k1; if(k==size(ftrs,1)), tocStatus(tid,1); break; end
   tocStatus(tid,i/nImgs);
-end
+end % for i=1:nImgs
 if(k<size(ftrs,1)), ftrs=ftrs(1:k,:); labels=labels(:,:,1:k); end
 
 % train structured edge classifier (random decision tree)
 pTree=struct('minCount',opts.minCount, 'minChild',opts.minChild, ...
   'maxDepth',opts.maxDepth, 'H',opts.nClasses, 'split',opts.split);
+% labels as a 16 x 16 x k matrix, where k=10^6, (256MB); as a cell 368MB
 labels=mat2cell2(labels,[1 1 k]);
 pTree.discretize=@(hs,H) discretize(hs,H,opts.nSamples,opts.discretize);
-%% train each tree separately
-tree=forestTrain(ftrs,labels,pTree);
+tree=forestTrain(ftrs,labels,pTree); % train each tree separately
 tree.hs=cell2array(tree.hs);
+% fids are in [1;7228], 'adjust' them so tree.fids are in [0;7227]
+% TODO: what happens with the indices here?
 tree.fids(tree.child>0) = fids(tree.fids(tree.child>0)+1)-1;
 if(~exist(treeDir,'dir')), mkdir(treeDir); end
-save([treeFn int2str2(treeInd,3) '.mat'],'tree'); e=etime(clock,tStart);
+save([treeFn int2str2(treeInd,3) '.mat'],'tree', '-v7.3'); e=etime(clock,tStart);
 fprintf('Training of tree %d complete (time=%.1fs).\n',treeInd,e);
 RandStream.setGlobalStream( streamOrig );
-
-end
+end % trainTree
 
 % ----------------------------------------------------------------------
 function ftrs = stComputeSimFtrs( chns, opts )
@@ -263,24 +294,43 @@ end
 % ----------------------------------------------------------------------
 function [hs,seg] = discretize( segs, nClasses, nSamples, type )
 % Convert a set of segmentations into a set of labels in [1,nClasses].
-persistent cache; w=size(segs{1},1); assert(size(segs{1},2)==w);
-if(~isempty(cache) && cache{1}==w), [~,is1,is2]=deal(cache{:}); else
+% % function mapping structured to class labels
+% % this function will have nSamples and type injected (currying):
+% % [hsClass,hBest] = discretize(hsStructured,H)
+%
+% INPUTS
+%   segs       - 1 x 1 x nSegs a set of segs (structured labels)
+%   nClasses   - [2] number of classes ('k' in paper)
+%   nSamples   - [256] size of intermediate space Z ('m' in paper)
+%   type       - ['pca'] string, type of discretization, 'pca' or 'kmeans'
+%
+% OUTPUTS
+%   hs         - nSegs x 1 a set of class labels
+%   seg        - most representative (closest to mean) seg among the input ones segs
+%
+
+persistent cache; w=size(segs{1},1); assert(size(segs{1},2)==w); % w = 16
+% is1, is2 - indices for simultaneous lookup in the segm patch
+if (~isempty(cache) && cache{1}==w), [~,is1,is2]=deal(cache{:}); else
   % compute all possible lookup inds for w x w patches
   is=1:w^4; is1=floor((is-1)/w/w); is2=is-is1*w*w; is1=is1+1;
-  kp=is2>is1; is1=is1(kp); is2=is2(kp); cache={w,is1,is2};
+  mask=is2>is1; is1=is1(mask); is2=is2(mask); cache={w,is1,is2};
 end
-% compute n binary codes zs of length nSamples
-nSamples=min(nSamples,length(is1)); kp=randperm(length(is1),nSamples);
-n=length(segs); is1=is1(kp); is2=is2(kp); zs=false(n,nSamples);
-for i=1:n, zs(i,:)=segs{i}(is1)==segs{i}(is2); end
-zs=bsxfun(@minus,zs,sum(zs,1)/n); zs=zs(:,any(zs,1));
-if(isempty(zs)), hs=ones(n,1,'uint32'); seg=segs{1}; return; end
+% compute nSegs binary codes zs of length nSamples
+nSegs=length(segs); nSamples=min(nSamples,length(is1));
+% sample 256 of the 32640 unique pixel pairs in a 16 x 16 seg mask
+kp=randperm(length(is1),nSamples); is1=is1(kp); is2=is2(kp);
+zs=false(nSegs,nSamples); % for root node 10^6 x 256
+for i=1:nSegs, zs(i,:)=segs{i}(is1)==segs{i}(is2); end
+% keep only those columns (sampled pairwise pixel lookup results) in which some of the seg patches differ
+zs=bsxfun(@minus,zs,sum(zs,1)/nSegs); zs=zs(:,any(zs,1));
+if(isempty(zs)), hs=ones(nSegs,1,'uint32'); seg=segs{1}; return; end % all segs identical (up to a perm)
 % find most representative seg (closest to mean)
 [~,ind]=min(sum(zs.*zs,2)); seg=segs{ind};
 % apply PCA to reduce dimensionality of zs
 U=pca(zs'); d=min(5,size(U,2)); zs=zs*U(:,1:d);
 % discretize zs by clustering or discretizing pca dimensions
-d=min(d,floor(log2(nClasses))); hs=zeros(n,1);
+d=min(d,floor(log2(nClasses))); hs=zeros(nSegs,1);
 for i=1:d, hs=hs+(zs(:,i)<0)*2^(i-1); end
 [~,~,hs]=unique(hs); hs=uint32(hs);
 if(strcmpi(type,'kmeans'))
@@ -289,5 +339,5 @@ if(strcmpi(type,'kmeans'))
   hs=uint32(kmeans2(zs,nClasses,'C0',C,'nIter',1));
 end
 % optionally display different types of hs
-for i=1:0, figure(i); montage2(cell2array(segs(hs==i))); end
-end
+for i=1:0, figure(i); montage2(cell2array(segs(hs==i))); end % displays all seg patches from class i
+end % discretize

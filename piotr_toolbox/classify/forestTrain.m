@@ -11,7 +11,7 @@ function forest = forestTrain( data, hs, varargin )
 %  forest = forestTrain( data, hs, [varargin] )
 %
 % INPUTS
-%  data     - [NxF] N length F feature vectors
+%  data     - [NxF] N feature vectors, each of length F
 %  hs       - [Nx1] or {Nx1} target output labels in [1,H]
 %  varargin - additional params (struct or name/value pairs)
 %   .M          - [1] number of trees to train
@@ -28,14 +28,19 @@ function forest = forestTrain( data, hs, varargin )
 %                    format: [hsClass,hBest] = discretize(hsStructured,H);
 %
 % OUTPUTS
+% Dimensions:
+%  K - number of nodes in the tree
+%
 %  forest   - learned forest model struct array w the following fields
-%   .fids     - [Kx1] feature ids for each node
+%             ('tree' has the same structure)
+%   .fids     - [Kx1] feature ids for each node, in [0;7227]
 %   .thrs     - [Kx1] threshold corresponding to each fid
-%   .child    - [Kx1] index of child for each node
+%   .child    - [Kx1] index of left child for each node, in [0;K-1];
+%                     0 - no children
 %   .distr    - [KxH] prob distribution at each node
 %   .hs       - [Kx1] or {Kx1} most likely label at each node
 %   .count    - [Kx1] number of data points at each node
-%   .depth    - [Kx1] depth of each node
+%   .depth    - [Kx1] depth of each node; root has depth 0
 %
 % EXAMPLE
 %  N=10000; H=5; d=2; [xs0,hs0,xs1,hs1]=demoGenData(N,N,H,d,1,1);
@@ -92,39 +97,61 @@ end
 
 end
 
+% ----------------------------------------------------------------------
 function tree = treeTrain( data, hs, dWts, prmTree )
 % Train single random tree.
 [H,F1,minCount,minChild,maxDepth,fWts,split,discretize]=deal(prmTree{:});
-N=size(data,1); K=2*N-1; discr=~isempty(discretize);
-thrs=zeros(K,1,'single'); distr=zeros(K,H,'single');
-fids=zeros(K,1,'uint32'); child=fids; count=fids; depth=fids;
-hsn=cell(K,1); dids=cell(K,1); dids{1}=uint32(1:N); k=1; K=2;
+N=size(data,1); discr=~isempty(discretize);
+K_UB=2*N-1; % upper bound of the number of nodes K
+thrs=zeros(K_UB,1,'single'); distr=zeros(K_UB,H,'single');
+fids=zeros(K_UB,1,'uint32'); child=fids; count=fids; depth=fids;
+hsn=cell(K_UB,1); % n stands for 'new'; the (best) seg for each node
+dids=cell(K_UB,1); dids{1}=uint32(1:N); % data ids; the root node has all the data
+k=1; % current node
+K=2; % left child of current node; right child is K+1
 while( k < K )
   % get node data and store distribution
-  dids1=dids{k}; dids{k}=[]; hs1=hs(dids1); n1=length(hs1); count(k)=n1;
-  if(discr), [hs1,hsn{k}]=feval(discretize,hs1,H); hs1=uint32(hs1); end
-  if(discr), assert(all(hs1>0 & hs1<=H)); end; pure=all(hs1(1)==hs1);
+  dids1=dids{k}; % dids{k}=[]; % don't delete the ids of data/label for each child
+  hs1Segs=hs(dids1); n1=length(hs1Segs); count(k)=n1;
+  % discretization is performed independently when training each node and
+  % depends on the distribution of labels at a given node
+  % hs1 is the set of classes corresponding to hs1Segs
+  % hsn{k} - the most representative seg
+  if(discr), [hs1,hsn{k}]=feval(discretize,hs1Segs,H); hs1=uint32(hs1); end
+  if(discr), assert(all(hs1>0 & hs1<=H)); end; pure=all(hs1(1)==hs1); % pure nodes have all labels the same
   if(~discr), if(pure), distr(k,hs1(1))=1; hsn{k}=hs1(1); else
       distr(k,:)=histc(hs1,1:H)/n1; [~,hsn{k}]=max(distr(k,:)); end; end
   % if pure node or insufficient data don't train split
   if( pure || n1<=minCount || depth(k)>maxDepth ), k=k+1; continue; end
   % train split and continue
-  fids1=wswor(fWts,F1,4); data1=data(dids1,fids1);
-  [~,order1]=sort(data1); order1=uint32(order1-1);
-  [fid,thr,gain]=forestFindThr(data1,hs1,dWts(dids1),order1,H,split);
-  fid=fids1(fid); left=data(dids1,fid)<thr; count0=nnz(left);
-  if( gain>1e-10 && count0>=minChild && (n1-count0)>=minChild )
+  fids1=wswor(fWts,F1,4); % F1 ~ 60, only sample sqrt of the 3614 features
+  data1=data(dids1,fids1); [~,order1]=sort(data1); order1=uint32(order1-1);
+  [fid,thr,gain]=forestFindThr(data1,hs1,dWts(dids1),order1,H,split); % mex function, see cpp code, split=0 is gini
+  fid=fids1(fid); % learnt feature id
+  left=data(dids1,fid)<thr; countLeft=nnz(left);
+  if( gain>1e-10 && countLeft>=minChild && (n1-countLeft)>=minChild )
     child(k)=K; fids(k)=fid-1; thrs(k)=thr;
-    dids{K}=dids1(left); dids{K+1}=dids1(~left);
+    dids{K}=dids1(left); dids{K+1}=dids1(~left); % data ids of left and right child, respectively
     depth(K:K+1)=depth(k)+1; K=K+2;
   end; k=k+1;
 end
 % create output model struct
-K=1:K-1; if(discr), hsn={hsn(K)}; else hsn=[hsn{K}]'; end
-tree=struct('fids',fids(K),'thrs',thrs(K),'child',child(K),...
-  'distr',distr(K,:),'hs',hsn,'count',count(K),'depth',depth(K));
+Ks=1:K-1;
+if(discr), hsn={hsn(Ks)}; else hsn=[hsn{Ks}]'; end
+% TODO: only save patches at the leaves
+hsAll=cell(K_UB,1);
+for k=Ks
+  hsAll{k}=hs(dids{k}); % hsAll 7.5GB
 end
+% optionally display a few segs
+for i=1:0 % K-9:4:K-1
+  figure(i); montage2(cell2array(hsAll{i})); % displays all segs from class i
+end
+tree=struct('fids',fids(Ks),'thrs',thrs(Ks),'child',child(Ks),...
+  'distr',distr(Ks,:),'hs',hsn,'patches',{hsAll(Ks)},'count',count(Ks),'depth',depth(Ks));
+end % treeTrain
 
+% ----------------------------------------------------------------------
 function ids = wswor( prob, N, trials )
 % Fast weighted sample without replacement. Alternative to:
 %  ids=datasample(1:length(prob),N,'weights',prob,'replace',false);
