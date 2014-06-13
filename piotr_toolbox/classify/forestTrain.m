@@ -47,8 +47,8 @@ function forest = forestTrain( data, hs, varargin )
 %  xs0=single(xs0); xs1=single(xs1);
 %  pTrain={'maxDepth',50,'F1',2,'M',150,'minChild',5};
 %  tic, forest=forestTrain(xs0,hs0,pTrain{:}); toc
-%  hsPr0 = forestApply(xs0,forest);
-%  hsPr1 = forestApply(xs1,forest);
+%  hsPr0=forestApply(xs0,forest);
+%  hsPr1=forestApply(xs1,forest);
 %  e0=mean(hsPr0~=hs0); e1=mean(hsPr1~=hs1);
 %  fprintf('errors trn=%f tst=%f\n',e0,e1); figure(1);
 %  subplot(2,2,1); visualizeData(xs0,2,hs0);
@@ -65,7 +65,7 @@ function forest = forestTrain( data, hs, varargin )
 
 % get additional parameters and fill in remaining parameters
 dfs={ 'M',1, 'H',[], 'N1',[], 'F1',[], 'split','gini', 'minCount',1, ...
-  'minChild',1, 'maxDepth',64, 'dWts',[], 'fWts',[], 'discretize','' };
+  'minChild',1, 'maxDepth',64, 'dWts',[], 'fWts',[], 'discretize',''};
 [M,H,N1,F1,splitStr,minCount,minChild,maxDepth,dWts,fWts,discretize] = ...
   getPrmDflt(varargin,dfs,1);
 [N,F]=size(data); assert(length(hs)==N); discr=~isempty(discretize);
@@ -85,13 +85,13 @@ if(~isa(fWts,'single')), fWts=single(fWts); end
 if(~isa(dWts,'single')), dWts=single(dWts); end
 
 % train M random trees on different subsets of data
-prmTree = {H,F1,minCount,minChild,maxDepth,fWts,split,discretize};
+prmTree={H,F1,minCount,minChild,maxDepth,fWts,split,discretize};
 for i=1:M
   if(N==N1), data1=data; hs1=hs; dWts1=dWts; else
     d=wswor(dWts,N1,4); data1=data(d,:); hs1=hs(d);
     dWts1=dWts(d); dWts1=dWts1/sum(dWts1);
   end
-  tree = treeTrain(data1,hs1,dWts1,prmTree);
+  tree=treeTrain(data1,hs1,dWts1,prmTree);
   if(i==1), forest=tree(ones(M,1)); else forest(i)=tree; end
 end
 
@@ -105,22 +105,22 @@ N=size(data,1); discr=~isempty(discretize);
 K_UB=2*N-1; % upper bound of the number of nodes K
 thrs=zeros(K_UB,1,'single'); distr=zeros(K_UB,H,'single');
 fids=zeros(K_UB,1,'uint32'); child=fids; count=fids; depth=fids;
-hsn=cell(K_UB,1); % n stands for 'new'; the (best) seg for each node
+hsb=cell(K_UB,1); % best seg for each node
 dids=cell(K_UB,1); dids{1}=uint32(1:N); % data ids; the root node has all the data
 k=1; % current node
 K=2; % left child of current node; right child is K+1
 while( k < K )
   % get node data and store distribution
-  dids1=dids{k}; % dids{k}=[]; % don't delete the ids of data/label for each child
+  dids1=dids{k};
   hs1Segs=hs(dids1); n1=length(hs1Segs); count(k)=n1;
   % discretization is performed independently when training each node and
   % depends on the distribution of labels at a given node
   % hs1 is the set of classes corresponding to hs1Segs
-  % hsn{k} - the most representative seg
-  if(discr), [hs1,hsn{k}]=feval(discretize,hs1Segs,H); hs1=uint32(hs1); end
+  % hsb{k} - the most representative seg
+  if(discr), [hs1,hsb{k}]=feval(discretize,hs1Segs,H); hs1=uint32(hs1); end
   if(discr), assert(all(hs1>0 & hs1<=H)); end; pure=all(hs1(1)==hs1); % pure nodes have all labels the same
-  if(~discr), if(pure), distr(k,hs1(1))=1; hsn{k}=hs1(1); else
-      distr(k,:)=histc(hs1,1:H)/n1; [~,hsn{k}]=max(distr(k,:)); end; end
+  if(~discr), if(pure), distr(k,hs1(1))=1; hsb{k}=hs1(1); else
+      distr(k,:)=histc(hs1,1:H)/n1; [~,hsb{k}]=max(distr(k,:)); end; end
   % if pure node or insufficient data don't train split
   if( pure || n1<=minCount || depth(k)>maxDepth ), k=k+1; continue; end
   % train split and continue
@@ -130,27 +130,38 @@ while( k < K )
   fid=fids1(fid); % learnt feature id
   left=data(dids1,fid)<thr; countLeft=nnz(left);
   if( gain>1e-10 && countLeft>=minChild && (n1-countLeft)>=minChild )
-    child(k)=K; fids(k)=fid-1; thrs(k)=thr;
+    child(k)=K; fids(k)=fid-1; thrs(k)=thr; dids{k}=[];
     dids{K}=dids1(left); dids{K+1}=dids1(~left); % data ids of left and right child, respectively
     depth(K:K+1)=depth(k)+1; K=K+2;
   end; k=k+1;
 end
-% create output model struct
+% keep intermediate segs (previously discarded as only a best seg was chosen)
 Ks=1:K-1;
-if(discr), hsn={hsn(Ks)}; else hsn=[hsn{Ks}]'; end
-% TODO: only save patches at the leaves
-hsAll=cell(K,1); %K_UB,1);
-leavesIds=find(~child(Ks));
-for l=leavesIds' %k=Ks
-  hsAll{l}=hs(dids{l});
-  %hsAll{k}=hs(dids{k}); % hsAll 7.5GB
-end
+hsl=cell(K-1,1); % l stands for leaves; the indices that correspond to internal nodes are empty
+% % saving all patches - at internal nodes as well
+% for k=Ks, hsl{k}=hs(dids{k}); end % hsl 7.5GB (~80K nodes)
+
+% only saving patches at the leaves
+leavesIds=find(~child(Ks))';
+for l=leavesIds, hsl{l}=hs(dids{l}); end % hsl 370MB (~40K nodes); good - hs 350MB
+
 % optionally display a few segs
-for i=1:0 % K-9:4:K-1
-  figure(i); montage2(cell2array(hsAll{i})); % displays all segs from class i
+sz=length(leavesIds); %#ok<NASGU>
+for i=1:0 % 1:floor(sz/4):sz
+  id=leavesIds(i); figure(id); montage2(cat(3,hsb{id},cell2array(hsl{id})));
 end
-tree=struct('fids',fids(Ks),'thrs',thrs(Ks),'child',child(Ks),...
-  'distr',distr(Ks,:),'hs',hsn,'patches',{hsAll(Ks)},'count',count(Ks),'depth',depth(Ks));
+
+% create output model struct
+if(discr), hsb={hsb(Ks)}; else hsb=[hsb{Ks}]'; end
+tree=struct(...
+  'fids',fids(Ks),'thrs',thrs(Ks),'child',child(Ks),'distr',distr(Ks,:),...
+  'hs',hsb,'patches',{hsl},'count',count(Ks),'depth',depth(Ks));
+
+% % TODO interactive session (load a treeXX.mat file):
+% leavesIds=find(~cellfun(@isempty, hsAll)); sz=length(leavesIds);
+% for i=1:floor(sz/4):sz, id=leavesIds(i); figure(id);
+%   montage2(cat(3,tree.hs(:,:,id),cell2array(tree.patches{id})));
+% end
 end % treeTrain
 
 % ----------------------------------------------------------------------
