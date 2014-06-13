@@ -9,7 +9,7 @@ to_log = false;
 % video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.mat - training, detection and benchmark options; benchmark output
 
 log_.dsFolder = 'VSB100_40';
-log_.model_name = [log_.dsFolder '_with_patches'];
+log_.model_name = [log_.dsFolder '_'];
 log_.dsDir = fullfile('/BS/kostadinova/work/video_segm_evaluation', log_.dsFolder); % '/BS/kostadinova/work/BSR/BSDS500/data/';
 log_.recordings_dir = fullfile(log_.dsDir, 'test', 'recordings');
 log_.timestamp = datestr(clock,'yyyy-mm-dd_HH-MM-SS');
