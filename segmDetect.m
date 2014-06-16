@@ -57,7 +57,7 @@ end
 if(~exist(resDir,'dir')), mkdir(resDir); end; do=false(1,n);
 for i=1:n, do(i)=~exist([resDir ids(i).video filesep ids(i).name '.png'],'file'); end
 do=find(do); m=length(do);
-% % TODO: why non-maximum suppression breaks the watershed?
+% % TODO why non-maximum suppression breaks the watershed?
 % model.opts.nms=1;
 segsCell=cell(1,m);
 parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
@@ -69,13 +69,12 @@ parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   segsCell{i}=struct( ...
     'file', fullfile(resDir,id.video,[id.name '.mat']), ...
     'segs', Uintconv(ws));
-%   imwrite(uint8(E*255), fullfile(resDir, id.video, [id.name '.png'])); % save probability of boundary (pb)
+  %   imwrite(uint8(E*255), fullfile(resDir, id.video, [id.name '.png'])); % save probability of boundary (pb)
 end
 
-% TODO: can this be done inside the above parfor loop
+% TODO can this be done inside the above parfor loop
 for i=1:m
   segs{1}=segsCell{i}.segs; %#ok<NASGU>
   save(segsCell{i}.file,'segs');
 end
-
 end

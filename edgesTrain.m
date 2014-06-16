@@ -32,7 +32,7 @@ function model = edgesTrain( varargin )
 %   (3) feature parameters:
 %   .nOrients   - [4] number of orientations per gradient scale
 %   .grdSmooth  - [0] radius for image gradient smoothing (using convTri)
-%                     TODO: find in paper
+%                     TODO find in paper
 %   .chnSmooth  - [2] radius for reg channel smoothing (using convTri), i.e.
 %                     channel blur - triangle filter; for pixel lookups;
 %                     'reg' stands for 'regular'
@@ -45,7 +45,7 @@ function model = edgesTrain( varargin )
 %   .shrink     - [2] amount to shrink channels, i.e. channel downsample
 %   .nCells     - [5] number of self similarity cells, i.e. grid cells
 %   (4) detection parameters (can be altered after training):
-%   TODO: Detection parameters are not used here; figure out how to
+%   TODO Detection parameters are not used here; figure out how to
 %       incorporate these options in VSB100 benchmark and remove them here.
 %   .stride     - [2] stride at which to compute edges
 %   .multiscale - [1] if true run multiscale edge detector
@@ -124,7 +124,7 @@ if(opts.useParfor), parfor i=1:nTrees, trainTree(opts,stream,i); end
 else for i=1:nTrees, trainTree(opts,stream,i); end; end
 
 % accumulate trees and merge into final model
-treeFn = [opts.modelDir '/tree/' opts.modelFnm '_tree'];
+treeFn=[opts.modelDir '/tree/' opts.modelFnm '_tree'];
 for i=1:nTrees
   t=load([treeFn int2str2(i,3) '.mat'],'tree'); t=t.tree;
   if(i==1), trees=t(ones(1,nTrees)); else trees(i)=t; end
@@ -152,8 +152,8 @@ for i=1:nTrees, tree=trees(i); nNodes1=size(tree.fids,1);
   end
 end
 if(0), model.segmMax=squeeze(max(max(model.segm))); end
-model.eBnds=[0; model.eBnds(:)]; % TODO: what is it
-model.eBins=model.eBins(1:k); % TODO: what is it
+model.eBnds=[0; model.eBnds(:)]; % TODO what is it
+model.eBins=model.eBins(1:k); % TODO what is it
 % save model
 if(~exist(forestDir,'dir')), mkdir(forestDir); end
 save([forestFn '.mat'], 'model', '-v7.3');
@@ -187,8 +187,8 @@ nChns=opts.nChns; nTotFtrs=opts.nTotFtrs;
 nPos=opts.nPos; nNeg=opts.nNeg; shrink=opts.shrink;
 
 % finalize setup
-treeDir = [opts.modelDir '/tree/'];
-treeFn = [treeDir opts.modelFnm '_tree'];
+treeDir=[opts.modelDir '/tree/'];
+treeFn=[treeDir opts.modelFnm '_tree'];
 if(exist([treeFn int2str2(treeInd,3) '.mat'],'file')), return; end
 fprintf('\n-------------------------------------------\n');
 fprintf('Training tree %d of %d\n',treeInd,opts.nTrees); tStart=clock;
@@ -224,7 +224,7 @@ for i=1:nImgs
   B(shrink:shrink:end,shrink:shrink:end)=1;
   B([1:imRadius end-imRadius:end],:)=0; B(:,[1:imRadius end-imRadius:end])=0;
   for j=1:nGt
-    M=gt{j}.Boundaries; M(bwdist(M)<gtRadius)=1; % TODO: why is the mask called B and the boundary M
+    M=gt{j}.Boundaries; M(bwdist(M)<gtRadius)=1; % TODO why is the mask called B and the boundary M
     % sample positive locations
     [y,x]=find(M.*B); k2=min(length(y),ceil(nPos/nImgs/nGt)); % k2 - # positive locations sampled for this gt segm
     rp=randperm(length(y),k2); y=y(rp); x=x(rp);
@@ -270,7 +270,7 @@ pTree.discretize=@(hs,H) discretize(hs,H,opts.nSamples,opts.discretize);
 tree=forestTrain(ftrs,labels,pTree); % train each tree separately
 tree.hs=cell2array(tree.hs);
 % fids are in [1;7228], 'adjust' them so tree.fids are in [0;7227]
-% TODO: what happens with the indices here?
+% TODO what happens with the indices here?
 tree.fids(tree.child>0)=fids(tree.fids(tree.child>0)+1)-1;
 if(~exist(treeDir,'dir')), mkdir(treeDir); end
 save([treeFn int2str2(treeInd,3) '.mat'],'tree', '-v7.3'); e=etime(clock,tStart);

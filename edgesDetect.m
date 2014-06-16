@@ -44,17 +44,17 @@ if( opts.multiscale )
   
 else
   % pad image, making divisible by 4
-  sizOrig=size(I); r=opts.imWidth/2; p=[r r r r];
-  p([2 4])=p([2 4])+mod(4-mod(sizOrig(1:2)+2*r,4),4);
-  I = imPad(I,p,'symmetric');
+  szOrig=size(I); r=opts.imWidth/2; p=[r r r r];
+  p([2 4])=p([2 4])+mod(4-mod(szOrig(1:2)+2*r,4),4);
+  I=imPad(I,p,'symmetric');
   
   % compute features and apply forest to image
-  [chnsReg,chnsSim] = edgesChns( I, opts );
-  Es = edgesDetectMex(model,chnsReg,chnsSim);
+  [chnsReg,chnsSim]=edgesChns( I, opts );
+  Es=edgesDetectMex(model,chnsReg,chnsSim);
   
   % normalize and finalize edge maps
   t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval; r=opts.gtWidth/2;
-  O=[]; Es=Es(1+r:sizOrig(1)+r,1+r:sizOrig(2)+r,:)*t; Es=convTri(Es,1);
+  O=[]; Es=Es(1+r:szOrig(1)+r,1+r:szOrig(2)+r,:)*t; Es=convTri(Es,1);
 end
 
 % compute E and O and perform nms
@@ -72,11 +72,11 @@ E1=imPad(E,r+1,'replicate'); Dx=cos(O); Dy=sin(O);
 for i=-r:r, if(i==0), continue; end
   cs0=i*Dx+cs; dcs=cs0-floor(cs0); cs0=floor(cs0);
   rs0=i*Dy+rs; drs=rs0-floor(rs0); rs0=floor(rs0);
-  E2 = (1-dcs).*(1-drs) .* E1(rs0+0+(cs0-1)*ht);
-  E2 = E2 + dcs.*(1-drs) .* E1(rs0+0+(cs0-0)*ht);
-  E2 = E2 + (1-dcs).*drs .* E1(rs0+1+(cs0-1)*ht);
-  E2 = E2 + dcs.*drs .* E1(rs0+1+(cs0-0)*ht);
-  E(E*1.01<E2) = 0;
+  E2=(1-dcs).*(1-drs) .* E1(rs0+0+(cs0-1)*ht);
+  E2=E2 + dcs.*(1-drs) .* E1(rs0+0+(cs0-0)*ht);
+  E2=E2 + (1-dcs).*drs .* E1(rs0+1+(cs0-1)*ht);
+  E2=E2 + dcs.*drs .* E1(rs0+1+(cs0-0)*ht);
+  E(E*1.01<E2)=0;
 end
 % suppress noisy estimates near boundaries
 for r=1:s, E([r end-r+1],:,:)=E([r end-r+1],:,:)*(r-1)/s; end
