@@ -53,7 +53,7 @@ training_time=toc(timeEdgesTrain);
 % set detection parameters (can set after training)
 model.opts.multiscale=false;      % for top accuracy set multiscale=true
 model.opts.nTreesEval=4;          % for top speed set nTreesEval=1
-model.opts.nThreads=4;            % max number threads for evaluation
+model.opts.nThreads=4;            % max number threads for evaluation; used in edgesDetectMex
 model.opts.nms=false;             % set to true to enable nms (fairly slow)
 
 % run edge/segment detector
