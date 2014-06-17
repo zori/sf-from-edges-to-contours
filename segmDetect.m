@@ -44,13 +44,19 @@ imDir=p.imDir; assert(exist(imDir,'dir')==7);
 gtDir=p.gtDir; assert(exist(gtDir,'dir')==7);
 resDir=p.resDir;
 
-% get video frames ids
-ids_=Listacrossfolders(imDir, 'jpg', 1); ids_={ids_.name}; n=length(ids_);
-ids=repmat(struct('video', '', 'name', ''), 1, n);
+% get input image ids
+ids_=Listacrossfolders(imDir,'jpg',1); ids_={ids_.name}; n=length(ids_);
+ids=repmat(struct('video','','name',''),1,n);
 for i=1:n
-  str=strsplit(ids_{i}, filesep);
-  ids(i).video=str{1};
-  ids(i).name=str{2}(1:end-4);
+  sp=strsplit(ids_{i},filesep); nSp=length(sp);
+  if nSp==2 % input is video frames (each video in its own directory)
+    ids(i).video=sp{1};
+    ids(i).name=sp{2};
+  else
+    ids(i).video='';
+    ids(i).name=ids_{i};
+    if nSp>1, warning('Unexpected directory structure.'); end
+  end; ids(i).name=ids(i).name(1:end-4); % remove filename extension
 end
 
 % detect edges (and output a seg)

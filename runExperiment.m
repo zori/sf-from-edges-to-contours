@@ -8,9 +8,11 @@ logging=false;
 % video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.txt - git version, runtimes
 % video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.mat - training, detection and benchmark options; benchmark output
 
-LOG.dsFolder='VSB100_40';
-LOG.modelName=[LOG.dsFolder ''];
-LOG.dsDir=fullfile('/BS/kostadinova/work/video_segm_evaluation', LOG.dsFolder);
+dss=struct('name', {'BSDS500' 'VSB100_40' 'VSB100_full'},...
+  'isVideo', {false true true});
+dsId=1;
+LOG.modelName=[dss(dsId).name ''];
+LOG.dsDir=fullfile('/BS/kostadinova/work/video_segm_evaluation', dss(dsId).name);
 LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');
 LOG.timestamp=datestr(clock,'yyyy-mm-dd_HH-MM-SS');
 LOG.timestampDir=fullfile(LOG.recordingsDir, LOG.timestamp);
@@ -72,7 +74,7 @@ bmOpts.path=[LOG.dsDir];                      % path to bmOpts.dir
 bmOpts.dir='test';                            % contains the directories `Images', `Groundtruth' and `Ucm2' (computed results of the algorithm of Dollar)
 bmOpts.nthresh=51;                            % number of hierarchical levels to include
 bmOpts.superposeGraph=false;                  % true - new curves are added to the same graph; false - a new graph is initialized
-bmOpts.testTempConsistency=true;  % false for images
+bmOpts.testTempConsistency=dss(dsId).isVideo; % true iff test set consists of videos
 % possible benchmark metrics
 metrics={
   'bdry',...       % BPR - Boundary Precision-Recall
