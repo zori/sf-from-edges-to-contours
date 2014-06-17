@@ -97,7 +97,7 @@ if(nargin==0), model=opts; return; end
 % if forest exists load it and return
 cd(fileparts(mfilename('fullpath')));
 forestDir=fullfile(opts.modelDir, 'forest/');
-forestFn=[forestDir opts.modelFnm];
+forestFn=fullfile(forestDir, opts.modelFnm);
 if(exist([forestFn '.mat'], 'file'))
   load([forestFn '.mat']); return; end
 
@@ -124,7 +124,7 @@ if(opts.useParfor), parfor i=1:nTrees, trainTree(opts,stream,i); end
 else for i=1:nTrees, trainTree(opts,stream,i); end; end
 
 % accumulate trees and merge into final model
-treeFn=[opts.modelDir '/tree/' opts.modelFnm '_tree'];
+treeFn=fullfile(opts.modelDir, 'tree', [opts.modelFnm '_tree']);
 for i=1:nTrees
   t=load([treeFn int2str2(i,3) '.mat'],'tree'); t=t.tree;
   if(i==1), trees=t(ones(1,nTrees)); else trees(i)=t; end
@@ -187,8 +187,8 @@ nChns=opts.nChns; nTotFtrs=opts.nTotFtrs;
 nPos=opts.nPos; nNeg=opts.nNeg; shrink=opts.shrink;
 
 % finalize setup
-treeDir=[opts.modelDir '/tree/'];
-treeFn=[treeDir opts.modelFnm '_tree'];
+treeDir=fullfile(opts.modelDir, 'tree/');
+treeFn=fullfile(treeDir, [opts.modelFnm '_tree']);
 if(exist([treeFn int2str2(treeInd,3) '.mat'],'file')), return; end
 fprintf('\n-------------------------------------------\n');
 fprintf('Training tree %d of %d\n',treeInd,opts.nTrees); tStart=clock;

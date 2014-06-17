@@ -32,12 +32,12 @@ fprintf(LOG.fid, 'Last git commit %s \n', gitCommitId);
 %% Training
 
 % set opts for training (see edgesTrain.m)
-trOpts=edgesTrain();                       % default options (good settings)
-trOpts.modelDir='models/';                 % model will be in models/forest
-trOpts.modelFnm=['model' LOG.modelName];   % model name
-trOpts.nPos=5e5;                           % decrease to speedup training
-trOpts.nNeg=5e5;                           % decrease to speedup training
-trOpts.useParfor=logging;                  % parallelize if sufficient memory; true iff benchmarking
+trOpts=edgesTrain();                                       % default options (good settings)
+trOpts.modelDir='/BS/kostadinova/work/video_segm/models/'; % model will be in models/forest
+trOpts.modelFnm=['model' LOG.modelName];                   % model name
+trOpts.nPos=5e5;                                           % decrease to speedup training
+trOpts.nNeg=5e5;                                           % decrease to speedup training
+trOpts.useParfor=logging;                                  % parallelize if sufficient memory; true iff benchmarking
 trOpts.dsDir=fullfile(LOG.dsDir, 'train', filesep);
 
 % train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
