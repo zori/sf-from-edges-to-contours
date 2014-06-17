@@ -136,12 +136,14 @@ model.thrs=zeros(nNodes,nTrees,'single');
 Z=zeros(nNodes,nTrees,'uint32');
 model.fids=Z; model.child=Z; model.count=Z; model.depth=Z;
 if(0), model.segm=ones(gtWidth,gtWidth,nNodes,nTrees,'uint8'); end
+model.patches=cell(nNodes,nTrees);
 model.eBins=zeros(nNodes*nTrees*gtWidth*gtWidth,1,'uint16');
 model.eBnds=Z; nEdgeBins=opts.nEdgeBins; k=0;
 for i=1:nTrees, tree=trees(i); nNodes1=size(tree.fids,1);
   model.fids(1:nNodes1,i)=tree.fids; model.thrs(1:nNodes1,i)=tree.thrs;
   model.child(1:nNodes1,i)=tree.child; model.count(1:nNodes1,i)=tree.count;
   model.depth(1:nNodes1,i)=tree.depth;
+  model.patches(1:nNodes1,i)=tree.patches(1:nNodes1);
   if(0), model.segm(:,:,1:nNodes1,i)=tree.hs; end
   % store compact representation of sparse binary edge patches
   for j=1:nNodes
