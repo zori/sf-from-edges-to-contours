@@ -10,7 +10,7 @@ function [] = segmDetect( model, varargin )
 %  model      - structured edge model trained with edgesTrain
 %  parameters - parameters (struct or name/value pairs)
 %   .nThresh    - [99] number of thresholds for evaluation
-%   .imgDir     - [] directory of dataset - images
+%   .imDir      - [] directory of dataset - images
 %   .gtDir      - [] directory of dataset - groundtruth
 %   .stride     - [] stride at which to compute edges
 %   .nTreesEval - [] number of trees to evaluate per location
@@ -30,7 +30,7 @@ function [] = segmDetect( model, varargin )
 
 % get default parameters
 dfs={
-  'nThresh',99, 'imgDir','REQ', 'gtDir', 'REQ', ...
+  'nThresh',99, 'imDir','REQ', 'gtDir', 'REQ', ...
   'resDir', 'REQ', 'stride',[], ...
   'nTreesEval',[], 'multiscale',[], 'pDistr',{{'type','parfor'}}
   };
@@ -40,7 +40,7 @@ if( ~isempty(p.stride) ), model.opts.stride=p.stride; end
 if( ~isempty(p.nTreesEval) ), model.opts.nTreesEval=p.nTreesEval; end
 if( ~isempty(p.multiscale) ), model.opts.multiscale=p.multiscale; end
 
-imDir=p.imgDir; assert(exist(imDir,'dir')==7);
+imDir=p.imDir; assert(exist(imDir,'dir')==7);
 gtDir=p.gtDir; assert(exist(gtDir,'dir')==7);
 resDir=p.resDir;
 
@@ -61,9 +61,9 @@ do=find(do); m=length(do);
 % model.opts.nms=1;
 segsCell=cell(1,m);
 parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
-  I=imread([imDir id.video filesep id.name '.jpg']);
+  I=imread(fullfile(imDir,id.video,[id.name '.jpg']));
   E=edgesDetect(I,model);
-  if (~exist([resDir id.video], 'dir')), mkdir([resDir id.video]); end;
+  if (~exist(fullfile(resDir,id.video), 'dir')), mkdir(fullfile(resDir,id.video)); end;
   % run vanilla watershed and save the (over-)seg
   ws=watershed(E);
   segsCell{i}=struct( ...

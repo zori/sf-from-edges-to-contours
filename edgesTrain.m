@@ -57,7 +57,7 @@ function model = edgesTrain( varargin )
 %   .useParfor  - [0] if true train trees in parallel (memory intensive)
 %   .modelDir   - ['models/'] target directory for storing models
 %   .modelFnm   - ['model'] model filename
-%   .dsDir    -   ['BSR/BSDS500/data/'] location of training dataset
+%   .dsDir    -   [] location of training dataset, default is BSDS500
 %
 % OUTPUTS
 %  model      - trained structured edge detector w the following fields
@@ -90,7 +90,7 @@ dfs={'imWidth',32, 'gtWidth',16, 'nEdgeBins',1, 'nPos',1e5, 'nNeg',1e5, ...
   'simSmooth',8, 'normRad',4, 'shrink',2, 'nCells',5, ...
   'stride',2, 'multiscale',1, 'nTreesEval',4, 'nThreads',4, 'nms',0, ...
   'seed',1, 'useParfor',0, 'modelDir','models/', 'modelFnm','model', ...
-  'dsDir','BSR/BSDS500/data/'};
+  'dsDir','/BS/kostadinova/work/video_segm_evaluation/BSDS500/train/'};
 opts=getPrmDflt(varargin,dfs,1);
 if(nargin==0), model=opts; return; end
 
@@ -177,8 +177,8 @@ function trainTree( opts, stream, treeInd )
 % location of ground truth
 trnImDir=fullfile(opts.dsDir, 'Images/');
 trnGtDir=fullfile(opts.dsDir, 'Groundtruth/');
-imgIds=Listacrossfolders(trnImDir, 'jpg', 1); imgIds={imgIds.name};
-nImgs=length(imgIds); for i=1:nImgs, imgIds{i}=imgIds{i}(1:end-4); end
+imIds=Listacrossfolders(trnImDir, 'jpg', 1); imIds={imIds.name};
+nIms=length(imIds); for i=1:nIms, imIds{i}=imIds{i}(1:end-4); end
 
 % extract commonly used options
 imWidth=opts.imWidth; imRadius=imWidth/2;
@@ -201,22 +201,22 @@ RandStream.setGlobalStream( stream );
 % collect positive and negative patches and compute features
 fids=sort(randperm(nTotFtrs,round(nTotFtrs*opts.fracFtrs))); % for this tree, sample half (3614) out of nTotFtrs possible features
 nTrainPatches=nPos+nNeg; % 10^6
-nImgs=min(nImgs,opts.nImgs);
+nIms=min(nIms,opts.nImgs);
 ftrs=zeros(nTrainPatches,length(fids),'single');
 labels=zeros(gtWidth,gtWidth,nTrainPatches,'uint8');
 k=0; % # total samples (features and labels) sampled and computed; k<=nTrainPatches
 tid=ticStatus('Collecting data',1,1);
-for i=1:nImgs
+for i=1:nIms
   % get image and compute channels
-  gt=load([trnGtDir imgIds{i} '.mat']); gt=gt.groundTruth;
-  I=imread([trnImDir imgIds{i} '.jpg']); sz=size(I);
+  gt=load([trnGtDir imIds{i} '.mat']); gt=gt.groundTruth;
+  I=imread([trnImDir imIds{i} '.jpg']); sz=size(I);
   p=zeros(1,4); p([2 4])=mod(4-mod(sz(1:2),4),4);
   if(any(p)), I=imPad(I,p,'symmetric'); end
   [chnsReg,chnsSim]=edgesChns(I,opts); % regular and self-similarity channels, downsampled to 180x320
   % sample positive and negative locations
   nGt=length(gt);
   k1=0; % # locations sampled from all gt segs for this image
-  k1_ub=ceil(nTrainPatches/nImgs/nGt)*nGt; % upper bound of k1, for preallocation
+  k1_ub=ceil(nTrainPatches/nIms/nGt)*nGt; % upper bound of k1, for preallocation
   % xy is k1 x 3 matrix with the locations samples for the image
   % each row is [x y gtId], gtId - id of the gt for the sample
   xy=zeros(k1_ub,3);
@@ -226,11 +226,11 @@ for i=1:nImgs
   for j=1:nGt
     M=gt{j}.Boundaries; M(bwdist(M)<gtRadius)=1; % TODO why is the mask called B and the boundary M
     % sample positive locations
-    [y,x]=find(M.*B); k2=min(length(y),ceil(nPos/nImgs/nGt)); % k2 - # positive locations sampled for this gt segm
+    [y,x]=find(M.*B); k2=min(length(y),ceil(nPos/nIms/nGt)); % k2 - # positive locations sampled for this gt segm
     rp=randperm(length(y),k2); y=y(rp); x=x(rp);
     xy(k1+1:k1+k2,:)=[x y ones(k2,1)*j]; k1=k1+k2;
     % sample negative locations
-    [y,x]=find(~M.*B); k2=min(length(y),ceil(nNeg/nImgs/nGt));
+    [y,x]=find(~M.*B); k2=min(length(y),ceil(nNeg/nIms/nGt));
     rp=randperm(length(y),k2); y=y(rp); x=x(rp);
     xy(k1+1:k1+k2,:)=[x y ones(k2,1)*j]; k1=k1+k2;
   end
@@ -257,7 +257,7 @@ for i=1:nImgs
   ftrs1=[reshape(psReg,[],k1)' stComputeSimFtrs(psSim,opts)];
   ftrs(k+1:k+k1,:)=ftrs1(:,fids); labels(:,:,k+1:k+k1)=lbls;
   k=k+k1; if(k==size(ftrs,1)), tocStatus(tid,1); break; end
-  tocStatus(tid,i/nImgs);
+  tocStatus(tid,i/nIms);
 end % for i=1:nImgs
 if(k<size(ftrs,1)), ftrs=ftrs(1:k,:); labels=labels(:,:,1:k); end
 

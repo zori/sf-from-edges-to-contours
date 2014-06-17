@@ -158,7 +158,7 @@ tree=struct(...
   'hs',hsb,'patches',{hsl},'count',count(Ks),'depth',depth(Ks));
 
 % % TODO interactive session (load a treeXX.mat file):
-% leavesIds=find(~cellfun(@isempty, hsAll)); sz=length(leavesIds);
+% leavesIds=find(~cellfun(@isempty, hsl)); sz=length(leavesIds);
 % for i=1:floor(sz/4):sz, id=leavesIds(i); figure(id);
 %   montage2(cat(3,tree.hs(:,:,id),cell2array(tree.patches{id})));
 % end
