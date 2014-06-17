@@ -8,11 +8,13 @@ logging=false;
 % video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.txt - git version, runtimes
 % video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.mat - training, detection and benchmark options; benchmark output
 
+repoDir='/BS/kostadinova/work/video_segm';
+evalDir='/BS/kostadinova/work/video_segm_evaluation';
 dss=struct('name', {'BSDS500' 'VSB100_40' 'VSB100_full'},...
   'isVideo', {false true true});
 dsId=1;
 LOG.modelName=[dss(dsId).name ''];
-LOG.dsDir=fullfile('/BS/kostadinova/work/video_segm_evaluation', dss(dsId).name);
+LOG.dsDir=fullfile(evalDir, dss(dsId).name);
 LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');
 LOG.timestamp=datestr(clock,'yyyy-mm-dd_HH-MM-SS');
 LOG.timestampDir=fullfile(LOG.recordingsDir, LOG.timestamp);
@@ -24,26 +26,27 @@ if (logging)
   if (~exist(LOG.recordingsDir, 'dir')), mkdir(LOG.recordingsDir), end
   mkdir(LOG.timestampDir), LOG.fid=fopen(LOG.file, 'w');
 end
-cd(fileparts(mfilename('fullpath')));
+cd(repoDir);
 [status, gitCommitId]=system('git --no-pager log --format="%H" -n 1');
-if (status), warning('no git repository in %s', pwd); end
-fprintf(LOG.fid, 'Last git commit %s \n', gitCommitId);
+if (status), warning('no git repository in %s', pwd); else
+  fprintf(LOG.fid, 'Last git commit %s \n', gitCommitId); end
+cd(fileparts(mfilename('fullpath')));
 
 %% Training
 
 % set opts for training (see edgesTrain.m)
-trOpts=edgesTrain();                                       % default options (good settings)
-trOpts.modelDir='/BS/kostadinova/work/video_segm/models/'; % model will be in models/forest
-trOpts.modelFnm=['model' LOG.modelName];                   % model name
-trOpts.nPos=5e5;                                           % decrease to speedup training
-trOpts.nNeg=5e5;                                           % decrease to speedup training
-trOpts.useParfor=logging;                                  % parallelize if sufficient memory; true iff benchmarking
+trOpts=edgesTrain();                         % default options (good settings)
+trOpts.modelDir=fullfile(repoDir,'models/'); % model will be in models/forest
+trOpts.modelFnm=['model' LOG.modelName];     % model name
+trOpts.nPos=5e5;                             % decrease to speedup training
+trOpts.nNeg=5e5;                             % decrease to speedup training
+trOpts.useParfor=logging;                    % parallelize if sufficient memory; true iff benchmarking
 trOpts.dsDir=fullfile(LOG.dsDir, 'train', filesep);
 
 % train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
 if (trOpts.useParfor && isempty(gcp('nocreate')))
   pool=parpool(12);
-  addAttachedFiles(pool,'/BS/kostadinova/work/video_segm/private/edgesDetectMex.mexw64');
+  addAttachedFiles(pool,fullfile(repoDir, 'private/edgesDetectMex.mexw64'));
 end
 
 timerTr=tic;
