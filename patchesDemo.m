@@ -9,15 +9,16 @@ opts=model.opts;
 
 while (true)
   clear functions; % clear the persistent vars in getFigPos
-  % get user input and crop patch TODO crop patch from Ipadded
-  initFig(); im(I); title('Choose a patch to crop');
+  % get user input and crop patch TODO crop patch from Ipadded so as not to
+  % exceed matrix dimensions
+  initFig(); imagesc(I); axis('image'); title('Choose a patch to crop');
   [x,y]=ginput;
   % if no patch or more than one patch is selected, stop the interactive demo
   if (length(x)~= 1), close all; return; end
   x_ind=uint32(floor(x/2)); y_ind=uint32(floor(y/2));
   x=uint32(floor(x)); y=uint32(floor(y));
   initFig(); r0=opts.imWidth/2; % patch radius r=16
-  im(cropPatch(I,x,y,r0)); title('Cropped image patch');
+  imagesc(cropPatch(I,x,y,r0)); axis('image'); title('Cropped image patch'); % TODO ... or, alternatively, "bounce" (move) patch within matrix bounds
   
   Im=I;
   % pad image, making divisible by 4
@@ -37,7 +38,8 @@ while (true)
   % that vote for each pixel
   initFig(); im(cropPatch(EsDetected,x,y,r0)); title('SRF decision patch');
   % Superpixelization (over-segmentation patch)
-  initFig(); im(cropPatch(watershed(EsDetected),x,y,r0)); title('Superpixels patch');
+  ws=label2rgb(watershed(EsDetected),'jet',[.5 .5 .5]);
+  initFig(); imagesc(cropPatch(ws,x,y,r0)); axis('image'); title('Superpixels patch');
   initFig(); im(zeros(r0,r0)); title('Placeholder intermediate decision patch');
   
   nTreeNodes=length(model.fids);
@@ -67,7 +69,6 @@ end
 
 function initFig()
 % creates and positions a figure on a 3 x 3 grid for convenient viewing
-f=figure;
 persistent cache figCnt;
 if (~isempty(cache)), [scrSz,figSz]=deal(cache{:}); else
   set(0,'Units','pixels');
@@ -75,8 +76,9 @@ if (~isempty(cache)), [scrSz,figSz]=deal(cache{:}); else
   figSz=[3 3]; figCnt=1;
   cache={scrSz,figSz};
 end
-[x, y]=ind2sub(figSz,figCnt); figCnt=figCnt+1;
+f=figure(figCnt);
+[x, y]=ind2sub(figSz,figCnt);
 position=[(x-1)*scrSz(1)/3,(y-1)*scrSz(2)/3,scrSz(1)/3,scrSz(2)/3]; % [left bottom width height]
 set(f,'OuterPosition',position);
-if figCnt>figSz(1)*figSz(2), figCnt=1; end
+figCnt=figCnt+1; if figCnt>figSz(1)*figSz(2), figCnt=1; end
 end
