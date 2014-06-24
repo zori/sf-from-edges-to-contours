@@ -8,14 +8,15 @@ I=imread(imFile);
 opts=model.opts;
 
 while (true)
+  clear functions; % clear the persistent vars in getFigPos
   % get user input and crop patch TODO crop patch from Ipadded
-  imFigure=figure(101); im(I); title('Choose a patch to crop');
+  initFig(); im(I); title('Choose a patch to crop');
   [x,y]=ginput;
   % if no patch or more than one patch is selected, stop the interactive demo
-  if (length(x)~= 1), close(imFigure); break; end
+  if (length(x)~= 1), close all; return; end
   x_ind=uint32(floor(x/2)); y_ind=uint32(floor(y/2));
   x=uint32(floor(x)); y=uint32(floor(y));
-  figure(102); r0=opts.imWidth/2; % patch radius r=16
+  initFig(); r0=opts.imWidth/2; % patch radius r=16
   im(cropPatch(I,x,y,r0)); title('Cropped image patch');
   
   Im=I;
@@ -34,9 +35,10 @@ while (true)
   
   % patch detected with the decision forest; result based on 16x16x4/4 trees
   % that vote for each pixel
-  figure(103); im(cropPatch(EsDetected,x,y,r0)); title('SRF decision patch');
+  initFig(); im(cropPatch(EsDetected,x,y,r0)); title('SRF decision patch');
   % Superpixelization (over-segmentation patch)
-  figure(104); im(cropPatch(watershed(EsDetected),x,y,r0)); title('Superpixels patch');
+  initFig(); im(cropPatch(watershed(EsDetected),x,y,r0)); title('Superpixels patch');
+  initFig(); im(zeros(r0,r0)); title('Placeholder intermediate decision patch');
   
   nTreeNodes=length(model.fids);
   nTreesEval=opts.nTreesEval;
@@ -47,7 +49,8 @@ while (true)
   for k=1:nTreesEval
     treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
     assert(~model.child(leafId,treeId) && ~isempty(model.patches{leafId,treeId}));
-    figure(k); montage2(cat(3,T{treeId}.hs(:,:,leafId),cell2array(T{treeId}.patches{leafId}))); % model.patches{leafId,treeId}
+    initFig();
+    montage2(cat(3,T{treeId}.hs(:,:,leafId),cell2array(T{treeId}.patches{leafId}))); % model.patches{leafId,treeId}
   end
   % TODO get the "intermediate" patch - decision made only based on the 4
   % groups of patches shown here; don't use the result ind of the private mex
@@ -60,4 +63,20 @@ function patch = cropPatch(I,x,y,r)
 % crop a patch with radius r from an image I at location [x y]
 % output patch has dimensions [2r x 2r]
 patch=I(y-r+1:y+r,x-r+1:x+r,:);
+end
+
+function initFig()
+% creates and positions a figure on a 3 x 3 grid for convenient viewing
+f=figure;
+persistent cache figCnt;
+if (~isempty(cache)), [scrSz,figSz]=deal(cache{:}); else
+  set(0,'Units','pixels');
+  scrSz=get(0,'ScreenSize'); scrSz=scrSz(3:4);
+  figSz=[3 3]; figCnt=1;
+  cache={scrSz,figSz};
+end
+[x, y]=ind2sub(figSz,figCnt); figCnt=figCnt+1;
+position=[(x-1)*scrSz(1)/3,(y-1)*scrSz(2)/3,scrSz(1)/3,scrSz(2)/3]; % [left bottom width height]
+set(f,'OuterPosition',position);
+if figCnt>figSz(1)*figSz(2), figCnt=1; end
 end
