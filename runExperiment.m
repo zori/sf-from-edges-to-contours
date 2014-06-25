@@ -12,8 +12,8 @@ repoDir='/BS/kostadinova/work/video_segm';
 evalDir='/BS/kostadinova/work/video_segm_evaluation';
 dss=struct('name', {'BSDS500' 'VSB100_40' 'VSB100_full'},...
   'isVideo', {false true true});
-dsId=1;
-LOG.modelName=[dss(dsId).name ''];
+dsId=2;
+LOG.modelName=[dss(dsId).name '_patches'];
 LOG.dsDir=fullfile(evalDir, dss(dsId).name);
 LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');
 LOG.timestamp=datestr(clock,'yyyy-mm-dd_HH-MM-SS');

@@ -50,9 +50,12 @@ while (true)
   
   for k=1:nTreesEval
     treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
-    assert(~model.child(leafId,treeId) && ~isempty(model.patches{leafId,treeId}));
+    assert(~model.child(leafId,treeId)); % TODO add this to assertion when saving patches in forest && ~isempty(model.patches{leafId,treeId}));
     initFig();
     montage2(cat(3,T{treeId}.hs(:,:,leafId),cell2array(T{treeId}.patches{leafId}))); % model.patches{leafId,treeId}
+    % TODO this is tmp
+    figure(k*100);
+    montage2(cat(3,T{treeId}.hs(:,:,leafId),cell2array(T{treeId}.patches_tmp{leafId})));
   end
   % TODO get the "intermediate" patch - decision made only based on the 4
   % groups of patches shown here; don't use the result ind of the private mex
