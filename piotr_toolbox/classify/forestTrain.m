@@ -107,7 +107,6 @@ thrs=zeros(K_UB,1,'single'); distr=zeros(K_UB,H,'single');
 fids=zeros(K_UB,1,'uint32'); child=fids; count=fids; depth=fids;
 hsb=cell(K_UB,1); % best seg for each node
 dids=cell(K_UB,1); dids{1}=uint32(1:N); % data ids; the root node has all the data
-dids_tmp=cell(K_UB,1);
 k=1; % current node
 K=2; % left child of current node; right child is K+1
 while( k < K )
@@ -120,7 +119,7 @@ while( k < K )
   % hsb{k} - the most representative seg
   if(discr)
     [hs1,hsb{k},inds]=feval(discretize,hs1Segs,H);
-    dids_tmp{k}=dids1(inds);
+    dids{k}=dids1(inds);
     hs1=uint32(hs1);
   end
   if(discr), assert(all(hs1>0 & hs1<=H)); end; pure=all(hs1(1)==hs1); % pure nodes have all labels the same
@@ -135,7 +134,7 @@ while( k < K )
   fid=fids1(fid); % learnt feature id
   left=data(dids1,fid)<thr; countLeft=nnz(left);
   if( gain>1e-10 && countLeft>=minChild && (n1-countLeft)>=minChild )
-    child(k)=K; fids(k)=fid-1; thrs(k)=thr; dids{k}=[]; dids_tmp{k}=[];
+    child(k)=K; fids(k)=fid-1; thrs(k)=thr; dids{k}=[];
     dids{K}=dids1(left); dids{K+1}=dids1(~left); % data ids of left and right child, respectively
     depth(K:K+1)=depth(k)+1; K=K+2;
   end; k=k+1;
@@ -143,13 +142,12 @@ end
 % keep intermediate segs (previously discarded as only a best seg was chosen)
 Ks=1:K-1;
 hsl=cell(K-1,1); % l stands for leaves; the indices that correspond to internal nodes are empty
-hsl_tmp=cell(K-1,1);
 % % saving all patches - at internal nodes as well
 % for k=Ks, hsl{k}=hs(dids{k}); end % hsl 7.5GB (~80K nodes)
 
 % only saving patches at the leaves
 leavesIds=find(~child(Ks))';
-for l=leavesIds, hsl{l}=hs(dids{l}); hsl_tmp{l}=hs(dids_tmp{l}); end % hsl 370MB (~40K nodes); good - hs 350MB
+for l=leavesIds, hsl{l}=hs(dids{l}); end % hsl 370MB (~40K nodes); good - hs 350MB
 
 % optionally display a few segs
 sz=length(leavesIds); %#ok<NASGU>
@@ -161,7 +159,7 @@ end
 if(discr), hsb={hsb(Ks)}; else hsb=[hsb{Ks}]'; end
 tree=struct(...
   'fids',fids(Ks),'thrs',thrs(Ks),'child',child(Ks),'distr',distr(Ks,:),...
-  'hs',hsb,'patches',{hsl},'patches_tmp',{hsl_tmp},'count',count(Ks),'depth',depth(Ks));
+  'hs',hsb,'patches',{hsl},'count',count(Ks),'depth',depth(Ks));
 
 % % TODO interactive session (load a treeXX.mat file):
 % leavesIds=find(~cellfun(@isempty, tree.patches)); sz=length(leavesIds);
