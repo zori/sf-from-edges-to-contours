@@ -143,7 +143,8 @@ for i=1:nTrees, tree=trees(i); nNodes1=size(tree.fids,1);
   model.fids(1:nNodes1,i)=tree.fids; model.thrs(1:nNodes1,i)=tree.thrs;
   model.child(1:nNodes1,i)=tree.child; model.count(1:nNodes1,i)=tree.count;
   model.depth(1:nNodes1,i)=tree.depth;
-  model.patches(1:nNodes1,i)=tree.patches(1:nNodes1);
+  % model.patches(1:nNodes1,i)=tree.patches(1:nNodes1); % TODO add this when
+  % saving the patches in the forest (will I need to use them?)
   if(0), model.segm(:,:,1:nNodes1,i)=tree.hs; end
   % store compact representation of sparse binary edge patches
   for j=1:nNodes
@@ -294,7 +295,7 @@ ftrs=reshape(ftrs,nSimFtrs,m)';
 end
 
 % ----------------------------------------------------------------------
-function [hs,seg] = discretize( segs, nClasses, nSamples, type )
+function [hs,seg,inds] = discretize( segs, nClasses, nSamples, type )
 % Convert a set of segmentations into a set of labels in [1,nClasses].
 % % function mapping structured to class labels
 % % this function will have nSamples and type injected (currying):
@@ -309,6 +310,8 @@ function [hs,seg] = discretize( segs, nClasses, nSamples, type )
 % OUTPUTS
 %   hs         - nSegs x 1 a set of class labels
 %   seg        - most representative (closest to mean) seg among the input ones segs
+%   inds       - indices of segments sorted in decreasing distance from the
+%                medoid (most representative segment)
 %
 
 persistent cache; w=size(segs{1},1); assert(size(segs{1},2)==w); % w=16
@@ -326,9 +329,9 @@ zs=false(nSegs,nSamples); % for root node 10^6 x 256
 for i=1:nSegs, zs(i,:)=segs{i}(is1)==segs{i}(is2); end
 % keep only those columns (sampled pairwise pixel lookup results) in which some of the seg patches differ
 zs=bsxfun(@minus,zs,sum(zs,1)/nSegs); zs=zs(:,any(zs,1));
-if(isempty(zs)), hs=ones(nSegs,1,'uint32'); seg=segs{1}; return; end % all segs identical (up to a perm)
+if(isempty(zs)), hs=ones(nSegs,1,'uint32'); seg=segs{1}; inds=1:nSegs; return; end % all segs identical (up to a perm)
 % find most representative seg (closest to mean)
-[~,ind]=min(sum(zs.*zs,2)); seg=segs{ind};
+[~,inds]=sort(sum(zs.*zs,2)); seg=segs{inds(1)};
 % apply PCA to reduce dimensionality of zs
 U=pca(zs'); d=min(5,size(U,2)); zs=zs*U(:,1:d);
 % discretize zs by clustering or discretizing pca dimensions
