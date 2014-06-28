@@ -10,8 +10,8 @@ logging=false;
 
 repoDir='/BS/kostadinova/work/video_segm';
 evalDir='/BS/kostadinova/work/video_segm_evaluation';
-dss=struct('name', {'BSDS500' 'VSB100_40' 'VSB100_full'},...
-  'isVideo', {false true true});
+dss=struct('name', {'BSDS500' 'VSB100_40' 'VSB100_full' 'VSB100_tiny'},...
+  'isVideo', {false true true true});
 dsId=2;
 LOG.modelName=[dss(dsId).name '_patches'];
 LOG.dsDir=fullfile(evalDir, dss(dsId).name);
