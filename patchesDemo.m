@@ -11,7 +11,7 @@ while (true)
   clear functions; % clear the persistent vars in getFigPos
   % get user input and crop patch TODO crop patch from Ipadded so as not to
   % exceed matrix dimensions
-  initFig(); imagesc(I); axis('image'); title('Choose a patch to crop');
+  initFig(1); imagesc(I); axis('image'); title('Choose a patch to crop');
   [x,y]=ginput;
   % if no patch or more than one patch is selected, stop the interactive demo
   if (length(x)~= 1), close all; return; end
@@ -73,20 +73,26 @@ function patch = cropPatch(I,x,y,r)
 patch=I(y-r+1:y+r,x-r+1:x+r,:);
 end
 
-function initFig()
-% creates and positions a figure on a 3 x 3 grid for convenient viewing
+function initFig(figureIndex)
+% creates and positions a figure on a 3 x 4 grid layout for convenient viewing
 persistent cache figCnt;
-if (~isempty(cache)), [scrSz,figSz]=deal(cache{:}); else
+if nargin>0, figCnt=figureIndex; end
+if (~isempty(cache)), [scrSz,figSz,nFigs]=deal(cache{:}); else
   set(0,'Units','pixels');
   scrSz=get(0,'ScreenSize'); scrSz=scrSz(3:4);
-  figSz=[3 3]; figCnt=1;
-  cache={scrSz,figSz};
+  figSz=[4 3]; nFigs=figSz(1)*figSz(2); cache={scrSz,figSz,nFigs};
 end
-f=figure(figCnt);
-[x, y]=ind2sub(figSz,figCnt);
-position=[(x-1)*scrSz(1)/3,(y-1)*scrSz(2)/3,scrSz(1)/3,scrSz(2)/3]; % [left bottom width height]
+f=figure(figCnt); clf;
+ind=figCnt;
+if figCnt>1, ind=mod(figCnt-2,nFigs-1)+2; end
+[x,y]=ind2sub(figSz,ind);
+position=[...
+  (x-1)*scrSz(1)/figSz(1),... % left
+  (3-y)*scrSz(2)/figSz(2),... % bottom
+  scrSz(1)/figSz(1),...       % width
+  scrSz(2)/figSz(2)];         % height
 set(f,'OuterPosition',position);
-figCnt=figCnt+1; if figCnt>figSz(1)*figSz(2), figCnt=1; end
+figCnt=figCnt+1;
 end
 
 % ----------------------------------------------------------------------
