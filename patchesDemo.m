@@ -50,9 +50,15 @@ while (true)
   
   for k=1:nTreesEval
     treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
-    assert(~model.child(leafId,treeId)); % TODO add this to assertion when saving patches in forest && ~isempty(model.patches{leafId,treeId}));
-    initFig(); montage2(cell2array(T{treeId}.patches{leafId})); % model.patches{leafId,treeId}
+    assert(~model.child(leafId,treeId)); % TODO add this to assertion (when also saving patches in forest) && ~isempty(model.patches{leafId,treeId}));
+    segPs=T{treeId}.segPs{leafId}; % model.patches{leafId,treeId}
+    imgPs=T{treeId}.imgPs{leafId};
+    assert(~xor(isempty(segPs),isempty(imgPs)));
+    if isempty(segPs), continue; end % only leaves with no more than 40 samples have the patches stored
+    initFig(); montage2(cell2array(segPs));
     montage2Title(['Segmentations tree ' num2str(treeId)]);
+    initFig(); montage2(imgPs,struct('hasChn', true));
+    montage2Title(['Image patches tree ' num2str(treeId)]);
   end
   % TODO get the "intermediate" patch - decision made only based on the 4
   % groups of patches shown here; don't use the result ind of the private mex
