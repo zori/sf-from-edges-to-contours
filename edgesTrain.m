@@ -206,6 +206,7 @@ fids=sort(randperm(nTotFtrs,round(nTotFtrs*opts.fracFtrs))); % for this tree, sa
 nTrainPatches=nPos+nNeg; % 10^6
 nIms=min(nIms,opts.nImgs);
 ftrs=zeros(nTrainPatches,length(fids),'single');
+patches=zeros(imWidth,imWidth,3,nTrainPatches,'uint8'); % images patches at locations sampled for training
 labels=zeros(gtWidth,gtWidth,nTrainPatches,'uint8');
 k=0; % # total samples (features and labels) sampled and computed; k<=nTrainPatches
 tid=ticStatus('Collecting data',1,1);
@@ -243,26 +244,35 @@ for i=1:nIms
   % 'image' patches are cropped from chnsReg and chnsSim
   % gt label patches are cropped from the gt seg that the location was sampled from
   psReg=zeros(imWidth/shrink,imWidth/shrink,nChns,k1,'single'); psSim=psReg;
-  lbls=zeros(gtWidth,gtWidth,k1,'uint8'); ri=imRadius/shrink; rg=gtRadius;
+  lbls=zeros(gtWidth,gtWidth,k1,'uint8');
+  ptchs=zeros(imWidth,imWidth,3,k1,'uint8');
+  ri=imRadius; rs=imRadius/shrink; rg=gtRadius;
   for j=1:k1, xy1=xy(j,:); xy2=xy1/shrink;
     % for every sample location crop all the regular and self-similarity channels
-    psReg(:,:,:,j)=chnsReg(xy2(2)-ri+1:xy2(2)+ri,xy2(1)-ri+1:xy2(1)+ri,:);
-    psSim(:,:,:,j)=chnsSim(xy2(2)-ri+1:xy2(2)+ri,xy2(1)-ri+1:xy2(1)+ri,:);
+    psReg(:,:,:,j)=chnsReg(xy2(2)-rs+1:xy2(2)+rs,xy2(1)-rs+1:xy2(1)+rs,:);
+    psSim(:,:,:,j)=chnsSim(xy2(2)-rs+1:xy2(2)+rs,xy2(1)-rs+1:xy2(1)+rs,:);
     t=gt{xy1(3)}.Segmentation(xy1(2)-rg+1:xy1(2)+rg,xy1(1)-rg+1:xy1(1)+rg); % 16x16 gt segm
     % labels are unique up to a permutation, so relabel, e.g. a segment with
     % labels '3' and '6' to have the labels '1' and '2' (use smallest
     % integers) - more compact representation
     [~,~,t]=unique(t); lbls(:,:,j)=reshape(t,gtWidth,gtWidth);
+    ptchs(:,:,:,j)=I(xy1(2)-ri+1:xy1(2)+ri,xy1(1)-ri+1:xy1(1)+ri,:); % 32x32 rgb img patch
   end
   if(0), figure(1); montage2(squeeze(psReg(:,:,1,:))); drawnow; end % visualize the first output channel of the regular patches
   if(0), figure(2); montage2(lbls(:,:,:)); drawnow; end % visualize gt labels
   % compute features and store features and labels
   ftrs1=[reshape(psReg,[],k1)' stComputeSimFtrs(psSim,opts)];
-  ftrs(k+1:k+k1,:)=ftrs1(:,fids); labels(:,:,k+1:k+k1)=lbls;
+  ftrs(k+1:k+k1,:)=ftrs1(:,fids);
+  labels(:,:,k+1:k+k1)=lbls;
+  patches(:,:,:,k+1:k+k1)=ptchs;
   k=k+k1; if(k==size(ftrs,1)), tocStatus(tid,1); break; end
   tocStatus(tid,i/nIms);
 end % for i=1:nImgs
-if(k<size(ftrs,1)), ftrs=ftrs(1:k,:); labels=labels(:,:,1:k); end
+if(k<size(ftrs,1))
+  ftrs=ftrs(1:k,:);
+  labels=labels(:,:,1:k);
+  patches=patches(:,:,:,1:k);
+end
 
 % train structured edge classifier (random decision tree)
 pTree=struct('minCount',opts.minCount, 'minChild',opts.minChild, ...
@@ -271,6 +281,25 @@ pTree=struct('minCount',opts.minCount, 'minChild',opts.minChild, ...
 labels=mat2cell2(labels,[1 1 k]);
 pTree.discretize=@(hs,H) discretize(hs,H,opts.nSamples,opts.discretize);
 tree=forestTrain(ftrs,labels,pTree); % train each tree separately
+% get the data indices and record the image and segmentation ground truth
+% patches in the tree
+K=length(tree.fids);
+imgPs=cell(K,1); % img patches
+segPs=cell(K,1); % seg patches; the indices that correspond to internal (non-leaf) nodes will be empty % keep intermediate segs (previously discarded as only a best seg is chosen)
+
+% only saving patches at "small" leaves
+leavesIds=find(~tree.child)';
+for l=leavesIds
+  if tree.count(l) > 40, continue; end
+  imgPs{l}=patches(:,:,:,tree.dids{l});
+  segPs{l}=labels(tree.dids{l});
+  if(0)
+    figure(1); montage2(imgPs{l},struct('hasChn', true));
+    figure(2); montage2(cell2array(segPs{l}));
+  end
+end
+tree.imgPs=imgPs; tree.segPs=segPs;
+tree=rmfield(tree,'dids');
 tree.hs=cell2array(tree.hs);
 % fids are in [1;7228], 'adjust' them so tree.fids are in [0;7227]
 % TODO what happens with the indices here?

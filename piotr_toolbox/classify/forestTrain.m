@@ -139,27 +139,11 @@ while( k < K )
     depth(K:K+1)=depth(k)+1; K=K+2;
   end; k=k+1;
 end
-% keep intermediate segs (previously discarded as only a best seg was chosen)
-Ks=1:K-1;
-hsl=cell(K-1,1); % l stands for leaves; the indices that correspond to internal nodes are empty
-% % saving all patches - at internal nodes as well
-% for k=Ks, hsl{k}=hs(dids{k}); end % hsl 7.5GB (~80K nodes)
-
-% only saving patches at the leaves
-leavesIds=find(~child(Ks))';
-for l=leavesIds, hsl{l}=hs(dids{l}); end % hsl 370MB (~40K nodes); good - hs 350MB
-
-% optionally display a few segs
-sz=length(leavesIds); %#ok<NASGU>
-for i=1:0 % 1:floor(sz/4):sz
-  id=leavesIds(i); figure(id); montage2(cat(3,hsb{id},cell2array(hsl{id})));
-end
-
 % create output model struct
-if(discr), hsb={hsb(Ks)}; else hsb=[hsb{Ks}]'; end
+Ks=1:K-1; if(discr), hsb={hsb(Ks)}; else hsb=[hsb{Ks}]'; end
 tree=struct(...
   'fids',fids(Ks),'thrs',thrs(Ks),'child',child(Ks),'distr',distr(Ks,:),...
-  'hs',hsb,'patches',{hsl},'count',count(Ks),'depth',depth(Ks));
+  'hs',hsb,'dids',{dids(Ks)},'count',count(Ks),'depth',depth(Ks));
 
 % % TODO interactive session (load a treeXX.mat file):
 % leavesIds=find(~cellfun(@isempty, tree.patches)); sz=length(leavesIds);
