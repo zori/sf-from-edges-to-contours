@@ -52,6 +52,7 @@ while (true)
     treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
     assert(~model.child(leafId,treeId)); % TODO add this to assertion when saving patches in forest && ~isempty(model.patches{leafId,treeId}));
     initFig(); montage2(cell2array(T{treeId}.patches{leafId})); % model.patches{leafId,treeId}
+    montage2Title(['Segmentations tree ' num2str(treeId)]);
   end
   % TODO get the "intermediate" patch - decision made only based on the 4
   % groups of patches shown here; don't use the result ind of the private mex
@@ -80,4 +81,11 @@ f=figure(figCnt);
 position=[(x-1)*scrSz(1)/3,(y-1)*scrSz(2)/3,scrSz(1)/3,scrSz(2)/3]; % [left bottom width height]
 set(f,'OuterPosition',position);
 figCnt=figCnt+1; if figCnt>figSz(1)*figSz(2), figCnt=1; end
+end
+
+% ----------------------------------------------------------------------
+function montage2Title(mTitle);
+% adds a title to a figure drawn using montage2 function
+set(gca,'Visible','on'); set(gca,'xtick',[]); set(gca,'ytick',[]);
+title(mTitle);
 end
