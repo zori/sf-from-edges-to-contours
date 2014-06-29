@@ -80,10 +80,13 @@ end
 
 function h = initFig(figureHandle)
 % creates and positions a figure on a 3 x 4 grid layout for convenient viewing
+%
 % INPUTS
-%  figureIndex - (optional) handle/index for the figure
+%  figureHandle - (optional) handle/index for the figure
+%
 % OUTPUTS
-%  h           - figure handle
+%  h            - figure handle
+%
 persistent cache figCnt;
 if nargin, figCnt=figureHandle; end
 if (~isempty(cache)), [scrSz,figSz,nFigs]=deal(cache{:}); else
