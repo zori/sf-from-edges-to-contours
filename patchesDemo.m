@@ -40,7 +40,7 @@ while (true)
   % Superpixelization (over-segmentation patch)
   ws=label2rgb(watershed(EsDetected),'jet',[.5 .5 .5]);
   initFig(); imagesc(cropPatch(ws,x,y,r0)); axis('image'); title('Superpixels patch');
-  initFig(); im(zeros(r0,r0)); title('Placeholder intermediate decision patch');
+  h=initFig(); im(zeros(r0,r0)); title('Placeholder intermediate decision patch');
   
   nTreeNodes=length(model.fids);
   nTreesEval=opts.nTreesEval;
@@ -57,12 +57,17 @@ while (true)
     if isempty(segPs), continue; end % only leaves with no more than 40 samples have the patches stored
     initFig(); montage2(cell2array(segPs));
     montage2Title(['Segmentations tree ' num2str(treeId)]);
-    initFig(); montage2(imgPs,struct('hasChn', true));
+    h=initFig(); montage2(imgPs,struct('hasChn', true));
     montage2Title(['Image patches tree ' num2str(treeId)]);
   end
   % TODO get the "intermediate" patch - decision made only based on the 4
   % groups of patches shown here; don't use the result ind of the private mex
   % function, rather work within it
+  
+  % remove all figures that were not created on this iteration
+  figHandles=findobj('Type','figure');
+  oldFigures=figHandles(figHandles>h); % h is the last handle used
+  close(oldFigures);
 end % while(true)
 end % patchesDemo
 
@@ -73,16 +78,20 @@ function patch = cropPatch(I,x,y,r)
 patch=I(y-r+1:y+r,x-r+1:x+r,:);
 end
 
-function initFig(figureIndex)
+function h = initFig(figureHandle)
 % creates and positions a figure on a 3 x 4 grid layout for convenient viewing
+% INPUTS
+%  figureIndex - (optional) handle/index for the figure
+% OUTPUTS
+%  h           - figure handle
 persistent cache figCnt;
-if nargin>0, figCnt=figureIndex; end
+if nargin, figCnt=figureHandle; end
 if (~isempty(cache)), [scrSz,figSz,nFigs]=deal(cache{:}); else
   set(0,'Units','pixels');
   scrSz=get(0,'ScreenSize'); scrSz=scrSz(3:4);
   figSz=[4 3]; nFigs=figSz(1)*figSz(2); cache={scrSz,figSz,nFigs};
 end
-f=figure(figCnt); clf;
+h=figure(figCnt); clf;
 ind=figCnt;
 if figCnt>1, ind=mod(figCnt-2,nFigs-1)+2; end
 [x,y]=ind2sub(figSz,ind);
@@ -91,13 +100,13 @@ position=[...
   (3-y)*scrSz(2)/figSz(2),... % bottom
   scrSz(1)/figSz(1),...       % width
   scrSz(2)/figSz(2)];         % height
-set(f,'OuterPosition',position);
+set(h,'OuterPosition',position);
 figCnt=figCnt+1;
 end
 
 % ----------------------------------------------------------------------
-function montage2Title(mTitle);
-% adds a title to a figure drawn using montage2 function
+function montage2Title(mTitle)
+% adds a title to a figure drawn using the montage2 function
 set(gca,'Visible','on'); set(gca,'xtick',[]); set(gca,'ytick',[]);
 title(mTitle);
 end
