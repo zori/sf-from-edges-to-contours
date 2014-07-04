@@ -68,10 +68,14 @@ function model = edgesTrain( varargin )
 %   .count      - [nNodes x nTrees] number of data points at each node
 %   .depth      - [nNodes x nTrees] depth of each node
 %   .eBins      - data structure for storing all node edge maps;
+%                 0-based "flattened" patch [16 x 16] index of the location of
+%                 boundaries;
 %                 [5947957 <= nNodes*nTrees*gtWidth*gtWidth x 1 uint16],
 %                 values in [0;255]
 %   .eBnds      - data structure for storing all node edge maps;
-%                 [642489x1 uint32], values in [0;5947957]
+%                 for every node of every tree, index of beginning of boundary
+%                 in model.eBins;
+%                 [642489x1 uint32], ascendingly sorted values in [0;5947957]
 %
 % EXAMPLE
 %
@@ -155,8 +159,8 @@ for i=1:nTrees, tree=trees(i); nNodes1=size(tree.fids,1);
   end
 end
 if(0), model.segmMax=squeeze(max(max(model.segm))); end
-model.eBnds=[0; model.eBnds(:)]; % TODO what is it
-model.eBins=model.eBins(1:k); % TODO what is it
+model.eBnds=[0; model.eBnds(:)]; % add sentinel value to begin indexing and "flatten" eBnds matrix to a vector % (model.eBnds-1)/8 is nNodes 
+model.eBins=model.eBins(1:k); % here k is the total amount of boundary pixels in the segmentation of every node of every tree in the model
 % save model
 if(~exist(forestDir,'dir')), mkdir(forestDir); end
 save([forestFn '.mat'], 'model', '-v7.3');
