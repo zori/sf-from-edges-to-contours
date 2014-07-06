@@ -17,9 +17,19 @@ typedef unsigned short uint16;
 
 // construct lookup array for mapping fids to channel indices
 uint32* buildLookup( int *dims, int w ) {
-  int c, r, z, n=w*w*dims[2]; uint32 *cids=new uint32[n]; n=0;
-  for(z=0; z<dims[2]; z++) for(c=0; c<w; c++) for(r=0; r<w; r++)
-    cids[n++] = z*dims[0]*dims[1] + c*dims[0] + r;
+  int c, r, z;
+  int n=w*w*dims[2];
+  uint32 *cids=new uint32[n];
+  n=0;
+  for(z=0; z<dims[2]; z++) {
+    for(c=0; c<w; c++) {    // c - column index
+      for(r=0; r<w; r++) {  // r - row index
+        cids[n++] = z*dims[0]*dims[1] + c*dims[0] + r;
+        // printf("%u ", cids[n-1]);
+      }
+      // printf("\n");
+    }
+  }
   return cids;
 }
 
@@ -87,7 +97,8 @@ void mexFunction( int nl, mxArray *pl[], int nr, const mxArray *pr[] )
   pl[0] = mxCreateNumericArray(3,outDims,mxSINGLE_CLASS,mxREAL);
   float *E = (float*) mxGetData(pl[0]);
   pl[1] = mxCreateNumericArray(3,indDims,mxUINT32_CLASS,mxREAL);
-  uint32 *ind = (uint32*) mxGetData(pl[1]);
+  // joint leaf-and-tree index for location (pixel lookup) and tree evaluated
+  uint32 *ind = (uint32*) mxGetData(pl[1]); // h1 x w1 x nTreesEval matrix
 
   // apply forest to all patches and store leaf inds
   #ifdef USEOMP
@@ -109,7 +120,7 @@ void mexFunction( int nl, mxArray *pl[], int nr, const mxArray *pr[] )
         k += t1*nTreeNodes;
       }
       // store leaf index and update edge maps
-      ind[ r + c*h1 + t*h1*w1 ] = k;
+      ind[ r + c*h1 + t*h1*w1 ] = k; // ind[r,c,t]; r in [0,h1); c in [0,w1), t in [0,nTreesEval)
     }
   }
 
@@ -118,12 +129,13 @@ void mexFunction( int nl, mxArray *pl[], int nr, const mxArray *pr[] )
     #ifdef USEOMP
     #pragma omp parallel for num_threads(nThreads)
     #endif
-    for( int c=c0; c<w1; c+=gtWidth/stride ) {
+    for( int c=c0; c<w1; c+=gtWidth/stride ) { // the increment of c, through use of c0 is for parallel execution
       for( int r=0; r<h1; r++ ) for( int t=0; t<nTreesEval; t++ ) {
         uint32 k = ind[ r + c*h1 + t*h1*w1 ];
         float *E1 = E + (r*stride) + (c*stride)*h2;
         int b0=eBnds[k], b1=eBnds[k+1]; if(b0==b1) continue;
-        for( int b=b0; b<b1; b++ ) E1[eids[eBins[b]]]++;
+        for( int b=b0; b<b1; b++ )
+          E1[eids[eBins[b]]]++; // because of the way eids indexes patches, c and r are the 0-based x and y coords of the upper-left corner of the 16 x 16 border patch
       }
     }
   }
