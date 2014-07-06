@@ -53,11 +53,15 @@ while (true)
     segPs=T{treeId}.segPs{leafId}; % model.patches{leafId,treeId}
     imgPs=T{treeId}.imgPs{leafId};
     assert(~xor(isempty(segPs),isempty(imgPs)));
-    if isempty(segPs), continue; end % only leaves with no more than 40 samples have the patches stored
-    initFig(); montage2(cell2array(segPs));
-    montage2Title(['Segmentations tree ' num2str(treeId)]);
-    h=initFig(); montage2(imgPs,struct('hasChn', true));
-    montage2Title(['Image patches tree ' num2str(treeId)]);
+    treeStr=num2str(treeId);
+    if ~isempty(segPs) % only leaves with no more than 40 samples have the patches stored
+      initFig(); montage2(cell2array(segPs));
+      montage2Title(['Segmentations; tree ' treeStr]);
+      h=initFig(); montage2(imgPs,struct('hasChn', true));
+      montage2Title(['Image patches; tree ' treeStr]);
+    else
+      h=initFig(); im(T{treeId}.hs(:,:,leafId)); title(['Best segmentation; tree ' treeStr]);
+    end
   end
   % TODO get the "intermediate" patch - decision made only based on the 4
   % groups of patches shown here; don't use the result ind of the private mex
