@@ -27,22 +27,17 @@ while (true)
   clear functions; % clear the persistent vars in getFigPos
   % get user input and crop patch
   initFig(1); imagesc(I); axis('image'); title('Choose a patch to crop');
+  if exist('x','var'), hold on; plot(x,y,'rx','MarkerSize',20); end
   [x,y]=ginput;
   % if no patch or more than one patch is selected, stop the interactive demo
   if (length(x)~= 1), close all; return; end
   [x,y]=fixInput(x,y,ri,szOrig(1:2));
+  imagesc(I); axis('image'); title('Choose a patch to crop');
+  hold on; plot(x,y,'rx','MarkerSize',20);
   x_ind=uint32(floor(x/2)); y_ind=uint32(floor(y/2));
   x=uint32(floor(x)); y=uint32(floor(y));
   initFig(); r0=opts.imWidth/2; % patch radius r=16
   imagesc(cropPatch(I,x,y,r0)); axis('image'); title('Cropped image patch');
-  
-  % patch detected with the decision forest; result based on 16x16x4/4 trees
-  % that vote for each pixel
-  initFig(); im(cropPatch(EsDetected,x,y,r0)); title('SRF decision patch');
-  % Superpixelization (over-segmentation patch)
-  ws=label2rgb(watershed(EsDetected),'jet',[.5 .5 .5]);
-  initFig(); imagesc(cropPatch(ws,x,y,r0)); axis('image'); title('Superpixels patch');
-  h=initFig(); im(zeros(r0,r0)); title('Placeholder intermediate decision patch');
 
   ids=double(ind(y_ind,x_ind,:)); % indices come from cpp and are 0-based
   treeIds=uint32(floor(ids./nTreeNodes)+1);
@@ -66,7 +61,14 @@ while (true)
   % TODO get the "intermediate" patch - decision made only based on the 4
   % groups of patches shown here; don't use the result ind of the private mex
   % function, rather work within it
-  
+
+  % patch detected with the decision forest; result based on 16x16x4/4 trees
+  % that vote for each pixel
+  initFig(); im(cropPatch(EsDetected,x,y,rg)); title('SRF decision patch');
+  % Superpixelization (over-segmentation patch)
+  ws=label2rgb(watershed(EsDetected),'jet',[1 1 1],'shuffle');
+  h=initFig(); imagesc(cropPatch(ws,x,y,rg)); axis('image'); title('Superpixels patch');
+
   % remove all figures that were not created on this iteration
   figHandles=findobj('Type','figure');
   oldFigures=figHandles(figHandles>h); % h is the last handle used
