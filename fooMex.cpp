@@ -17,9 +17,19 @@ typedef unsigned short uint16;
 
 // construct lookup array for mapping fids to channel indices
 uint32* buildLookup( int *dims, int w ) {
-  int c, r, z, n=w*w*dims[2]; uint32 *cids=new uint32[n]; n=0;
-  for(z=0; z<dims[2]; z++) for(c=0; c<w; c++) for(r=0; r<w; r++)
-    cids[n++] = z*dims[0]*dims[1] + c*dims[0] + r;
+  int c, r, z;
+  int n=w*w*dims[2]; // dims[2] is nEdgeBins
+  uint32 *cids=new uint32[n];
+  n=0;
+  for(z=0; z<dims[2]; z++) { // z - edge bins index
+    for(c=0; c<w; c++) {    // c - column index
+      for(r=0; r<w; r++) {  // r - row index
+        cids[n++] = z*dims[0]*dims[1] + c*dims[0] + r;
+        // printf("%u ", cids[n-1]);
+      }
+      // printf("\n");
+    }
+  }
   return cids;
 }
 
@@ -36,13 +46,30 @@ void buildLookupSs( uint32 *&cids1, uint32 *&cids2, int *dims, int w, int m ) {
   }
 }
 
-// [E,ind] = mexFunction(model,chns,chnsSs) - helper for edgesDetect.m
+// compute edge maps for the location represented by c - column and r - row; changes the edges matrix E
+void computeEdges(const int c, const int r, const int w1, const int h1,
+      const int nTreesEval, const int stride, const int h2,
+      float * const E, const uint32 *ind, const uint16 *eBins, const uint32 *eBnds, const uint32 *eids) {
+  for( int t=0; t<nTreesEval; t++ ) {
+    uint32 k = ind[ r + c*h1 + t*h1*w1 ];
+    float *E1 = E + (r*stride) + (c*stride)*h2;
+    int b0=eBnds[k], b1=eBnds[k+1]; if(b0==b1) continue;
+    for( int b=b0; b<b1; b++ )
+      E1[eids[eBins[b]]]++; // because of the way eids indexes patches, c and r are the 0-based x and y coords of the upper-left corner of the 16 x 16 border patch
+  }
+}
+
+// [E,ind] = mexFunction(model,chns,chnsSs) - helper for edgesDetect.m; compute all edge maps
+// [E,ind] = mexFunction(model,chns,chnsSs,x1,y1) - helper for edgesDetect.m; compute edge maps only for the given pixel location
 void mexFunction( int nl, mxArray *pl[], int nr, const mxArray *pr[] )
 {
   // get inputs
   mxArray *model = (mxArray*) pr[0];
   float *chns = (float*) mxGetData(pr[1]);
   float *chnsSs = (float*) mxGetData(pr[2]);
+	bool allPxs = nr == 3;
+  const int x1 = allPxs ? 0 : (int) mxGetScalar(pr[3]) - 1;
+  const int y1 = allPxs ? 0 : (int) mxGetScalar(pr[4]) - 1;
 
   // extract relevant fields from model and options
   float *thrs = (float*) mxGetData(mxGetField(model,0,"thrs"));
@@ -87,7 +114,8 @@ void mexFunction( int nl, mxArray *pl[], int nr, const mxArray *pr[] )
   pl[0] = mxCreateNumericArray(3,outDims,mxSINGLE_CLASS,mxREAL);
   float *E = (float*) mxGetData(pl[0]);
   pl[1] = mxCreateNumericArray(3,indDims,mxUINT32_CLASS,mxREAL);
-  uint32 *ind = (uint32*) mxGetData(pl[1]);
+  // joint leaf-and-tree index for location (pixel lookup) and tree evaluated
+  uint32 *ind = (uint32*) mxGetData(pl[1]); // h1 x w1 x nTreesEval matrix
 
   // apply forest to all patches and store leaf inds
   #ifdef USEOMP
@@ -109,23 +137,26 @@ void mexFunction( int nl, mxArray *pl[], int nr, const mxArray *pr[] )
         k += t1*nTreeNodes;
       }
       // store leaf index and update edge maps
-      ind[ r + c*h1 + t*h1*w1 ] = k;
+      ind[ r + c*h1 + t*h1*w1 ] = k; // ind[r,c,t]; r in [0,h1); c in [0,w1), t in [0,nTreesEval)
     }
   }
 
-  // compute edge maps (avoiding collisions from parallel executions)
-  for( int c0=0; c0<gtWidth/stride; c0++ ) {
-    #ifdef USEOMP
-    #pragma omp parallel for num_threads(nThreads)
-    #endif
-    for( int c=c0; c<w1; c+=gtWidth/stride ) {
-      for( int r=0; r<h1; r++ ) for( int t=0; t<nTreesEval; t++ ) {
-        uint32 k = ind[ r + c*h1 + t*h1*w1 ];
-        float *E1 = E + (r*stride) + (c*stride)*h2;
-        int b0=eBnds[k], b1=eBnds[k+1]; if(b0==b1) continue;
-        for( int b=b0; b<b1; b++ ) E1[eids[eBins[b]]]++;
+  // compute edge maps
+  if (allPxs) {
+    // iterate the w1*h1 locations, avoiding collisions from parallel executions
+    for( int c0=0; c0<gtWidth/stride; c0++ ) {
+      #ifdef USEOMP
+      #pragma omp parallel for num_threads(nThreads)
+      #endif
+      for( int c=c0; c<w1; c+=gtWidth/stride ) { // the increment of c, through use of c0 is for parallel execution
+        for( int r=0; r<h1; r++ ) {
+          computeEdges(c, r, w1, h1, nTreesEval, stride, h2, E, ind, eBins, eBnds, eids);
+        }
       }
     }
+  } else {
+    int c=x1, r=y1;
+    computeEdges(c, r, w1, h1, nTreesEval, stride, h2, E, ind, eBins, eBnds, eids);
   }
 
   delete [] eids; delete [] cids; delete [] cids1; delete [] cids2;
