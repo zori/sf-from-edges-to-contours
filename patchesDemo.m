@@ -25,21 +25,23 @@ EsDetected=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
 
 while (true)
   clear functions; % clear the persistent vars in getFigPos
-  % get user input and crop patch
+  % get user input
   initFig(1); imagesc(I); axis('image'); title('Choose a patch to crop');
   if exist('x','var'), hold on; plot(x,y,'rx','MarkerSize',20); end
   [x,y]=ginput;
-  % if no patch or more than one patch is selected, stop the interactive demo
+  % if no or more than one location is clicked, stop the interactive demo
   if (length(x)~= 1), close all; return; end
   [x,y]=fixInput(x,y,ri,szOrig(1:2));
   imagesc(I); axis('image'); title('Choose a patch to crop');
   hold on; plot(x,y,'rx','MarkerSize',20);
-  x_ind=uint32(floor(x/2)); y_ind=uint32(floor(y/2));
-  x=uint32(floor(x)); y=uint32(floor(y));
-  initFig(); r0=opts.imWidth/2; % patch radius r=16
-  imagesc(cropPatch(I,x,y,r0)); axis('image'); title('Cropped image patch');
 
-  ids=double(ind(y_ind,x_ind,:)); % indices come from cpp and are 0-based
+  % display image patch
+  initFig(); imagesc(cropPatch(I,x,y,ri)); axis('image'); title('Selected image patch');
+
+  x1=ceil(((x+p(3))-opts.imWidth)/opts.stride)+rg; % rg<=x1<=w1, for w1 see edgesDetectMex.cpp
+  y1=ceil(((y+p(1))-opts.imWidth)/opts.stride)+rg; % rg<=y1<=h1
+	assert((x1==ceil(x/2)) && (y1==ceil(y/2)));
+  ids=double(ind(y1,x1,:)); % indices come from cpp and are 0-based
   treeIds=uint32(floor(ids./nTreeNodes)+1);
   leafIds=uint32(mod(ids,nTreeNodes)+1);
   for k=1:nTreesEval
@@ -52,15 +54,18 @@ while (true)
     if ~isempty(segPs) % only leaves with no more than 40 samples have the patches stored
       initFig(); montage2(cell2array(segPs));
       montage2Title(['Segmentations; tree ' treeStr]);
-      h=initFig(); montage2(imgPs,struct('hasChn', true));
+      initFig(); montage2(imgPs,struct('hasChn', true));
       montage2Title(['Image patches; tree ' treeStr]);
     else
-      h=initFig(); im(T{treeId}.hs(:,:,leafId)); title(['Best segmentation; tree ' treeStr]);
+      initFig(); im(T{treeId}.hs(:,:,leafId)); title(['Best segmentation; tree ' treeStr]);
     end
   end
-  % TODO get the "intermediate" patch - decision made only based on the 4
-  % groups of patches shown here; don't use the result ind of the private mex
-  % function, rather work within it
+  
+  Es4=fooMex(model,chnsReg,chnsSim,x1,y1); % mex-file was private edgesDetectMex(...)
+  Es_4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:); %*t; EsDetected4=convTri(Es_4,1);
+  % initFig(); im(EsDetected4); hold on; plot(x,y,'rx','MarkerSize',20);
+  % TODO why these apparent off-by-ones when cropping the patch; to "remedy" cropping 2px bigger radius; check rounding errors
+  initFig(); im(cropPatch(Es_4,x,y,rg+2)); title('Intermediate decision patch (4 trees voted)');
 
   % patch detected with the decision forest; result based on 16x16x4/4 trees
   % that vote for each pixel
@@ -80,6 +85,7 @@ end % patchesDemo
 function patch = cropPatch(I,x,y,r)
 % crop a patch with radius r from an image I at location [x y]
 % output patch has dimensions [2r x 2r]
+x=uint32(floor(x)); y=uint32(floor(y));
 patch=I(y-r+1:y+r,x-r+1:x+r,:);
 end
 

@@ -68,8 +68,9 @@ void mexFunction( int nl, mxArray *pl[], int nr, const mxArray *pr[] )
   float *chns = (float*) mxGetData(pr[1]);
   float *chnsSs = (float*) mxGetData(pr[2]);
 	bool allPxs = nr == 3;
-  const int x1 = allPxs ? 0 : (int) mxGetScalar(pr[3]) - 1;
-  const int y1 = allPxs ? 0 : (int) mxGetScalar(pr[4]) - 1;
+  // the input parameters are indices that come from matlab; they are 1-based and the following code works with 0-based indices
+  const int x1 = allPxs ? 0 : (int) mxGetScalar(pr[3])-1;
+  const int y1 = allPxs ? 0 : (int) mxGetScalar(pr[4])-1;
 
   // extract relevant fields from model and options
   float *thrs = (float*) mxGetData(mxGetField(model,0,"thrs"));
