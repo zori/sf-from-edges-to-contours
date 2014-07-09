@@ -68,7 +68,7 @@ detOpts={
   'resDir', fullfile(LOG.dsDir, 'test/Ucm2/')};
 
 timerDet=tic;
-segmDetect(model, detOpts);
+segmDetect(model,detOpts);
 detectionTime=toc(timerDet);
 
 %% Benchmark
