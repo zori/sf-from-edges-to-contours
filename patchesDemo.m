@@ -19,9 +19,13 @@ IPadded=imPad(I,p,'symmetric');
 % apply forest to image
 [Es,ind]=fooMex(model,chnsReg,chnsSim); % mex-file was private edgesDetectMex(...)
 % normalize and finalize edge maps
-% t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
-% Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:)*t; EsDetected=convTri(Es_,1);
-EsDetected=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
+t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
+Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:)*t; E=convTri(Es_,1);
+% E=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
+% Superpixelization (over-segmentation)
+ws=label2rgb(watershed(E),'jet',[1 1 1],'shuffle');
+% Ultrametric Contour Map
+ucm=contours2ucm(double(E)/255);
 
 while (true)
   clear functions; % clear the persistent vars in getFigPos
@@ -60,19 +64,21 @@ while (true)
       initFig(); im(T{treeId}.hs(:,:,leafId)); title(['Best segmentation; tree ' treeStr]);
     end
   end
-  
+
+	% Compute the intermediate decision at the given pixel location (of 4 trees)
   Es4=fooMex(model,chnsReg,chnsSim,x1,y1); % mex-file was private edgesDetectMex(...)
-  Es_4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:); %*t; EsDetected4=convTri(Es_4,1);
-  % initFig(); im(EsDetected4); hold on; plot(x,y,'rx','MarkerSize',20);
-  % TODO why these apparent off-by-ones when cropping the patch; to "remedy" cropping 2px bigger radius; check rounding errors
-  initFig(); im(cropPatch(Es_4,x,y,rg+2)); title('Intermediate decision patch (4 trees voted)');
+  E4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
+  % initFig(); im(E4); hold on; plot(x,y,'rx','MarkerSize',20);
+  % TODO why these apparent off-by-ones when cropping the patch; to "remedy" cropping 1px bigger radius; check rounding errors
+  initFig(); im(cropPatch(E4,x,y,rg+1)); title('Intermediate decision patch (4 trees voted)');
 
   % patch detected with the decision forest; result based on 16x16x4/4 trees
   % that vote for each pixel
-  initFig(); im(cropPatch(EsDetected,x,y,rg)); title('SRF decision patch');
+  initFig(); im(cropPatch(E,x,y,rg)); title('SRF decision patch');
   % Superpixelization (over-segmentation patch)
-  ws=label2rgb(watershed(EsDetected),'jet',[1 1 1],'shuffle');
-  h=initFig(); imagesc(cropPatch(ws,x,y,rg)); axis('image'); title('Superpixels patch');
+  initFig(); imagesc(cropPatch(ws,x,y,rg)); axis('image'); title('Superpixels patch');
+  % Ultrametric Contour Map patch
+	h=initFig(); im(cropPatch(ucm,x,y,rg));
 
   % remove all figures that were not created on this iteration
   figHandles=findobj('Type','figure');
