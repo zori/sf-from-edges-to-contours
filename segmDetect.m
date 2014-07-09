@@ -59,28 +59,32 @@ for i=1:n
   end; ids(i).name=ids(i).name(1:end-4); % remove filename extension
 end
 
-% detect edges (and output a seg)
+% detect edges (and output a seg or a ucm)
 if(~exist(resDir,'dir')), mkdir(resDir); end; do=false(1,n);
 for i=1:n, do(i)=~exist([resDir ids(i).video filesep ids(i).name '.png'],'file'); end
 do=find(do); m=length(do);
 % % TODO why non-maximum suppression breaks the watershed?
 % model.opts.nms=1;
-segsCell=cell(1,m);
+outCell=cell(1,m);
 parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   I=imread(fullfile(imDir,id.video,[id.name '.jpg']));
   E=edgesDetect(I,model);
   if (~exist(fullfile(resDir,id.video), 'dir')), mkdir(fullfile(resDir,id.video)); end;
-  % run vanilla watershed and save the (over-)seg
-  ws=watershed(E);
-  segsCell{i}=struct( ...
+%   % run vanilla watershed and save the (over-)seg
+%   ws=watershed(E);
+  % compute a (double-sized) ucm - because we will use it for regions benchmark
+  ucm2=contours2ucm(double(E)/max(E(:)),'doubleSize');
+  outCell{i}=struct( ...
     'file', fullfile(resDir,id.video,[id.name '.mat']), ...
-    'segs', Uintconv(ws));
+    'ucm2', ucm2);
+    % 'segs', Uintconv(ws));
   %   imwrite(uint8(E*255), fullfile(resDir, id.video, [id.name '.png'])); % save probability of boundary (pb)
 end
 
 % TODO can this be done inside the above parfor loop
 for i=1:m
-  segs{1}=segsCell{i}.segs; %#ok<NASGU>
-  save(segsCell{i}.file,'segs');
+  ucm2=outCell{i}.ucm2; %#ok<NASGU>
+	% segs{1}=outCell{i}.segs; %#ok<NASGU>
+  save(outCell{i}.file,'ucm2');
 end
 end
