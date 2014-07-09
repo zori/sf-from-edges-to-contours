@@ -2,11 +2,11 @@
 function contours = fit_contour(nmax)
 
 % extract contours
-[skel, labels, is_v, is_e, assign, vertices, edges, ...
+% mex code prints to standard output; capture and suppress that using evalc
+[~, skel, labels, is_v, is_e, assign, vertices, edges, ...
  v_left, v_right, e_left, e_right, c_left, c_right, ...
  edge_equiv_ids, is_compl, e_x_coords, e_y_coords] = ...
-   mex_contour_sides(nmax,true);
-
+   evalc('mex_contour_sides(nmax,true)');
 
 % store pixel assignment maps
 contours.skel   = skel;
