@@ -78,7 +78,7 @@ while (true)
   % Superpixelization (over-segmentation patch)
   initFig(); imagesc(cropPatch(ws,x,y,rg)); axis('image'); title('Superpixels patch');
   % Ultrametric Contour Map patch
-	h=initFig(); im(cropPatch(ucm,x,y,rg));
+	h=initFig(); im(cropPatch(ucm,x,y,rg)); title('UCM patch');
 
   % remove all figures that were not created on this iteration
   figHandles=findobj('Type','figure');
