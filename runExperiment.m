@@ -1,60 +1,75 @@
 function runExperiment()
 % SRF training and evaluation (using the VSB100 benchmark)
 
-closeParpool=false;
-logging=false;
+LOG.logging=false;
 
+LOG.repoDir='/BS/kostadinova/work/video_segm';
+LOG.evalDir='/BS/kostadinova/work/video_segm_evaluation';
+LOG.dss=struct('name', {'BSDS500' 'VSB100_40' 'VSB100_full' 'VSB100_tiny'},...
+  'isVideo', {false true true true});
+LOG.dsId=2;
+LOG.modelName=[LOG.dss(LOG.dsId).name '_patches'];
+% log directories
+LOG.dsDir=fullfile(LOG.evalDir, LOG.dss(LOG.dsId).name);
+LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');
+if (~exist(LOG.recordingsDir, 'dir')), mkdir(LOG.recordingsDir), end
+LOG.timestamp=datestr(clock,'yyyy-mm-dd_HH-MM-SS'); disp(LOG.timestamp);
+LOG.timestampDir=fullfile(LOG.recordingsDir, LOG.timestamp);
+mkdir(LOG.timestampDir);
 % example log files:
 % video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.txt - git version, runtimes
 % video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.mat - training, detection and benchmark options; benchmark output
+LOG.txtFile=fullfile(LOG.timestampDir, '_recordings.txt');
+LOG.matFile=fullfile(LOG.timestampDir, '_recordings.mat');
+LOG.fid=fopen(LOG.txtFile, 'w');
+save(LOG.matFile,'LOG');
 
-repoDir='/BS/kostadinova/work/video_segm';
-evalDir='/BS/kostadinova/work/video_segm_evaluation';
-dss=struct('name', {'BSDS500' 'VSB100_40' 'VSB100_full' 'VSB100_tiny'},...
-  'isVideo', {false true true true});
-dsId=2;
-LOG.modelName=[dss(dsId).name '_patches'];
-LOG.dsDir=fullfile(evalDir, dss(dsId).name);
-LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');
-LOG.timestamp=datestr(clock,'yyyy-mm-dd_HH-MM-SS');
-LOG.timestampDir=fullfile(LOG.recordingsDir, LOG.timestamp);
-LOG.file=fullfile(LOG.timestampDir, '_recordings.txt');
-LOG.fid=1; % default is stdout
-
-if (logging)
-  disp(LOG.timestamp);
-  if (~exist(LOG.recordingsDir, 'dir')), mkdir(LOG.recordingsDir), end
-  mkdir(LOG.timestampDir), LOG.fid=fopen(LOG.file, 'w');
-end
-cd(repoDir);
+cd(LOG.repoDir);
 [status, gitCommitId]=system('git --no-pager log --format="%H" -n 1');
 if (status), warning('no git repository in %s', pwd); else
   fprintf(LOG.fid, 'Last git commit %s \n', gitCommitId); end
 cd(fileparts(mfilename('fullpath')));
 
 %% Training
+model=edgesTrainWrapper(LOG);
 
+%% Detection
+segmDetectWrapper(model,LOG);
+
+%% Benchmark
+benchmarkWrapper(LOG);
+
+%%
+if (~isempty(gcp('nocreate'))), delete(gcp('nocreate')); end
+fprintf(LOG.fid, '\n'); fclose(LOG.fid);
+end
+
+% ----------------------------------------------------------------------
+function model = edgesTrainWrapper(LOG)
 % set opts for training (see edgesTrain.m)
 trOpts=edgesTrain();                         % default options (good settings)
-trOpts.modelDir=fullfile(repoDir,'models/'); % model will be in models/forest
+trOpts.modelDir=fullfile(LOG.repoDir,'models/'); % model will be in models/forest
 trOpts.modelFnm=['model' LOG.modelName];     % model name
 trOpts.nPos=5e5;                             % decrease to speedup training
 trOpts.nNeg=5e5;                             % decrease to speedup training
-trOpts.useParfor=logging;                    % parallelize if sufficient memory; true iff benchmarking
+trOpts.useParfor=true;                       % parallelize if sufficient memory
 trOpts.dsDir=fullfile(LOG.dsDir, 'train', filesep);
 
 % train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
 if (trOpts.useParfor && isempty(gcp('nocreate')))
-  pool=parpool(12);
-  addAttachedFiles(pool,fullfile(repoDir, 'private/edgesDetectMex.mexw64'));
+  addAttachedFiles(parpool(12),fullfile(LOG.repoDir,'private/edgesDetectMex.mexw64'));
 end
 
 timerTr=tic;
 model=edgesTrain(trOpts); % will load model if already trained
 trainingTime=toc(timerTr);
 
-%% Detection
+fprintf(LOG.fid, 'Training %s \n', seconds2human(trainingTime));
+save(LOG.matFile,'trOpts','-append');
+end
 
+% ----------------------------------------------------------------------
+function model = segmDetectWrapper(model,LOG)
 % set detection parameters (can set after training)
 model.opts.multiscale=false;      % for top accuracy set multiscale=true
 model.opts.nTreesEval=4;          % for top speed set nTreesEval=1
@@ -71,13 +86,17 @@ timerDet=tic;
 segmDetect(model,detOpts);
 detectionTime=toc(timerDet);
 
-%% Benchmark
+fprintf(LOG.fid, 'Detection %s \n', seconds2human(detectionTime));
+save(LOG.matFile,'detOpts','-append');
+end
 
-bmOpts.path=[LOG.dsDir];                      % path to bmOpts.dir
-bmOpts.dir='test';                            % contains the directories `Images', `Groundtruth' and `Ucm2' (computed results of the algorithm of Dollar)
-bmOpts.nthresh=51;                            % number of hierarchical levels to include
-bmOpts.superposeGraph=false;                  % true - new curves are added to the same graph; false - a new graph is initialized
-bmOpts.testTempConsistency=dss(dsId).isVideo; % true iff test set consists of videos
+% ----------------------------------------------------------------------
+function benchmarkWrapper(LOG)
+bmOpts.path=[LOG.dsDir];                              % path to bmOpts.dir
+bmOpts.dir='test';                                    % contains the directories `Images', `Groundtruth' and `Ucm2' (computed results of the algorithm of Dollar)
+bmOpts.nthresh=51;                                    % number of hierarchical levels to include
+bmOpts.superposeGraph=false;                          % true - new curves are added to the same graph; false - a new graph is initialized
+bmOpts.testTempConsistency=LOG.dss(LOG.dsId).isVideo; % true iff test set consists of videos
 % possible benchmark metrics
 metrics={
   'bdry',...       % BPR - Boundary Precision-Recall
@@ -97,16 +116,6 @@ output=Computerpimvid(bmOpts.path, bmOpts.nthresh, bmOpts.dir,...
   bmOpts.metric, [], bmOpts.outDir); %#ok<NASGU>
 benchmarkTime=toc(timerBm);
 
-fprintf(LOG.fid, 'Training %s \nDetection %s \nBenchmark %s\n\n',...
-  seconds2human(trainingTime),...
-  seconds2human(detectionTime),...
-  seconds2human(benchmarkTime));
-
-if (closeParpool && ~isempty(gcp('nocreate'))), delete(gcp('nocreate')); end
-
-if (logging)
-  fclose(LOG.fid);
-  save(fullfile(LOG.timestampDir, '_recordings'),...
-    'trOpts', 'detOpts', 'bmOpts', 'output');
-end
+fprintf(LOG.fid, 'Benchmark %s \n', seconds2human(benchmarkTime));
+save(LOG.matFile,'bmOpts','output','-append');
 end
