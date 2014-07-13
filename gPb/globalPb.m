@@ -1,4 +1,4 @@
-function [gPb_orient, gPb_thin, textons] = globalPb(imgFile, outFile, rsz)
+function [gPb_orient, gPb_thin, textons] = globalPb(imFile, outFile, rsz, dfPb)
 % syntax:
 %   [gPb_orient, gPb_thin, textons] = globalPb(imgFile, outFile, rsz)
 %
@@ -6,9 +6,12 @@ function [gPb_orient, gPb_thin, textons] = globalPb(imgFile, outFile, rsz)
 %   compute Globalized Probability of Boundary of an image.
 %
 % arguments:
-%   imgFile : image file
+%   imFile :  image file
 %   outFile:  mat format (optional)
 %   rsz:      resizing factor in (0,1], to speed-up eigenvector computation
+%   dfPb:     (optional) probability of boundary as output from the decision forest
+%             algorithm (Structured Edge Detector); otherwise use the mPb as in
+%             the Arbelaez algorithm
 %
 % outputs (uint8):
 %   gPb_orient: oriented lobalized probability of boundary.
@@ -24,7 +27,7 @@ if ((rsz<=0) || (rsz>1)),
     error('resizing factor rsz out of range (0,1]');
 end
 
-im = double(imread(imgFile)) / 255;
+im = double(imread(imFile)) / 255;
 [tx, ty, nchan] = size(im);
 orig_sz = [tx, ty];
 
@@ -40,7 +43,14 @@ end
 
 %% sPb
 outFile2 = strcat(outFile, '_pbs.mat');
-[sPb] = spectralPb(mPb_rsz, orig_sz, outFile2);
+if exist('dfPb','var')
+  % our baseline uses the edge detector from Dollar
+  pb = dfPb;
+else
+  % original Arbelaez algorithm uses the multiscale probability of boundary
+  pb = mPb_rsz;
+end
+[sPb] = spectralPb(pb, orig_sz, outFile2);
 delete(outFile2);
 
 %% gPb
