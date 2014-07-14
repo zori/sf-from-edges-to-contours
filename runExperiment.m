@@ -1,8 +1,6 @@
 function runExperiment()
 % SRF training and evaluation (using the VSB100 benchmark)
 
-LOG.logging=false;
-
 LOG.repoDir='/BS/kostadinova/work/video_segm';
 LOG.evalDir='/BS/kostadinova/work/video_segm_evaluation';
 LOG.dss=struct('name', {'BSDS500' 'VSB100_40' 'VSB100_full' 'VSB100_tiny'},...
@@ -128,11 +126,10 @@ plotOpts.path=fullfile(LOG.dsDir, 'test');
 plotOpts.dir='precomputed';
 plotOpts.nthresh=51; % Number of hierarchical levels to include when benchmarking image segmentation
 
-Computerpimvid(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'r',true,[],'all',[],'Output_df_vanilla_watershed_over-seg');
-Computerpimvid(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'b',true,[],'all',[],'Output_df_ucm');
-
 % Computerpimvid(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'k',false,[],'all',[],'Output_general_human');
-% Computerpimvid(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'r',true,[],'all',[],'Output_general_corsoetal');
-% Computerpimvid(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'b',true,[],'all',[],'Output_general_galassoetal');
-% Computerpimvid(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'g',true,[],'all',[],'Output_general_grundmannetal');
+Computerpimvid(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'g',true,[],'all',[],'Output_srf_dollar');
+Computerpimvid(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'b',true,[],'all',[],'Output_df_vanilla_watershed_over-seg');
+Computerpimvid(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'m',true,[],'all',[],'Output_df_ucm');
+Computerpimvid(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'c',true,[],'all',[],'Output_df_and_sPb');
+
 end
