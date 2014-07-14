@@ -7,7 +7,7 @@ LOG.repoDir='/BS/kostadinova/work/video_segm';
 LOG.evalDir='/BS/kostadinova/work/video_segm_evaluation';
 LOG.dss=struct('name', {'BSDS500' 'VSB100_40' 'VSB100_full' 'VSB100_tiny'},...
   'isVideo', {false true true true});
-LOG.dsId=2;
+LOG.dsId=1;
 LOG.modelName=[LOG.dss(LOG.dsId).name '_patches'];
 % log directories
 LOG.dsDir=fullfile(LOG.evalDir, LOG.dss(LOG.dsId).name);
@@ -92,7 +92,7 @@ end
 
 % ----------------------------------------------------------------------
 function benchmarkWrapper(LOG)
-bmOpts.path=[LOG.dsDir];                              % path to bmOpts.dir
+bmOpts.path=LOG.dsDir;                                % path to bmOpts.dir
 bmOpts.dir='test';                                    % contains the directories `Images', `Groundtruth' and `Ucm2' (computed results of the algorithm of Dollar)
 bmOpts.nthresh=51;                                    % number of hierarchical levels to include
 bmOpts.superposeGraph=false;                          % true - new curves are added to the same graph; false - a new graph is initialized
@@ -116,6 +116,23 @@ output=Computerpimvid(bmOpts.path, bmOpts.nthresh, bmOpts.dir,...
   bmOpts.metric, [], bmOpts.outDir); %#ok<NASGU>
 benchmarkTime=toc(timerBm);
 
+plotContext(LOG);
+
 fprintf(LOG.fid, 'Benchmark %s \n', seconds2human(benchmarkTime));
 save(LOG.matFile,'bmOpts','output','-append');
+end
+
+% ----------------------------------------------------------------------
+function plotContext(LOG)
+plotOpts.path=fullfile(LOG.dsDir, 'test');
+plotOpts.dir='precomputed';
+plotOpts.nthresh=51; % Number of hierarchical levels to include when benchmarking image segmentation
+
+Computerpimvid(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'r',true,[],'all',[],'Output_df_vanilla_watershed_over-seg');
+Computerpimvid(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'b',true,[],'all',[],'Output_df_ucm');
+
+% Computerpimvid(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'k',false,[],'all',[],'Output_general_human');
+% Computerpimvid(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'r',true,[],'all',[],'Output_general_corsoetal');
+% Computerpimvid(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'b',true,[],'all',[],'Output_general_galassoetal');
+% Computerpimvid(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'g',true,[],'all',[],'Output_general_grundmannetal');
 end
