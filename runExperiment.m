@@ -108,8 +108,8 @@ bmOpts.metric=metrics{end};
 bmOpts.outDir=fullfile('recordings', LOG.timestamp);
 
 timerBm=tic;
-% Computerpimvid computes the Precision-Recall curves
-output=Computerpimvid(bmOpts.path, bmOpts.nthresh, bmOpts.dir,...
+% ComputeRP computes the Precision-Recall curves
+output=ComputeRP(bmOpts.path, bmOpts.nthresh, bmOpts.dir,...
   false, 0, 'r', bmOpts.superposeGraph, bmOpts.testTempConsistency,...
   bmOpts.metric, [], bmOpts.outDir); %#ok<NASGU>
 benchmarkTime=toc(timerBm);
@@ -126,10 +126,10 @@ plotOpts.path=fullfile(LOG.dsDir, 'test');
 plotOpts.dir='precomputed';
 plotOpts.nthresh=51; % Number of hierarchical levels to include when benchmarking image segmentation
 
-% Computerpimvid(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'k',false,[],'all',[],'Output_general_human');
-Computerpimvid(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'g',true,[],'all',[],'Output_srf_dollar');
-Computerpimvid(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'b',true,[],'all',[],'Output_df_vanilla_watershed_over-seg');
-Computerpimvid(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'m',true,[],'all',[],'Output_df_ucm');
-Computerpimvid(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'c',true,[],'all',[],'Output_df_and_sPb');
+% ComputeRP(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'k',false,[],'all',[],'Output_general_human');
+ComputeRP(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'g',true,[],'all',[],'Output_srf_dollar');
+ComputeRP(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'b',true,[],'all',[],'Output_df_vanilla_watershed_over-seg');
+ComputeRP(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'m',true,[],'all',[],'Output_df_ucm');
+ComputeRP(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'c',true,[],'all',[],'Output_df_and_sPb');
 
 end

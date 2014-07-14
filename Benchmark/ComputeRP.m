@@ -1,5 +1,8 @@
-function output=Computerpimvid(filenames,nthresh,additionalmasname,requestdelconf,minimumimagenumber,curvecolor,plotsuperpose,considervideos,bmetrics,justavideo,outputdir)
-%Computerpimvid(filenames,99,'tttttSegm',true,0,true,'r')
+function output=ComputeRP(filenames,nthresh,additionalmasname,requestdelconf,minimumimagenumber,curvecolor,plotsuperpose,considervideos,bmetrics,justavideo,outputdir)
+% ComputeRP(filenames,99,'tttttSegm',true,0,true,'r')
+% computes recall and precision for images or videos and plots the curves for
+% the corresponding metrics
+%
 % Fabio Galasso
 % February 2014
 
