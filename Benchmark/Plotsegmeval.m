@@ -48,7 +48,7 @@ if (exist(fullfile(outDir,'eval_bdry_globalthr.txt'),'file'))
         title('Boundary Global PR Curve'); %Just the value corresponding to the maxmimum F is plotted, i.e. G-ODS
     end
     hold off
-    saveas(gcf,fullfile(outDir,'BPR'),'jpg');
+    saveas(gcf,fullfile(outDir,'_BPR'),'jpg');
     
     fprintf('Boundary PR global\n');
     fprintf('   G-ODS: F( R %1.2f, P %1.2f ) = %1.2f   [th = %1.2f]\n',evalRes(2:4),evalRes(1));
@@ -81,7 +81,7 @@ if (exist(fullfile(outDir,'eval_regpr_globalthr.txt'),'file'))
         title('Volume Global PR Curve'); %Just the value corresponding to the maxmimum F is plotted, i.e. G-ODS
     end
     hold off
-    saveas(gcf,fullfile(outDir,'VPR'),'jpg');
+    saveas(gcf,fullfile(outDir,'_VPR'),'jpg');
     
     fprintf('Volume PR global\n');
     fprintf('   G-ODS: F( R %1.2f, P %1.2f ) = %1.2f   [th = %1.2f]\n',evalRes(2:4),evalRes(1));
@@ -141,7 +141,7 @@ if ( (exist(fullfile(outDir,'eval_regpr_avgthr.txt'),'file')) && (exist(fullfile
                 title('Length Precision Curve Global');
             end
             hold off
-            saveas(gcf,fullfile(outDir,'length_precision'),'jpg');
+            saveas(gcf,fullfile(outDir,'_length_precision'),'jpg');
         
         [val,idx]=sort( abs( lengthvals(:,1)-repmat(evalRes(1),size(lengthvals,1),1) ) , 'ascend'); %#ok<ASGLU>
         fprintf('Length stats with Volume PR global\n');
@@ -177,7 +177,7 @@ if ( (exist(fullfile(outDir,'eval_regpr_avgthr.txt'),'file')) && (exist(fullfile
                 title('Ncluster Precision Curve Global');
             end
             hold off
-            saveas(gcf,fullfile(outDir,'ncluster_precision'),'jpg');
+            saveas(gcf,fullfile(outDir,'_ncluster_precision'),'jpg');
 
 
         [val,idx]=sort( abs( nclustervals(:,1)-repmat(evalRes(1),size(nclustervals,1),1) ) , 'ascend'); %#ok<ASGLU>
