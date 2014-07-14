@@ -67,13 +67,21 @@ do=find(do); m=length(do);
 % model.opts.nms=1;
 outCell=cell(1,m);
 parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
-  I=imread(fullfile(imDir,id.video,[id.name '.jpg']));
+  imFile=fullfile(imDir,id.video,[id.name '.jpg']);
+  I=imread(imFile);
   E=edgesDetect(I,model);
   if (~exist(fullfile(resDir,id.video), 'dir')), mkdir(fullfile(resDir,id.video)); end;
 %   % run vanilla watershed and save the (over-)seg
 %   ws=watershed(E);
   % compute a (double-sized) ucm - because we will use it for regions benchmark
   ucm2=contours2ucm(double(E)/max(E(:)),'doubleSize');
+  % convert ucm to the size of the original image
+  ucm_dfPb = ucm2(3:2:end, 3:2:end);
+  [SRF_gPb_orient, ~, ~] = globalPb(imFile,'', 1.0, ucm_dfPb);
+  SRF_S=max(SRF_gPb_orient,[],3);
+  % for regions
+  ucm2=contours2ucm(SRF_S,'doubleSize');
+  
   outCell{i}=struct( ...
     'file', fullfile(resDir,id.video,[id.name '.mat']), ...
     'ucm2', ucm2);
