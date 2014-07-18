@@ -1,3 +1,5 @@
+% Zornitsa Kostadinova
+% Jun 2014
 function patchesDemo(model,T)
 assert(~isempty(model) && ~isempty(T));
 
