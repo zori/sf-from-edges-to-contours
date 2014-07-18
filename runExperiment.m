@@ -1,3 +1,5 @@
+% Zornitsa Kostadinova
+% Jun 2014
 function runExperiment()
 % SRF training and evaluation (using the VSB100 benchmark)
 
@@ -36,6 +38,9 @@ segmDetectWrapper(model,LOG);
 
 %% Benchmark
 benchmarkWrapper(LOG);
+
+%% Optionally, plot additionally precomputed results from other algorithms
+plotContext(LOG);
 
 %%
 if (~isempty(gcp('nocreate'))), delete(gcp('nocreate')); end
@@ -90,31 +95,13 @@ end
 
 % ----------------------------------------------------------------------
 function benchmarkWrapper(LOG)
-bmOpts.path=LOG.dsDir;                                % path to bmOpts.dir
-bmOpts.dir='test';                                    % contains the directories `Images', `Groundtruth' and `Ucm2' (computed results of the algorithm of Dollar)
-bmOpts.nthresh=51;                                    % number of hierarchical levels to include
-bmOpts.superposeGraph=false;                          % true - new curves are added to the same graph; false - a new graph is initialized
-bmOpts.testTempConsistency=LOG.dss(LOG.dsId).isVideo; % true iff test set consists of videos
-% possible benchmark metrics
-metrics={
-  'bdry',...       % BPR - Boundary Precision-Recall
-  'regpr',...      % VPR - Volumetric Precision-Recall
-  'sc',...         % SC  - Segmentation Covering
-  'pri',...        % PRI - Probabilistic Rand Index
-  'vi',...         % VI  - Variation of Information
-  'lengthsncl',... % length statistics and number of clusters
-  'all'};          % computes all available
-bmOpts.metric=metrics{end};
-bmOpts.outDir=fullfile('recordings', LOG.timestamp);
+bmOpts={'path',LOG.dsDir,'dirR','test',...
+  'outDirR',fullfile('recordings', LOG.timestamp),...
+  'tempConsistency',LOG.dss(LOG.dsId).isVideo,'nthresh',51};
 
 timerBm=tic;
-% ComputeRP computes the Precision-Recall curves
-output=ComputeRP(bmOpts.path, bmOpts.nthresh, bmOpts.dir,...
-  false, 0, 'r', bmOpts.superposeGraph, bmOpts.testTempConsistency,...
-  bmOpts.metric, [], bmOpts.outDir); %#ok<NASGU>
+output=ComputeRP(bmOpts); %#ok<NASGU>
 benchmarkTime=toc(timerBm);
-
-plotContext(LOG);
 
 fprintf(LOG.fid, 'Benchmark %s \n', seconds2human(benchmarkTime));
 save(LOG.matFile,'bmOpts','output','-append');
@@ -122,14 +109,27 @@ end
 
 % ----------------------------------------------------------------------
 function plotContext(LOG)
-plotOpts.path=fullfile(LOG.dsDir, 'test');
-plotOpts.dir='precomputed';
-plotOpts.nthresh=51; % Number of hierarchical levels to include when benchmarking image segmentation
+plotOpts=struct('path',fullfile(LOG.dsDir,'test'),'dirR','precomputed',...
+  'outDirR',fullfile('recordings', LOG.timestamp),...
+  'tempConsistency',LOG.dss(LOG.dsId).isVideo,...
+  'nthresh',51,'superposePlot',true);
 
-% ComputeRP(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'k',false,[],'all',[],'Output_general_human');
-ComputeRP(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'g',true,[],'all',[],'Output_srf_dollar');
-ComputeRP(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'b',true,[],'all',[],'Output_df_vanilla_watershed_over-seg');
-ComputeRP(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'m',true,[],'all',[],'Output_df_ucm');
-ComputeRP(plotOpts.path,plotOpts.nthresh,plotOpts.dir,false,0,'c',true,[],'all',[],'Output_df_and_sPb');
+% TODO add avg human agreement ComputeRP(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'k',false,[],'all',[],'Output_general_human');
+% directories, labels and colors for the precomputed results
+data=struct('outDir',{'Output_srf_dollar','Output_df_vanilla_watershed_over-seg','Output_df_ucm','Output_df_and_sPb'},...
+  'legend',{'DF structured edge','DF Watershed Over-segmentation','UCM','DF + sPb'},...
+  'color',{'g','b','m','r.'});
 
+for k=1:length(data)
+  plotOpts.curveColor=data(k).color;
+  plotOpts.outDirR=data(k).outDir;
+  [~,fhs]=ComputeRP(plotOpts);
+end
+for k=1:length(fhs)
+  figure(fhs(k));
+  legend(data.legend,'Location','NorthEastOutside');
+  figTitle=get(get(gca,'Title'),'String');
+  fileName=strrep(figTitle,' ','_');
+  saveas(gcf,fullfile(plotOpts.path,plotOpts.dirR,['_',fileName]),'jpg');
+end
 end
