@@ -1,15 +1,15 @@
-function Removetheoutputimvid(filenames,additionalmasname,outputdir)
+function Removetheoutputimvid(path_,dirR,outDirR)
 
-if (~exist('outputdir','var'))
-    outputdir=[]; %The default directory in additionalmasname is defined in the function Benchmarkcreateoutimvid
+if (~exist('outDirR','var'))
+  outDirR=[]; %The default directory in dirR is defined in the function Benchmarkcreateoutimvid
 end
 
-[sbenchmarkdir,outDir,isvalid] = Benchmarkcreateoutimvid(filenames, additionalmasname, true, outputdir); %#ok<ASGLU>
+[~,outDirA,isvalid] = Benchmarkcreateoutimvid(path_, dirR, true, outDirR);
 
 if (isvalid)
-    rmdir(outDir,'s')
-    fprintf('Dir %s removed\n',outDir);
+  rmdir(outDirA,'s')
+  fprintf('Dir %s removed\n',outDirA);
 else
-    fprintf('Dir %s not removed (non existing)\n',outDir);
+  fprintf('Dir %s not removed (non existing)\n',outDirA);
 end
 

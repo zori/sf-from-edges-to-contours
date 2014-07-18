@@ -1,27 +1,21 @@
-function [sbenchmarkdir,imgDir,gtDir,inDir,isvalid] = Benchmarkcreatedirsimvid(filenames, additionalmasname, onlyassignnames)
-%imgDir images (for name listing), gtDir ground truth, inDir ucm2, outDir output
+function [dirA,imDir,gtDir,inDir,isvalid] = Benchmarkcreatedirsimvid(path_, dirR, onlyassignnames)
+% imDir images (for name listing), gtDir ground truth, inDir ucm2, outDir output
 
 if ( (~exist('onlyassignnames','var')) || (isempty(onlyassignnames)) )
-    onlyassignnames=false;
+  onlyassignnames=false;
 end
 
 isvalid=true;
 if (onlyassignnames)
-    
-    [sbenchmarkdir,isvalidtmp] = Checkadir([filenames.benchmark,additionalmasname,filesep]); isvalid=isvalid&isvalidtmp;
-    [imgDir,isvalidtmp] = Checkadir([sbenchmarkdir,'Images',filesep]);                    isvalid=isvalid&isvalidtmp;
-    [gtDir,isvalidtmp] = Checkadir([sbenchmarkdir,'Groundtruth',filesep]);                isvalid=isvalid&isvalidtmp;
-    [inDir,isvalidtmp] = Checkadir([sbenchmarkdir,'Ucm2',filesep]);                       isvalid=isvalid&isvalidtmp;
-    
+  [dirA,isvalidtmp] = Checkadir(fullfile(path_.benchmark,dirR)); isvalid=isvalid&isvalidtmp;
+  [imDir,isvalidtmp] = Checkadir(fullfile(dirA,'Images')); isvalid=isvalid&isvalidtmp;
+  [gtDir,isvalidtmp] = Checkadir(fullfile(dirA,'Groundtruth')); isvalid=isvalid&isvalidtmp;
+  [inDir,isvalidtmp] = Checkadir(fullfile(dirA,'Ucm2')); isvalid=isvalid&isvalidtmp;
 else
-    
-    Createadir(filenames.benchmark);
-    
-    sbenchmarkdir = Createadir([filenames.benchmark,additionalmasname,filesep]);
-    imgDir = Createadir([sbenchmarkdir,'Images',filesep]);
-    gtDir = Createadir([sbenchmarkdir,'Groundtruth',filesep]);
-    inDir = Createadir([sbenchmarkdir,'Ucm2',filesep]);
-    
-    %Additionally isvalid could be generated in Createdir
+  Createadir(path_.benchmark);
+  dirA = Createadir(fullfile(path_.benchmark,dirR));
+  imDir = Createadir(fullfile(dirA,'Images'));
+  gtDir = Createadir(fullfile(dirA,'Groundtruth'));
+  inDir = Createadir(fullfile(dirA,'Ucm2'));
+  %Additionally isvalid could be generated in Createadir
 end
-

@@ -1,29 +1,20 @@
-function [sbenchmarkdir,outDir,isvalid] = Benchmarkcreateoutimvid(filenames, additionalmasname, onlyassignnames, outputdir)
-%imgDir images (for name listing), gtDir ground truth, inDir ucm2, outDir output
+function [dirA,outDirA,isvalid] = Benchmarkcreateoutimvid(path_, dirR, onlyassignnames, outDirR)
 
-if ( (~exist('outputdir','var')) || (isempty(outputdir)) )
-    outputdir='Output';
+if ( (~exist('outDirR','var')) || (isempty(outDirR)) )
+  outDirR='Output';
 end
 if ( (~exist('onlyassignnames','var')) || (isempty(onlyassignnames)) )
-    onlyassignnames=false;
+  onlyassignnames=false;
 end
 
 isvalid=true;
 if (onlyassignnames)
-    
-    [sbenchmarkdir,isvalidbench] = Checkadir([filenames.benchmark,additionalmasname,filesep]); isvalid=isvalid&isvalidbench;
-                                                                                              
-    [outDir,isvalidtmp] = Checkadir([sbenchmarkdir,outputdir,filesep]);                    isvalid=isvalid&isvalidtmp;
-    
-    %outDir does not to exist
+  [dirA,isvalidbench] = Checkadir(fullfile(path_.benchmark,dirR)); isvalid=isvalid&isvalidbench;
+  [outDirA,isvalidtmp] = Checkadir(fullfile(dirA,outDirR)); isvalid=isvalid&isvalidtmp;
+  % outDirR does not to exist
 else
-    
-    Createadir(filenames.benchmark);
-    
-    sbenchmarkdir = Createadir([filenames.benchmark,additionalmasname,filesep]);
-
-    outDir = Createadir([sbenchmarkdir,outputdir,filesep]);
-    
-    %Additionally isvalid could be generated in Createdir
+  Createadir(path_.benchmark);
+  dirA = Createadir(fullfile(path_.benchmark,dirR));
+  outDirA = Createadir(fullfile(dirA,outDirR));
+  % Additionally isvalid could be generated in Createadir
 end
-

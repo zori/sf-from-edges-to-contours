@@ -1,11 +1,11 @@
-function Removebenchmarkdirimvid(filenames,additionalmasname)
+function Removebenchmarkdirimvid(path_,dirR)
 
-[sbenchmarkdir,imgDir,gtDir,inDir,isvalid] = Benchmarkcreatedirsimvid(filenames, additionalmasname, true); %#ok<ASGLU>
+[dirA,~,~,~,isvalid] = Benchmarkcreatedirsimvid(path_, dirR, true);
 
 if (isvalid)
-    rmdir(sbenchmarkdir,'s')
-    fprintf('Dir %s removed\n',sbenchmarkdir);
+  rmdir(dirA,'s')
+  fprintf('Dir %s removed\n',dirA);
 else
-    fprintf('Dir %s not removed (non existing)\n',sbenchmarkdir);
+  fprintf('Dir %s not removed (non existing)\n',dirA);
 end
 
