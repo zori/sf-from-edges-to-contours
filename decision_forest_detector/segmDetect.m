@@ -63,11 +63,11 @@ end
 if(~exist(resDir,'dir')), mkdir(resDir); end; do=false(1,n);
 for i=1:n, do(i)=~exist([resDir ids(i).video filesep ids(i).name '.png'],'file'); end
 do=find(do);
-detect(type, model,imDir,resDir,ids,do);
+detect('ucm2', model,imDir,resDir,ids,do);
 end
 
-function detect(type, model, imDir, resDir, ids, do)
-switch type
+function detect(outType, model, imDir, resDir, ids, do)
+switch outType
   case 'edge'
     detectEdge(model,imDir,resDir,ids,do);
   case 'segs'
