@@ -8,6 +8,9 @@ function [output,fhs]=ComputeRP(varargin)
 %
 % Fabio Galasso
 % February 2014
+%
+% modified by Zornitsa Kostadinova
+% Jun 2014
 
 % possible benchmark metrics
 metrics={

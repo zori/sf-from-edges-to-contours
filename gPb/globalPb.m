@@ -20,6 +20,10 @@ function [gPb_orient, gPb_thin, textons] = globalPb(imFile, outFile, rsz, dfPb)
 %
 % Pablo Arbelaez <arbelaez@eecs.berkeley.edu>
 % December 2010
+%
+% modified by Zornitsa Kostadinova
+% Jun 2014
+
 if nargin<3, rsz = 1.0; end
 if nargin<2, outFile = ''; end
 
