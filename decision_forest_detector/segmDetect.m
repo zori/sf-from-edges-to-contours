@@ -62,37 +62,88 @@ end
 % detect edges (and output a seg or a ucm)
 if(~exist(resDir,'dir')), mkdir(resDir); end; do=false(1,n);
 for i=1:n, do(i)=~exist([resDir ids(i).video filesep ids(i).name '.png'],'file'); end
-do=find(do); m=length(do);
-% % TODO why non-maximum suppression breaks the watershed?
+do=find(do);
+detect(type, model,imDir,resDir,ids,do);
+end
+
+function detect(type, model, imDir, resDir, ids, do)
+switch type
+  case 'edge'
+    detectEdge(model,imDir,resDir,ids,do);
+  case 'segs'
+    detectSegs(model,imDir,resDir,ids,do);
+  case 'ucm2'
+    detectUcm2(model,imDir,resDir,ids,do);
+  otherwise
+    warning('Unexpected output type. No output created.');
+end
+end
+
+% ----------------------------------------------------------------------
+function detectEdge(model, imDir, resDir, ids, do)
+m=length(do);
+model.opts.nms=1;
+parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
+  imFile=fullfile(imDir,id.video,[id.name '.jpg']);
+  I=imread(imFile);
+  E=edgesDetect(I,model);
+  if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
+  imwrite(uint8(E*255),fullfile(resDir,id.video,[id.name '.png'])); % save probability of boundary (pb)
+end
+end
+
+% ----------------------------------------------------------------------
+function detectSegs(model, imDir, resDir, ids, do)
+m=length(do);
+% TODO why non-maximum suppression breaks the watershed?
 % model.opts.nms=1;
 outCell=cell(1,m);
 parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   imFile=fullfile(imDir,id.video,[id.name '.jpg']);
   I=imread(imFile);
   E=edgesDetect(I,model);
-  if (~exist(fullfile(resDir,id.video), 'dir')), mkdir(fullfile(resDir,id.video)); end;
-%   % run vanilla watershed and save the (over-)seg
-%   ws=watershed(E);
-  % compute a (double-sized) ucm - because we will use it for regions benchmark
-  ucm2=contours2ucm(double(E)/max(E(:)),'doubleSize');
-  % convert ucm to the size of the original image
-  ucm_dfPb = ucm2(3:2:end, 3:2:end);
-  [SRF_gPb_orient, ~, ~] = globalPb(imFile,'', 1.0, ucm_dfPb);
-  SRF_S=max(SRF_gPb_orient,[],3);
-  % for regions
-  ucm2=contours2ucm(SRF_S,'doubleSize');
-  
+  if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
+  % run vanilla watershed and save the (over-)seg
+  ws=watershed(E);  
   outCell{i}=struct( ...
     'file', fullfile(resDir,id.video,[id.name '.mat']), ...
-    'ucm2', ucm2);
-    % 'segs', Uintconv(ws));
-  %   imwrite(uint8(E*255), fullfile(resDir, id.video, [id.name '.png'])); % save probability of boundary (pb)
+    'segs', Uintconv(ws));
 end
 
 % TODO can this be done inside the above parfor loop
 for i=1:m
+	segs{1}=outCell{i}.segs; %#ok<NASGU>
+  save(outCell{i}.file,'segs');
+end
+end
+
+% ----------------------------------------------------------------------
+function detectUcm2(model, imDir, resDir, ids, do)
+m=length(do);
+% TODO why non-maximum suppression breaks the watershed?
+% model.opts.nms=1;
+outCell=cell(1,m);
+parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
+  imFile=fullfile(imDir,id.video,[id.name '.jpg']);
+  I=imread(imFile);
+  E=edgesDetect(I,model);
+  if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
+  % compute a (double-sized) ucm - because we will use it for regions benchmark
+  ucm2=contours2ucm(double(E)/max(E(:)),'doubleSize');
+  % TODO isn-t it important to pass a double ucm to globalPb here?
+  % convert ucm to the size of the original image
+  ucm_dfPb = ucm2(3:2:end,3:2:end); % TODO comment
+  [SRF_gPb_orient, ~, ~] = globalPb(imFile,'',1.0,ucm_dfPb); % TODO ucm2
+  SRF_S=max(SRF_gPb_orient,[],3);
+  % for regions
+  ucm2=contours2ucm(SRF_S,'doubleSize'); % TODO imageSize
+  outCell{i}=struct( ...
+    'file', fullfile(resDir,id.video,[id.name '.mat']), ...
+    'ucm2', ucm2);
+end
+
+for i=1:m
   ucm2=outCell{i}.ucm2; %#ok<NASGU>
-	% segs{1}=outCell{i}.segs; %#ok<NASGU>
   save(outCell{i}.file,'ucm2');
 end
 end
