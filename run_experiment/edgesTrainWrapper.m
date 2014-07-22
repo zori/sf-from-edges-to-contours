@@ -12,7 +12,7 @@ trOpts.dsDir=fullfile(LOG.dsDir, 'train', filesep);
 
 % train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
 if (trOpts.useParfor && isempty(gcp('nocreate')))
-  addAttachedFiles(parpool(12),fullfile(LOG.repoDir,'decision_forest_detector/private/edgesDetectMex.mexa64'));
+  addAttachedFiles(parpool(12),fullfile(LOG.repoDir,'sf_detector/private/edgesDetectMex.mexa64'));
 end
 
 timerTr=tic;
