@@ -1,4 +1,4 @@
-function [gPb_orient, gPb_thin, textons] = globalPb(imFile, outFile, rsz, dfPb)
+function [gPb_orient, gPb_thin, textons] = globalPb(imFile, outFile, rsz, sfPb)
 % syntax:
 %   [gPb_orient, gPb_thin, textons] = globalPb(imgFile, outFile, rsz)
 %
@@ -9,7 +9,7 @@ function [gPb_orient, gPb_thin, textons] = globalPb(imFile, outFile, rsz, dfPb)
 %   imFile :  image file
 %   outFile:  mat format (optional)
 %   rsz:      resizing factor in (0,1], to speed-up eigenvector computation
-%   dfPb:     (optional) probability of boundary as output from the decision forest
+%   sfPb:     (optional) probability of boundary as output from the structured forest
 %             algorithm (Structured Edge Detector); otherwise use the mPb as in
 %             the Arbelaez algorithm
 %
@@ -47,9 +47,9 @@ end
 
 %% sPb
 outFile2 = strcat(outFile, '_pbs.mat');
-if exist('dfPb','var')
+if exist('sfPb','var')
   % our baseline uses the edge detector from Dollar
-  pb = dfPb;
+  pb = sfPb;
 else
   % original Arbelaez algorithm uses the multiscale probability of boundary
   pb = mPb_rsz;
