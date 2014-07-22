@@ -1,5 +1,5 @@
 % extract contours and neighboring regions given non-max suppressed edge map
-function contours = fit_contour(nmax)
+function contours = fit_contour(nmax) %#ok<INUSD>
 
 % extract contours
 % mex code prints to standard output; capture and suppress that using evalc

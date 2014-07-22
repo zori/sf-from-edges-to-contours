@@ -2,10 +2,11 @@ function [bg1, bg2, bg3, cga1, cga2, cga3, cgb1, cgb2, cgb3, tg1, tg2, tg3, text
 % compute image gradients. Implementation by Michael Maire.
 
 % compute pb parts
-[ ...
+% mex code prints to standard output; capture and suppress that using evalc
+[~, ...
     textons, ...
     bg_r3, bg_r5,  bg_r10,  cga_r5, cga_r10, cga_r20, cgb_r5, cgb_r10, cgb_r20, tg_r5,  tg_r10,  tg_r20...
-    ] = mex_pb_parts_final_selected(im(:,:,1),im(:,:,2),im(:,:,3));
+    ] = evalc('mex_pb_parts_final_selected(im(:,:,1),im(:,:,2),im(:,:,3))');
 
 [sx sy sz] = size(im);
 temp = zeros([sx sy 8]);
@@ -40,4 +41,4 @@ for r = [5 10 20]
     end
     eval(['tg_r' num2str(r) ' = temp;']);
 end
-tg1 = tg_r5; tg2 = tg_r10;  tg3 = tg_r20; 
+tg1 = tg_r5; tg2 = tg_r10;  tg3 = tg_r20;

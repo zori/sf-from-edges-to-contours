@@ -20,13 +20,13 @@ else
 end
 
 % get gradients
-tic;
+% tic;
 [bg1, bg2, bg3, cga1, cga2, cga3, cgb1, cgb2, cgb3, tg1, tg2, tg3, textons] = det_mPb(im);
-fprintf('Local cues: %g\n', toc);
+% fprintf('Local cues: %g\n', toc);
 
 % smooth cues
 gtheta = [1.5708    1.1781    0.7854    0.3927   0    2.7489    2.3562    1.9635];
-tic;
+% tic;
 filters = make_filters([3 5 10 20], gtheta);
 for o = 1 : size(tg1, 3),
     bg1(:,:,o) = fitparab(bg1(:,:,o),3,3/4,gtheta(o),filters{1,o});
@@ -46,7 +46,7 @@ for o = 1 : size(tg1, 3),
     tg3(:,:,o) = fitparab(tg3(:,:,o),20,20/4,gtheta(o),filters{4,o});
 
 end
-fprintf('Cues smoothing: %g\n', toc);
+% fprintf('Cues smoothing: %g\n', toc);
 
 
 % compute mPb at full scale
