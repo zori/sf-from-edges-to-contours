@@ -12,6 +12,8 @@ function [] = segmDetect( model, varargin )
 %   .nThresh    - [99] number of thresholds for evaluation
 %   .imDir      - [] directory of dataset - images
 %   .gtDir      - [] directory of dataset - groundtruth
+%   .resDir     . [] directory for the computed output
+%   .outType    - ['seg'] type of output; 'edge', 'seg', 'ucm' or 'sPb'
 %   .stride     - [] stride at which to compute edges
 %   .nTreesEval - [] number of trees to evaluate per location
 %   .multiscale - [] if true run multiscale edge detector
@@ -30,9 +32,8 @@ function [] = segmDetect( model, varargin )
 
 % get default parameters
 dfs={
-  'nThresh',99, 'imDir','REQ', 'gtDir', 'REQ', ...
-  'resDir', 'REQ', 'stride',[], ...
-  'nTreesEval',[], 'multiscale',[], 'pDistr',{{'type','parfor'}}
+  'nThresh',99, 'imDir','REQ', 'gtDir', 'REQ', 'resDir','REQ', 'outType','seg',...
+  'stride',[], 'nTreesEval',[], 'multiscale',[], 'pDistr',{{'type','parfor'}}
   };
 p=getPrmDflt(varargin,dfs,1);
 if( ischar(model) ), model=load(model); model=model.model; end
@@ -43,6 +44,7 @@ if( ~isempty(p.multiscale) ), model.opts.multiscale=p.multiscale; end
 imDir=p.imDir; assert(exist(imDir,'dir')==7);
 gtDir=p.gtDir; assert(exist(gtDir,'dir')==7);
 resDir=p.resDir;
+outType=p.outType;
 
 % get input image ids
 ids_=Listacrossfolders(imDir,'jpg',1); ids_={ids_.name}; n=length(ids_);
@@ -63,15 +65,15 @@ end
 if(~exist(resDir,'dir')), mkdir(resDir); end; do=false(1,n);
 for i=1:n, do(i)=~exist([resDir ids(i).video filesep ids(i).name '.png'],'file'); end
 do=find(do);
-detect('sPb', model,imDir,resDir,ids,do);
+detect(outType, model,imDir,resDir,ids,do);
 end
 
 function detect(outType, model, imDir, resDir, ids, do)
 switch outType
   case 'edge'
     detectEdge(model,imDir,resDir,ids,do);
-  case 'segs'
-    detectSegs(model,imDir,resDir,ids,do);
+  case 'seg'
+    detectSeg(model,imDir,resDir,ids,do);
   case 'ucm'
     detectUcm(model,imDir,resDir,ids,do);
   case 'sPb'
@@ -95,7 +97,7 @@ end
 end
 
 % ----------------------------------------------------------------------
-function detectSegs(model, imDir, resDir, ids, do)
+function detectSeg(model, imDir, resDir, ids, do)
 m=length(do);
 % TODO why non-maximum suppression breaks the watershed?
 % model.opts.nms=1;
