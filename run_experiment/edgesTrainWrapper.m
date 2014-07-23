@@ -10,12 +10,8 @@ trOpts.nNeg=5e5;                             % decrease to speedup training
 trOpts.useParfor=true;                       % parallelize if sufficient memory
 trOpts.dsDir=fullfile(LOG.dsDir, 'train', filesep);
 
-% train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
-if (trOpts.useParfor && isempty(gcp('nocreate')))
-  addAttachedFiles(parpool(12),fullfile(LOG.repoDir,'sf_detector/private/edgesDetectMex.mexa64'));
-end
-
 timerTr=tic;
+% train edge detector (~30m/15Gb per tree, proportional to nPos/nNeg)
 model=edgesTrain(trOpts); % will load model if already trained
 trainingTime=toc(timerTr);
 

@@ -105,6 +105,10 @@ forestFn=fullfile(forestDir, opts.modelFnm);
 if(exist([forestFn '.mat'], 'file'))
   load([forestFn '.mat']); return; end
 
+if (opts.useParfor && isempty(gcp('nocreate')))
+  addAttachedFiles(parpool(8),fullfile(LOG.repoDir,'sf_detector/private/edgesDetectMex.mexa64'));
+end
+
 % compute constants and store in opts
 nTrees=opts.nTrees; nCells=opts.nCells; shrink=opts.shrink;
 opts.nPos=round(opts.nPos); opts.nNeg=round(opts.nNeg);
