@@ -5,16 +5,22 @@ function runExperiment()
 
 LOG.repoDir='/BS/kostadinova/work/video_segm';
 LOG.evalDir='/BS/kostadinova/work/video_segm_evaluation';
-LOG.dss=struct('name', {'BSDS500' 'VSB100_40' 'VSB100_full' 'VSB100_tiny'},...
-  'isVideo', {false true true true});
-LOG.dsId=1;
-LOG.modelName=[LOG.dss(LOG.dsId).name '_patches'];
+dss=[...
+  struct('name','BSDS500','isVideo',false),...
+  struct('name','VSB100_40','isVideo',true),...
+  struct('name','VSB100_full','isVideo',true),...
+  struct('name','VSB100_tiny','isVideo',true),...
+  ];
+dsName='BSDS500';
+LOG.ds=dss(strcmp({dss.name},dsName));
+LOG.modelName=[LOG.ds.name '_patches'];
 % log directories
-LOG.dsDir=fullfile(LOG.evalDir, LOG.dss(LOG.dsId).name);
+LOG.dsDir=fullfile(LOG.evalDir, LOG.ds.name);
 LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');
 if (~exist(LOG.recordingsDir, 'dir')), mkdir(LOG.recordingsDir), end
 LOG.timestamp=datestr(clock,'yyyy-mm-dd_HH-MM-SS'); disp(LOG.timestamp);
 LOG.timestampDir=fullfile(LOG.recordingsDir, LOG.timestamp);
+%%
 mkdir(LOG.timestampDir);
 % example log files:
 % video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.txt - git version, runtimes

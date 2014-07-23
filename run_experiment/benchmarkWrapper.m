@@ -3,7 +3,7 @@
 function benchmarkWrapper(LOG)
 bmOpts={'path',LOG.dsDir,'dirR','test',...
   'outDirR',fullfile('recordings', LOG.timestamp),...
-  'tempConsistency',LOG.dss(LOG.dsId).isVideo,'nthresh',51};
+  'tempConsistency',LOG.ds.isVideo,'nthresh',51};
 
 timerBm=tic;
 output=ComputeRP(bmOpts); %#ok<NASGU>

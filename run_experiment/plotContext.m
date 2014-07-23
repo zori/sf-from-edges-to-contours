@@ -8,15 +8,12 @@ function plotContext(LOG)
 
 if nargin==0
   LOG.evalDir='/BS/kostadinova/work/video_segm_evaluation';
-  LOG.dss=struct('name', {'BSDS500' 'VSB100_40' 'VSB100_full' 'VSB100_tiny'},...
-    'isVideo', {false true true true});
-  LOG.dsId=1;
-  LOG.dsDir=fullfile(LOG.evalDir, LOG.dss(LOG.dsId).name);
+  LOG.ds=struct('name','BSDS500','isVideo',false);
+  LOG.dsDir=fullfile(LOG.evalDir, LOG.ds.name);
 end
 
 plotOpts=struct('path',fullfile(LOG.dsDir,'test'),'dirR','precomputed',...
-  'tempConsistency',LOG.dss(LOG.dsId).isVideo,...
-  'nthresh',51,'superposePlot',true);
+  'tempConsistency',LOG.ds.isVideo,'nthresh',51,'superposePlot',true);
 
 % TODO add avg human agreement ComputeRP(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'k',false,[],'all',[],'Output_general_human');
 
