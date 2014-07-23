@@ -45,8 +45,9 @@ segmDetectWrapper(model,LOG);
 %% Benchmark
 benchmarkWrapper(LOG);
 
-%% Optionally, plot additionally precomputed results from other algorithms
-plotContext(LOG);
+% TODO fix the legend
+% Optionally, plot additionally precomputed results from other algorithms
+% plotContext(LOG);
 
 %%
 if (~isempty(gcp('nocreate'))), delete(gcp('nocreate')); end
