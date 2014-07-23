@@ -11,7 +11,6 @@ function [] = segmDetect( model, varargin )
 %  parameters - parameters (struct or name/value pairs)
 %   .nThresh    - [99] number of thresholds for evaluation
 %   .imDir      - [] directory of dataset - images
-%   .gtDir      - [] directory of dataset - groundtruth
 %   .resDir     . [] directory for the computed output
 %   .outType    - ['seg'] type of output; 'edge', 'seg', 'ucm' or 'sPb'
 %   .stride     - [] stride at which to compute edges
@@ -32,7 +31,7 @@ function [] = segmDetect( model, varargin )
 
 % get default parameters
 dfs={
-  'nThresh',99, 'imDir','REQ', 'gtDir', 'REQ', 'resDir','REQ', 'outType','seg',...
+  'nThresh',99, 'imDir','REQ', 'resDir','REQ', 'outType','seg',...
   'stride',[], 'nTreesEval',[], 'multiscale',[], 'pDistr',{{'type','parfor'}}
   };
 p=getPrmDflt(varargin,dfs,1);
@@ -42,7 +41,6 @@ if( ~isempty(p.nTreesEval) ), model.opts.nTreesEval=p.nTreesEval; end
 if( ~isempty(p.multiscale) ), model.opts.multiscale=p.multiscale; end
 
 imDir=p.imDir; assert(exist(imDir,'dir')==7);
-gtDir=p.gtDir; assert(exist(gtDir,'dir')==7);
 resDir=p.resDir;
 outType=p.outType;
 
