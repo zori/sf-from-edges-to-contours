@@ -46,7 +46,7 @@ end
 [mPb, mPb_rsz, bg1, bg2, bg3, cga1, cga2, cga3, cgb1, cgb2, cgb3, tg1, tg2, tg3, textons] = multiscalePb(im, rsz);
 
 %% sPb
-outFile2 = strcat(outFile, '_pbs.mat');
+if ~strcmp(outFile,''), outFile2 = strcat(outFile, '_pbs.mat'); end
 if exist('sfPb','var')
   % our baseline uses the edge detector from Dollar
   pb = sfPb;
@@ -55,7 +55,7 @@ else
   pb = mPb_rsz;
 end
 [sPb] = spectralPb(pb, orig_sz, outFile2);
-delete(outFile2);
+if ~strcmp(outFile,''), delete(outFile2); end
 
 %% gPb
 gPb_orient = zeros(size(tg1));
