@@ -106,7 +106,8 @@ if(exist([forestFn '.mat'], 'file'))
   load([forestFn '.mat']); return; end
 
 if (opts.useParfor && isempty(gcp('nocreate')))
-  addAttachedFiles(parpool(8),fullfile(LOG.repoDir,'sf_detector/private/edgesDetectMex.mexa64'));
+  % start parallel pool for training and attach mex file needed for detection
+  addAttachedFiles(parpool(8),fullfile('sf_detector/private/edgesDetectMex.mexa64'));
 end
 
 % compute constants and store in opts
