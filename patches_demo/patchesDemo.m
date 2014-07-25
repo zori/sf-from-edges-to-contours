@@ -28,6 +28,7 @@ Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:)*t; E=convTri(Es_,1);
 ws=label2rgb(watershed(E),'jet',[1 1 1],'shuffle');
 % Ultrametric Contour Map
 ucm=contours2ucm(double(E)/255);
+processLocationFun=@(x,y) processLocation(x,y,model,T,I,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm);
 
 while (true)
   clear functions; % clear the persistent vars in getFigPos
@@ -39,40 +40,46 @@ while (true)
   if (length(x)~= 1), close all; return; end
   [x,y]=fixInput(x,y,ri,szOrig(1:2));
   imagesc(I); axis('image'); title('Choose a patch to crop');
-  hold on; plot(x,y,'rx','MarkerSize',20);
+  hold on;
+  processLocationFun(x,y);
+end % while(true)
+end % patchesDemo
 
-  % display image patch
-  initFig(); imagesc(cropPatch(I,x,y,ri)); axis('image'); title('Selected image patch');
+% ----------------------------------------------------------------------
+function processLocation(x,y,model,T,I,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm)
+plot(x,y,'rx','MarkerSize',20);
+% display image patch
+initFig(); imagesc(cropPatch(I,x,y,ri)); axis('image'); title('Selected image patch');
 
-  x1=ceil(((x+p(3))-opts.imWidth)/opts.stride)+rg; % rg<=x1<=w1, for w1 see edgesDetectMex.cpp
-  y1=ceil(((y+p(1))-opts.imWidth)/opts.stride)+rg; % rg<=y1<=h1
-	assert((x1==ceil(x/2)) && (y1==ceil(y/2)));
-  ids=double(ind(y1,x1,:)); % indices come from cpp and are 0-based
-  treeIds=uint32(floor(ids./nTreeNodes)+1);
-  leafIds=uint32(mod(ids,nTreeNodes)+1);
-  for k=1:nTreesEval
-    treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
-    assert(~model.child(leafId,treeId)); % TODO add this to assertion (when also saving patches in forest) && ~isempty(model.patches{leafId,treeId}));
-    segPs=T{treeId}.segPs{leafId}; % model.patches{leafId,treeId}
-    imgPs=T{treeId}.imgPs{leafId};
-    assert(~xor(isempty(segPs),isempty(imgPs)));
-    treeStr=num2str(treeId);
-    if ~isempty(segPs) % only leaves with no more than 40 samples have the patches stored
-      initFig(); montage2(cell2array(segPs));
-      montage2Title(['Segmentations; tree ' treeStr]);
-      initFig(); montage2(imgPs,struct('hasChn', true));
-      montage2Title(['Image patches; tree ' treeStr]);
-    else
-      initFig(); im(T{treeId}.hs(:,:,leafId)); title(['Best segmentation; tree ' treeStr]);
-    end
+x1=ceil(((x+p(3))-opts.imWidth)/opts.stride)+rg; % rg<=x1<=w1, for w1 see edgesDetectMex.cpp
+y1=ceil(((y+p(1))-opts.imWidth)/opts.stride)+rg; % rg<=y1<=h1
+assert((x1==ceil(x/2)) && (y1==ceil(y/2)));
+ids=double(ind(y1,x1,:)); % indices come from cpp and are 0-based
+treeIds=uint32(floor(ids./nTreeNodes)+1);
+leafIds=uint32(mod(ids,nTreeNodes)+1);
+for k=1:nTreesEval
+  treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
+  assert(~model.child(leafId,treeId)); % TODO add this to assertion (when also saving patches in forest) && ~isempty(model.patches{leafId,treeId}));
+  segPs=T{treeId}.segPs{leafId}; % model.patches{leafId,treeId}
+  imgPs=T{treeId}.imgPs{leafId};
+  assert(~xor(isempty(segPs),isempty(imgPs)));
+  treeStr=num2str(treeId);
+  if ~isempty(segPs) % only leaves with no more than 40 samples have the patches stored
+    initFig(); montage2(cell2array(segPs));
+    montage2Title(['Segmentations; tree ' treeStr]);
+    initFig(); montage2(imgPs,struct('hasChn', true));
+    montage2Title(['Image patches; tree ' treeStr]);
+  else
+    initFig(); im(T{treeId}.hs(:,:,leafId)); title(['Best segmentation; tree ' treeStr]);
   end
+end
 
-	% Compute the intermediate decision at the given pixel location (of 4 trees)
-  Es4=fooMex(model,chnsReg,chnsSim,x1,y1); % mex-file was private edgesDetectMex(...)
-  E4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
-  % initFig(); im(E4); hold on; plot(x,y,'rx','MarkerSize',20);
-  % TODO why these apparent off-by-ones when cropping the patch; to "remedy" cropping 1px bigger radius; check rounding errors
-  initFig(); im(cropPatch(E4,x,y,rg+1)); title('Intermediate decision patch (4 trees voted)');
+% Compute the intermediate decision at the given pixel location (of 4 trees)
+Es4=fooMex(model,chnsReg,chnsSim,x1,y1); % mex-file was private edgesDetectMex(...)
+E4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
+% initFig(); im(E4); hold on; plot(x,y,'rx','MarkerSize',20);
+% TODO why these apparent off-by-ones when cropping the patch; to "remedy" cropping 1px bigger radius; check rounding errors
+initFig(); im(cropPatch(E4,x,y,rg+1)); title('Intermediate decision patch (4 trees voted)');
 
   % patch detected with the decision forest; result based on 16x16x4/4 trees
   % that vote for each pixel
@@ -82,12 +89,11 @@ while (true)
   % Ultrametric Contour Map patch
 	h=initFig(); im(cropPatch(ucm,x,y,rg)); title('UCM patch');
 
-  % remove all figures that were not created on this iteration
-  figHandles=findobj('Type','figure');
-  oldFigures=figHandles(figHandles>h); % h is the last handle used
-  close(oldFigures);
-end % while(true)
-end % patchesDemo
+% remove all figures that were not created on this iteration
+figHandles=findobj('Type','figure');
+oldFigures=figHandles(figHandles>h); % h is the last handle used
+close(oldFigures);
+end % processLocation
 
 % ----------------------------------------------------------------------
 function patch = cropPatch(I,x,y,r)
@@ -131,7 +137,7 @@ position=[...
   scrSz(2)/figSz(2)];         % height
 set(h,'OuterPosition',position);
 figCnt=figCnt+1;
-end
+end % initFig
 
 % ----------------------------------------------------------------------
 function montage2Title(mTitle)
