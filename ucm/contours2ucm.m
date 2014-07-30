@@ -17,6 +17,10 @@ function [ucm] = contours2ucm(pb, fmt)
 %
 % Pablo Arbelaez <arbelaez@eecs.berkeley.edu>
 % December 2010
+%
+% modified by Zornitsa Kostadinova
+% Jul 2014
+
 if nargin<2, fmt = 'imageSize'; end;
 
 if ~strcmp(fmt,'imageSize') && ~strcmp(fmt,'doubleSize'),
@@ -69,7 +73,7 @@ for e = 1 : numel(contours.edge_x_coords)
   ws_wt(v2(1),v2(2))=max( pb(v2(1),v2(2)),ws_wt(v2(1),v2(2)));
 end
 ws_wt=double(ws_wt);
-end
+end % create_finest_partition
 
 % ----------------------------------------------------------------------
 function [pb2, V, H] = super_contour_4c(pb)
