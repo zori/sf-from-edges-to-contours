@@ -5,7 +5,7 @@ function [ucm] = contours2ucm(pb, fmt)
 %   [ucm] = contours2ucm(pb_oriented, fmt)
 %
 % description:
-%   Computes UCM by considering 
+%   Computes UCM by considering
 %   the mean pb value on the boundary between regions as dissimilarity.
 %
 % arguments:
@@ -20,7 +20,7 @@ function [ucm] = contours2ucm(pb, fmt)
 if nargin<2, fmt = 'imageSize'; end;
 
 if ~strcmp(fmt,'imageSize') && ~strcmp(fmt,'doubleSize'),
-    error('possible values for fmt are: imageSize and doubleSize');
+  error('possible values for fmt are: imageSize and doubleSize');
 end
 
 % create finest partition and transfer contour strength
@@ -41,9 +41,9 @@ super_ucm = double(ucm_mean_pb(ws_wt2, labels));
 super_ucm = normalize_output(super_ucm); % ojo
 
 if strcmp(fmt,'doubleSize'),
-    ucm = super_ucm;
+  ucm = super_ucm;
 else
-    ucm = super_ucm(3:2:end, 3:2:end);
+  ucm = super_ucm(3:2:end, 3:2:end);
 end
 end
 
@@ -58,15 +58,15 @@ contours = fit_contour(double(ws_bw));
 
 ws_wt = zeros(size(ws_bw));
 for e = 1 : numel(contours.edge_x_coords)
-    if contours.is_completion(e), continue; end
-    for p = 1 : numel(contours.edge_x_coords{e}),
-        ws_wt(contours.edge_x_coords{e}(p), contours.edge_y_coords{e}(p)) = ...
-            max(pb(contours.edge_x_coords{e}(p), contours.edge_y_coords{e}(p)), ws_wt(contours.edge_x_coords{e}(p), contours.edge_y_coords{e}(p)));
-    end
-    v1=contours.vertices(contours.edges(e,1),:);
-    v2=contours.vertices(contours.edges(e,2),:);
-    ws_wt(v1(1),v1(2))=max( pb(v1(1),v1(2)),ws_wt(v1(1),v1(2)));
-    ws_wt(v2(1),v2(2))=max( pb(v2(1),v2(2)),ws_wt(v2(1),v2(2)));
+  if contours.is_completion(e), continue; end
+  for p = 1 : numel(contours.edge_x_coords{e}),
+    ws_wt(contours.edge_x_coords{e}(p), contours.edge_y_coords{e}(p)) = ...
+      max(pb(contours.edge_x_coords{e}(p), contours.edge_y_coords{e}(p)), ws_wt(contours.edge_x_coords{e}(p), contours.edge_y_coords{e}(p)));
+  end
+  v1=contours.vertices(contours.edges(e,1),:);
+  v2=contours.vertices(contours.edges(e,2),:);
+  ws_wt(v1(1),v1(2))=max( pb(v1(1),v1(2)),ws_wt(v1(1),v1(2)));
+  ws_wt(v2(1),v2(2))=max( pb(v2(1),v2(2)),ws_wt(v2(1),v2(2)));
 end
 ws_wt=double(ws_wt);
 end
@@ -99,61 +99,61 @@ artifacts = ( c==0 & ws_clean==0 );
 R = regionprops(bwlabel(artifacts), 'PixelList');
 
 for r = 1 : numel(R),
-    xc = R(r).PixelList(1,2);
-    yc = R(r).PixelList(1,1);
-    
-    vec = [ max(ws_clean(xc-2, yc-1), ws_clean(xc-1, yc-2)) ...
-            max(ws_clean(xc+2, yc-1), ws_clean(xc+1, yc-2)) ... 
-            max(ws_clean(xc+2, yc+1), ws_clean(xc+1, yc+2)) ...
-            max(ws_clean(xc-2, yc+1), ws_clean(xc-1, yc+2)) ];
-    
-    [nd,id] = min(vec);
-    switch id,
-        case 1,
-            if ws_clean(xc-2, yc-1) < ws_clean(xc-1, yc-2),
-               ws_clean(xc, yc-1) = 0;
-               ws_clean(xc-1, yc) = vec(1);
-            else
-               ws_clean(xc, yc-1) = vec(1);
-               ws_clean(xc-1, yc) = 0;
-               
-            end
-            ws_clean(xc-1, yc-1) = vec(1);
-        case 2,
-           if ws_clean(xc+2, yc-1) < ws_clean(xc+1, yc-2),
-               ws_clean(xc, yc-1) = 0;
-               ws_clean(xc+1, yc) = vec(2);
-           else
-               ws_clean(xc, yc-1) = vec(2);
-               ws_clean(xc+1, yc) = 0;
-            end
-            ws_clean(xc+1, yc-1) = vec(2);
-            
-        case 3,
-            if ws_clean(xc+2, yc+1) < ws_clean(xc+1, yc+2), 
-               ws_clean(xc, yc+1) = 0;
-               ws_clean(xc+1, yc) = vec(3);
-            else
-                ws_clean(xc, yc+1) = vec(3);
-                ws_clean(xc+1, yc) = 0;
-            end
-            ws_clean(xc+1, yc+1) = vec(3);
-        case 4, 
-            if ws_clean(xc-2, yc+1) < ws_clean(xc-1, yc+2), 
-               ws_clean(xc, yc+1) = 0;
-               ws_clean(xc-1, yc) = vec(4);
-            else
-               ws_clean(xc, yc+1) = vec(4);
-               ws_clean(xc-1, yc) = 0;
-            end
-            ws_clean(xc-1, yc+1) = vec(4);
-    end 
+  xc = R(r).PixelList(1,2);
+  yc = R(r).PixelList(1,1);
+  
+  vec = [ max(ws_clean(xc-2, yc-1), ws_clean(xc-1, yc-2)) ...
+    max(ws_clean(xc+2, yc-1), ws_clean(xc+1, yc-2)) ...
+    max(ws_clean(xc+2, yc+1), ws_clean(xc+1, yc+2)) ...
+    max(ws_clean(xc-2, yc+1), ws_clean(xc-1, yc+2)) ];
+  
+  [nd,id] = min(vec);
+  switch id,
+    case 1,
+      if ws_clean(xc-2, yc-1) < ws_clean(xc-1, yc-2),
+        ws_clean(xc, yc-1) = 0;
+        ws_clean(xc-1, yc) = vec(1);
+      else
+        ws_clean(xc, yc-1) = vec(1);
+        ws_clean(xc-1, yc) = 0;
+        
+      end
+      ws_clean(xc-1, yc-1) = vec(1);
+    case 2,
+      if ws_clean(xc+2, yc-1) < ws_clean(xc+1, yc-2),
+        ws_clean(xc, yc-1) = 0;
+        ws_clean(xc+1, yc) = vec(2);
+      else
+        ws_clean(xc, yc-1) = vec(2);
+        ws_clean(xc+1, yc) = 0;
+      end
+      ws_clean(xc+1, yc-1) = vec(2);
+      
+    case 3,
+      if ws_clean(xc+2, yc+1) < ws_clean(xc+1, yc+2),
+        ws_clean(xc, yc+1) = 0;
+        ws_clean(xc+1, yc) = vec(3);
+      else
+        ws_clean(xc, yc+1) = vec(3);
+        ws_clean(xc+1, yc) = 0;
+      end
+      ws_clean(xc+1, yc+1) = vec(3);
+    case 4,
+      if ws_clean(xc-2, yc+1) < ws_clean(xc-1, yc+2),
+        ws_clean(xc, yc+1) = 0;
+        ws_clean(xc-1, yc) = vec(4);
+      else
+        ws_clean(xc, yc+1) = vec(4);
+        ws_clean(xc-1, yc) = 0;
+      end
+      ws_clean(xc-1, yc+1) = vec(4);
+  end
 end
 end
 
 % ----------------------------------------------------------------------
 function [pb_norm] = normalize_output(pb)
-% map ucm values to [0 1] with sigmoid 
+% map ucm values to [0 1] with sigmoid
 % learned on BSDS
 [tx, ty] = size(pb);
 beta = [-2.7487; 11.1189];
