@@ -47,6 +47,8 @@ end
 
 %% sPb
 if ~strcmp(outFile,''), outFile2 = strcat(outFile, '_pbs.mat'); end
+if ~exist('outFile2','var'), outFile2=''; end
+
 if exist('sfPb','var')
   % our baseline uses the edge detector from Dollar
   pb = sfPb;
