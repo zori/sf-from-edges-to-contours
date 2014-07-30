@@ -132,7 +132,7 @@ parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   E=edgesDetect(I,model);
   if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
   % compute a (double-sized) ucm - as we will use it for regions benchmark
-  ucm2=contours2ucm(double(E)/max(E(:)),'doubleSize');
+  ucm2=contours2ucm(E),'doubleSize');
   outCell{i}=struct( ...
     'file', fullfile(resDir,id.video,[id.name '.mat']), ...
     'ucm2', ucm2);
@@ -158,7 +158,7 @@ parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   I=imread(imFile);
   E=edgesDetect(I,model);
   if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
-  ucm=contours2ucm(double(E)/max(E(:)),'imageSize');
+  ucm=contours2ucm(E),'imageSize');
   [SF_gPb_orient, ~, ~] = globalPb(imFile,'',1.0,ucm);
   SF_S=max(SF_gPb_orient,[],3);
   % compute a (double-sized) ucm - as we will use it for regions benchmark
