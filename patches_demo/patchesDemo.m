@@ -153,14 +153,6 @@ close(oldFigures);
 end % processLocation
 
 % ----------------------------------------------------------------------
-function patch = cropPatch(I,x,y,r)
-% crop a patch with radius r from an image I at location [x y]
-% output patch has dimensions [2r x 2r]
-x=uint32(floor(x)); y=uint32(floor(y));
-patch=I(y-r+1:y+r,x-r+1:x+r,:);
-end
-
-% ----------------------------------------------------------------------
 function [x,y] = fixInput(x,y,r,szI)
 % return x y coordinates within the inside (not a band with width r) of the original image
 if y<r, y=r; else if y>szI(1)-r, y=szI(1)-r; end; end
