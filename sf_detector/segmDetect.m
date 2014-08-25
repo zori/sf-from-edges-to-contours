@@ -61,9 +61,9 @@ end
 
 % detect edges (and output a seg or a ucm)
 if(~exist(resDir,'dir')), mkdir(resDir); end; do=false(1,n);
-for i=1:n, do(i)=~exist([resDir ids(i).video filesep ids(i).name '.png'],'file'); end
+for i=1:n, do(i)=~exist(fullfile(resDir,ids(i).video, [ids(i).name '.png']),'file'); end
 do=find(do);
-detect(outType, model,imDir,resDir,ids,do);
+detect(outType,model,imDir,resDir,ids,do);
 end
 
 function detect(outType, model, imDir, resDir, ids, do)
@@ -132,7 +132,7 @@ parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   E=edgesDetect(I,model);
   if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
   % compute a (double-sized) ucm - as we will use it for regions benchmark
-  ucm2=contours2ucm(E),'doubleSize');
+  ucm2=contours2ucm(E,'doubleSize');
   outCell{i}=struct( ...
     'file', fullfile(resDir,id.video,[id.name '.mat']), ...
     'ucm2', ucm2);
@@ -158,7 +158,7 @@ parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   I=imread(imFile);
   E=edgesDetect(I,model);
   if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
-  ucm=contours2ucm(E),'imageSize');
+  ucm=contours2ucm(E,'imageSize');
   [SF_gPb_orient, ~, ~] = globalPb(imFile,'',1.0,ucm);
   SF_S=max(SF_gPb_orient,[],3);
   % compute a (double-sized) ucm - as we will use it for regions benchmark
