@@ -57,7 +57,8 @@ function model = edgesTrain( varargin )
 %   .useParfor  - [0] if true train trees in parallel (memory intensive)
 %   .modelDir   - ['models/'] target directory for storing models
 %   .modelFnm   - ['model'] model filename
-%   .dsDir    -   [] location of training dataset, default is BSDS500
+%   .dsDir      - [] location of training dataset, default is BSDS500
+%   .savePs     - [false] whether to save the patches in the leaves
 %
 % OUTPUTS
 %  model      - trained structured edge detector w the following fields
@@ -94,7 +95,7 @@ dfs={'imWidth',32, 'gtWidth',16, 'nEdgeBins',1, 'nPos',1e5, 'nNeg',1e5, ...
   'simSmooth',8, 'normRad',4, 'shrink',2, 'nCells',5, ...
   'stride',2, 'multiscale',1, 'nTreesEval',4, 'nThreads',4, 'nms',0, ...
   'seed',1, 'useParfor',0, 'modelDir','models/', 'modelFnm','model', ...
-  'dsDir','/BS/kostadinova/work/video_segm_evaluation/BSDS500/train/'};
+  'dsDir','/BS/kostadinova/work/video_segm_evaluation/BSDS500/train/','savePs','false'};
 opts=getPrmDflt(varargin,dfs,1);
 if(nargin==0), model=opts; return; end
 
@@ -144,17 +145,18 @@ model.opts=opts;
 model.thrs=zeros(nNodes,nTrees,'single');
 Z=zeros(nNodes,nTrees,'uint32');
 model.fids=Z; model.child=Z; model.count=Z; model.depth=Z;
-if(0), model.segm=ones(gtWidth,gtWidth,nNodes,nTrees,'uint8'); end
-model.patches=cell(nNodes,nTrees);
+model.seg=ones(gtWidth,gtWidth,nNodes,nTrees,'uint8');
+% model.patches=cell(nNodes,nTrees); % this is equivalent to model.seg and
+% therefore not needed
 model.eBins=zeros(nNodes*nTrees*gtWidth*gtWidth,1,'uint16');
 model.eBnds=Z; nEdgeBins=opts.nEdgeBins; k=0;
 for i=1:nTrees, tree=trees(i); nNodes1=size(tree.fids,1);
   model.fids(1:nNodes1,i)=tree.fids; model.thrs(1:nNodes1,i)=tree.thrs;
   model.child(1:nNodes1,i)=tree.child; model.count(1:nNodes1,i)=tree.count;
   model.depth(1:nNodes1,i)=tree.depth;
-  % model.patches(1:nNodes1,i)=tree.patches(1:nNodes1); % TODO add this when
+  % model.patches(1:nNodes1,i)=tree.hs(1:nNodes1); % TODO add this when
   % saving the patches in the forest (will I need to use them?)
-  if(0), model.segm(:,:,1:nNodes1,i)=tree.hs; end
+  model.seg(:,:,1:nNodes1,i)=tree.hs;
   % store compact representation of sparse binary edge patches
   for j=1:nNodes
     if(j>nNodes1 || tree.child(j)), E=0; else
@@ -163,7 +165,7 @@ for i=1:nTrees, tree=trees(i); nNodes1=size(tree.fids,1);
     model.eBins(k+1:k1)=eBins; k=k1; model.eBnds(j,i)=k;
   end
 end
-if(0), model.segmMax=squeeze(max(max(model.segm))); end
+if(0), model.segMax=squeeze(max(max(model.seg))); end
 model.eBnds=[0; model.eBnds(:)]; % add sentinel value to begin indexing and "flatten" eBnds matrix to a vector % (model.eBnds-1)/8 is nNodes 
 model.eBins=model.eBins(1:k); % here k is the total amount of boundary pixels in the segmentation of every node of every tree in the model
 % save model
@@ -173,7 +175,7 @@ end % edgesTrain
 
 % ----------------------------------------------------------------------
 function E = segToEdges( S, nEdgeBins )
-% Convert segmentation to binary edge map (optionally quatnized by angle).
+% Convert segmentation to binary edge map (optionally quantized by angle).
 E=gradientMag(single(S))>.01; if(nEdgeBins==1), return; end
 % if (# orientation bins) > 1, quantize by angle
 [~,O]=gradientMag(convTri(single(S),2));
@@ -193,6 +195,7 @@ imIds=Listacrossfolders(trnImDir, 'jpg', 1); imIds={imIds.name};
 nIms=length(imIds); for i=1:nIms, imIds{i}=imIds{i}(1:end-4); end
 
 % extract commonly used options
+savePs=opts.savePs;
 imWidth=opts.imWidth; imRadius=imWidth/2;
 gtWidth=opts.gtWidth; gtRadius=gtWidth/2;
 nChns=opts.nChns; nTotFtrs=opts.nTotFtrs;
@@ -215,7 +218,7 @@ fids=sort(randperm(nTotFtrs,round(nTotFtrs*opts.fracFtrs))); % for this tree, sa
 nTrainPatches=nPos+nNeg; % 10^6
 nIms=min(nIms,opts.nImgs);
 ftrs=zeros(nTrainPatches,length(fids),'single');
-patches=zeros(imWidth,imWidth,3,nTrainPatches,'uint8'); % images patches at locations sampled for training
+if savePs, patches=zeros(imWidth,imWidth,3,nTrainPatches,'uint8'); end % images patches at locations sampled for training
 labels=zeros(gtWidth,gtWidth,nTrainPatches,'uint8');
 k=0; % # total samples (features and labels) sampled and computed; k<=nTrainPatches
 tid=ticStatus('Collecting data',1,1);
@@ -239,7 +242,7 @@ for i=1:nIms
   for j=1:nGt
     M=gt{j}.Boundaries; M(bwdist(M)<gtRadius)=1; % TODO why is the mask called B and the boundary M
     % sample positive locations
-    [y,x]=find(M.*B); k2=min(length(y),ceil(nPos/nIms/nGt)); % k2 - # positive locations sampled for this gt segm
+    [y,x]=find(M.*B); k2=min(length(y),ceil(nPos/nIms/nGt)); % k2 - # positive locations sampled for this gt seg
     rp=randperm(length(y),k2); y=y(rp); x=x(rp);
     xy(k1+1:k1+k2,:)=[x y ones(k2,1)*j]; k1=k1+k2;
     % sample negative locations
@@ -254,18 +257,18 @@ for i=1:nIms
   % gt label patches are cropped from the gt seg that the location was sampled from
   psReg=zeros(imWidth/shrink,imWidth/shrink,nChns,k1,'single'); psSim=psReg;
   lbls=zeros(gtWidth,gtWidth,k1,'uint8');
-  ptchs=zeros(imWidth,imWidth,3,k1,'uint8');
+  if savePs, ptchs=zeros(imWidth,imWidth,3,k1,'uint8'); end
   ri=imRadius; rs=imRadius/shrink; rg=gtRadius;
   for j=1:k1, xy1=xy(j,:); xy2=xy1/shrink;
     % for every sample location crop all the regular and self-similarity channels
     psReg(:,:,:,j)=chnsReg(xy2(2)-rs+1:xy2(2)+rs,xy2(1)-rs+1:xy2(1)+rs,:);
     psSim(:,:,:,j)=chnsSim(xy2(2)-rs+1:xy2(2)+rs,xy2(1)-rs+1:xy2(1)+rs,:);
-    t=gt{xy1(3)}.Segmentation(xy1(2)-rg+1:xy1(2)+rg,xy1(1)-rg+1:xy1(1)+rg); % 16x16 gt segm
+    t=gt{xy1(3)}.Segmentation(xy1(2)-rg+1:xy1(2)+rg,xy1(1)-rg+1:xy1(1)+rg); % 16x16 gt seg
     % labels are unique up to a permutation, so relabel, e.g. a segment with
     % labels '3' and '6' to have the labels '1' and '2' (use smallest
     % integers) - more compact representation
     [~,~,t]=unique(t); lbls(:,:,j)=reshape(t,gtWidth,gtWidth);
-    ptchs(:,:,:,j)=I(xy1(2)-ri+1:xy1(2)+ri,xy1(1)-ri+1:xy1(1)+ri,:); % 32x32 rgb img patch
+    if savePs, ptchs(:,:,:,j)=I(xy1(2)-ri+1:xy1(2)+ri,xy1(1)-ri+1:xy1(1)+ri,:); end % 32x32 rgb img patch
   end
   if(0), figure(1); montage2(squeeze(psReg(:,:,1,:))); drawnow; end % visualize the first output channel of the regular patches
   if(0), figure(2); montage2(lbls(:,:,:)); drawnow; end % visualize gt labels
@@ -273,14 +276,14 @@ for i=1:nIms
   ftrs1=[reshape(psReg,[],k1)' stComputeSimFtrs(psSim,opts)];
   ftrs(k+1:k+k1,:)=ftrs1(:,fids);
   labels(:,:,k+1:k+k1)=lbls;
-  patches(:,:,:,k+1:k+k1)=ptchs;
+  if savePs, patches(:,:,:,k+1:k+k1)=ptchs; end
   k=k+k1; if(k==size(ftrs,1)), tocStatus(tid,1); break; end
   tocStatus(tid,i/nIms);
 end % for i=1:nImgs
 if(k<size(ftrs,1))
   ftrs=ftrs(1:k,:);
   labels=labels(:,:,1:k);
-  patches=patches(:,:,:,1:k);
+  if savePs, patches=patches(:,:,:,1:k); end
 end
 
 % train structured edge classifier (random decision tree)
@@ -290,28 +293,30 @@ pTree=struct('minCount',opts.minCount, 'minChild',opts.minChild, ...
 labels=mat2cell2(labels,[1 1 k]);
 pTree.discretize=@(hs,H) discretize(hs,H,opts.nSamples,opts.discretize);
 tree=forestTrain(ftrs,labels,pTree); % train each tree separately
-% get the data indices and record the image and segmentation ground truth
-% patches in the tree
-K=length(tree.fids);
-imgPs=cell(K,1); % img patches
-segPs=cell(K,1); % seg patches; the indices that correspond to internal (non-leaf) nodes will be empty % keep intermediate segs (previously discarded as only a best seg is chosen)
-
-% only saving patches at "small" leaves
-leavesIds=find(~tree.child)';
-for l=leavesIds
-  if tree.count(l) > 40, continue; end
-  imgPs{l}=patches(:,:,:,tree.dids{l});
-  segPs{l}=labels(tree.dids{l});
-  if(0)
-    figure(1); montage2(imgPs{l},struct('hasChn', true));
-    figure(2); montage2(cell2array(segPs{l}));
+if savePs
+  % get the data indices and record the image and segmentation ground truth
+  % patches in the tree
+  K=length(tree.fids);
+  imgPs=cell(K,1); % img patches
+  segPs=cell(K,1); % seg patches; the indices that correspond to internal (non-leaf) nodes will be empty % keep intermediate segs (previously discarded as only a best seg is chosen)
+  
+  % only saving patches at "small" leaves
+  leavesIds=find(~tree.child)';
+  for l=leavesIds
+    if tree.count(l) > 40, continue; end
+    imgPs{l}=patches(:,:,:,tree.dids{l});
+    segPs{l}=labels(tree.dids{l});
+    if(0)
+      figure(1); montage2(imgPs{l},struct('hasChn', true));
+      figure(2); montage2(cell2array(segPs{l}));
+    end
   end
-end
-tree.imgPs=imgPs; tree.segPs=segPs;
-tree=rmfield(tree,'dids');
+  tree.imgPs=imgPs; tree.segPs=segPs;
+  tree=rmfield(tree,'dids');
+end % if savePs
 tree.hs=cell2array(tree.hs);
-% fids are in [1;7228], 'adjust' them so tree.fids are in [0;7227]
-% TODO what happens with the indices here?
+% fids are in [1;7228], 'adjust' them so tree.fids are in [0;7227] because mex
+% (cpp) code works with 0-based indices
 tree.fids(tree.child>0)=fids(tree.fids(tree.child>0)+1)-1;
 if(~exist(treeDir,'dir')), mkdir(treeDir); end
 save([treeFn int2str2(treeInd,3) '.mat'],'tree', '-v7.3'); e=etime(clock,tStart);
@@ -353,7 +358,7 @@ function [hs,seg,inds] = discretize( segs, nClasses, nSamples, type )
 %
 
 persistent cache; w=size(segs{1},1); assert(size(segs{1},2)==w); % w=16
-% is1, is2 - indices for simultaneous lookup in the segm patch
+% is1, is2 - indices for simultaneous lookup in the seg patch
 if (~isempty(cache) && cache{1}==w), [~,is1,is2]=deal(cache{:}); else
   % compute all possible lookup inds for w x w patches
   is=1:w^4; is1=floor((is-1)/w/w); is2=is-is1*w*w; is1=is1+1;
