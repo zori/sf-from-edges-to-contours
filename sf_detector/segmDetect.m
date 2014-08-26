@@ -60,8 +60,8 @@ for i=1:n
 end
 
 % detect edges (and output a seg or a ucm)
-if(~exist(resDir,'dir')), mkdir(resDir); end; do=false(1,n);
-for i=1:n, do(i)=~exist(fullfile(resDir,ids(i).video, [ids(i).name '.png']),'file'); end
+if ~exist(resDir,'dir'), mkdir(resDir); end; do=false(1,n);
+for i=1:n, do(i)=~existOutput(fullfile(resDir,ids(i).video), ids(i).name); end
 do=find(do);
 detect(outType,model,imDir,resDir,ids,do);
 end
@@ -79,6 +79,14 @@ switch outType
   otherwise
     warning('Unexpected output type. No output created.');
 end
+end
+
+% ----------------------------------------------------------------------
+function exists = existOutput(filePath, fileName)
+% check the existance of an output file with an extension .mat, .png or .bmp
+exists = exist(fullfile(filePath, [fileName, '.mat']),'file') ||...
+  exist(fullfile(filePath, [fileName, '.png']),'file') ||...
+  exist(fullfile(filePath, [fileName, '.bmp']),'file');
 end
 
 % ----------------------------------------------------------------------
