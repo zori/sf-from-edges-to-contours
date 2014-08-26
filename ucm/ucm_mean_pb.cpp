@@ -90,7 +90,9 @@ class Neighbor_Region
 class Bdry_element
 {
   public:
+    // coordinate of the boundary, to index into local_boundaries
     int coord;
+    // the seg label of the neighbour region
     int cc_neigh;
 
     Bdry_element(){}
@@ -118,7 +120,7 @@ class Region
 {
   public:
     list<int> elements;
-    map<int, Neighbor_Region, less<int> > neighbors;
+    map<int, Neighbor_Region, less<int> > neighbors; // label to Neighbor_Region
     list<Bdry_element> boundary;
 
     Region(){}
@@ -254,15 +256,18 @@ void compute_ucm
   int vy[4] = { 0, 1,  0, -1};
   int nxp, nyp, cnp, xp, yp, label;
 
-  for( p = 0; p < tx*ty; p++ )
+  for( p = 0; p < tx*ty; p++ ) // indexes in the flattened labels matrix initial_partition
   {
-    xp = p%tx; yp = p/tx;
+    xp = p%tx; yp = p/tx; // column-major, as in MATLAB (C is row-major)
     for( v = 0; v < 4; v++ )
     {   
       nxp =  xp + vx[v]; nyp = yp + vy[v]; cnp = nxp + nyp*tx;
       if ( (nyp >= 0) && (nyp < ty) && (nxp < tx) && (nxp >= 0) && (initial_partition[cnp] != initial_partition[p]) )
-
-        R[initial_partition[p]].boundary.push_back(Bdry_element(( xp + nxp + 1 ) + ( yp + nyp + 1 )*(2*tx+1), initial_partition[cnp]));
+      {
+        int coord = ( xp + nxp + 1 ) + ( yp + nyp + 1 )*(2*tx+1); // coordinate of the boundary, to index into local_boundaries
+        int cc_neigh = initial_partition[cnp]; // label of the neighboring connected component
+        R[initial_partition[p]].boundary.push_back(Bdry_element(coord, cc_neigh));
+      }
     }
   }
 
@@ -280,19 +285,23 @@ void compute_ucm
     {
       if ((*itrb).cc_neigh == label)
       {
-        totalBdry++;
+        // same label, keep accumulating mean probability of boundary
+        totalBdry++; // TODO totalBdry should be integer, it is a counter of number of pixels on the boundary
         totalPb += local_boundaries[(*itrb).coord];
       }
       else
       {
+        // done with 'label'; store
         R[c].neighbors[label] = Neighbor_Region(totalPb/totalBdry, totalPb, totalBdry);
         if( label > c )   merging_queue.push(Order_node(totalPb/totalBdry, c, label));
-        label = (*itrb).cc_neigh;
-        totalBdry = 1.0;
+        // reinitialize
+        label = (*itrb).cc_neigh; // new neighbor's label
+        totalBdry = 1.0; // at least one pixel on boundary
         totalPb = local_boundaries[(*itrb).coord];
       }
 
     }
+    // done with last Bdry_element; store
     R[c].neighbors[label] = Neighbor_Region(totalPb/totalBdry, totalPb, totalBdry);
     if( label > c )   merging_queue.push(Order_node(totalPb/totalBdry, c, label));
   }
@@ -370,16 +379,16 @@ void mexFunction(int nlhs, mxArray *plhs[],int nrhs,const mxArray *prhs[])
   if (nrhs != 2) mexErrMsgTxt("INPUT: (local_boundaries, initial_partition) ");
   if (nlhs != 1) mexErrMsgTxt("OUTPUT: [ucm] ");
 
-  double* local_boundaries = mxGetPr(prhs[0]); // ws_wt2
-  double* pi = mxGetPr(prhs[1]); // segmentation labels 0-based, integers
+  double* local_boundaries = mxGetPr(prhs[0]); // ws_wt2; size [2*tx+1, 2*ty+1]
+  double* pi = mxGetPr(prhs[1]); // segmentation labels; 0-based, integers; size of image
 
   // size of original image
-  int fil = mxGetM(prhs[1]); // rows
-  int col = mxGetN(prhs[1]); // columns
+  int tx = mxGetM(prhs[1]); // number of rows of image and labels
+  int ty = mxGetN(prhs[1]); // number of columns of image and labels
 
   int totcc = -1; // number of connected components in pi (the labels)
-  int* initial_partition = new int[fil*col];
-  for( int px = 0; px < fil*col; px++ )
+  int* initial_partition = new int[tx*ty];
+  for( int px = 0; px < tx*ty; px++ )
   {
     initial_partition[px] = (int) pi[px]; 
     if (totcc < initial_partition[px])  totcc = initial_partition[px];
@@ -387,10 +396,10 @@ void mexFunction(int nlhs, mxArray *plhs[],int nrhs,const mxArray *prhs[])
   if (totcc < 0) mexErrMsgTxt("\n ERROR : number of connected components < 0 : \n");
   totcc++; 
 
-  plhs[0] = mxCreateDoubleMatrix(2*fil+1, 2*col+1, mxREAL);
+  plhs[0] = mxCreateDoubleMatrix(2*tx+1, 2*ty+1, mxREAL); // the super ucm has size twice the labels + 1 in each dimension
   double* ucm = mxGetPr(plhs[0]);
 
-  compute_ucm(local_boundaries, initial_partition, totcc, ucm, fil, col);
+  compute_ucm(local_boundaries, initial_partition, totcc, ucm, tx, ty);
 
   delete[] initial_partition;
 
