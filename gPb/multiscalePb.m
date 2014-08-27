@@ -1,5 +1,5 @@
-function [mPb_nmax, mPb_nmax_rsz, bg1, bg2, bg3, cga1, cga2, cga3, cgb1, cgb2, cgb3, tg1, tg2, tg3, textons] = multiscalePb(im, rsz)
-%function [mPb_nmax, mPb_nmax_rsz, bg1, bg2, bg3, cga1, cga2, cga3, cgb1, cgb2, cgb3, tg1, tg2, tg3, textons] = multiscalePb(im, rsz)
+function [mPb_nmax, mPb_nmax_rsz, bg1, bg2, bg3, cga1, cga2, cga3, cgb1, cgb2, cgb3, tg1, tg2, tg3, textons] = multiscalePb(img, rsz)
+%function [mPb_nmax, mPb_nmax_rsz, bg1, bg2, bg3, cga1, cga2, cga3, cgb1, cgb2, cgb3, tg1, tg2, tg3, textons] = multiscalePb(img, rsz)
 %
 % description:
 % compute local contour cues of an image.
@@ -12,19 +12,20 @@ if nargin<2, rsz = 1.0; end
 
 
 % default feature weights
-if size(im,3) == 3,
+if size(img,3) == 3,
     weights = [0.0146    0.0145    0.0163    0.0210    0.0243    0.0287    0.0166    0.0185    0.0204    0.0101    0.0111    0.0141];
 else
-    im(:,:,2)=im(:,:,1);im(:,:,3)=im(:,:,1);
+    img(:,:,2)=img(:,:,1);img(:,:,3)=img(:,:,1);
     weights = [0.0245    0.0220    0.0233         0         0         0         0         0         0    0.0208    0.0210    0.0229];
 end
 
-% get gradients
 % tic;
-[bg1, bg2, bg3, cga1, cga2, cga3, cgb1, cgb2, cgb3, tg1, tg2, tg3, textons] = det_mPb(im);
+% get gradients - brightness, color a, color b, and texton, each at 3 scales, respectively, and get the textons
+[bg1, bg2, bg3, cga1, cga2, cga3, cgb1, cgb2, cgb3, tg1, tg2, tg3, textons] = det_mPb(img);
 % fprintf('Local cues: %g\n', toc);
 
 % smooth cues
+% Savitzky-Golay filtering, equiv. to fitting a cylindrical parabola
 gtheta = [1.5708    1.1781    0.7854    0.3927   0    2.7489    2.3562    1.9635];
 % tic;
 filters = make_filters([3 5 10 20], gtheta);
@@ -50,6 +51,9 @@ end
 
 
 % compute mPb at full scale
+% linearly combine the local cues into a single multiscale oriented signal
+% the parameter weights (alpha_i,s in paper) weight the relative contribution
+% of each gradient signal
 mPb_all = zeros(size(tg1));
 for o = 1 : size(mPb_all, 3),
     l1 = weights(1)*bg1(:, :, o);
@@ -73,6 +77,7 @@ for o = 1 : size(mPb_all, 3),
 end
 
 % non-maximum suppression
+% in order to produce thin, real-valued contours
 mPb_nmax = nonmax_channels(mPb_all);
 mPb_nmax = max(0, min(1, 1.2*mPb_nmax));
 
