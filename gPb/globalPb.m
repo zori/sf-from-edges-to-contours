@@ -31,8 +31,8 @@ if ((rsz<=0) || (rsz>1)),
     error('resizing factor rsz out of range (0,1]');
 end
 
-im = double(imread(imFile)) / 255;
-[tx, ty, nchan] = size(im);
+img = double(imread(imFile)) / 255;
+[tx, ty, nchan] = size(img);
 orig_sz = [tx, ty];
 
 % default feature weights
@@ -43,7 +43,7 @@ else
 end
 
 %% mPb
-[mPb, mPb_rsz, bg1, bg2, bg3, cga1, cga2, cga3, cgb1, cgb2, cgb3, tg1, tg2, tg3, textons] = multiscalePb(im, rsz);
+[mPb, mPb_rsz, bg1, bg2, bg3, cga1, cga2, cga3, cgb1, cgb2, cgb3, tg1, tg2, tg3, textons] = multiscalePb(img, rsz);
 
 %% sPb
 if ~strcmp(outFile,''), outFile2 = strcat(outFile, '_pbs.mat'); end
@@ -86,7 +86,7 @@ end
 %% outputs
 gPb = max(gPb_orient, [], 3);
 
-gPb_thin = gPb .* (mPb>0.05);
+gPb_thin = gPb .* (pb>0.05);
 gPb_thin = gPb_thin .* bwmorph(gPb_thin, 'skel', inf);
 
 if ~strcmp(outFile,''), save(outFile,'gPb_thin', 'gPb_orient','textons'); end
