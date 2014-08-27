@@ -5,7 +5,10 @@ function [bg1, bg2, bg3, cga1, cga2, cga3, cgb1, cgb2, cgb3, tg1, tg2, tg3, text
 % mex code prints to standard output; capture and suppress that using evalc
 [~, ...
     textons, ...
-    bg_r3, bg_r5,  bg_r10,  cga_r5, cga_r10, cga_r20, cgb_r5, cgb_r10, cgb_r20, tg_r5,  tg_r10,  tg_r20...
+    bg_r3, bg_r5,  bg_r10,... % brightness gradients at 3 different scales - 3, 5 and 10 pxs
+    cga_r5, cga_r10, cga_r20,... % color a gradients at 3 different scalse - 5, 10 and 20 pxs
+    cgb_r5, cgb_r10, cgb_r20,... % color b gradients at 3 different scalse - 5, 10 and 20 pxs
+    tg_r5,  tg_r10,  tg_r20... % texture gradients at 3 different scalse - 5, 10 and 20 pxs
     ] = evalc('mex_pb_parts_final_selected(im(:,:,1),im(:,:,2),im(:,:,3))');
 
 [sx sy sz] = size(im);
