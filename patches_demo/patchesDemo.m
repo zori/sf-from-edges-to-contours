@@ -24,40 +24,12 @@ IPadded=imPad(I,p,'symmetric');
 % normalize and finalize edge maps
 t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
 Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:)*t; E=convTri(Es_,1);
-% E=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
 % Superpixelization (over-segmentation)
 ws=watershed(E);
-ws_bw=(ws==0);
-c=fit_contour(double(ws_bw));
-% remove empty fields
-c=rmfield(c,{'edge_equiv_ids','regions_v_left','regions_v_right','regions_e_left','regions_e_right','regions_c_left','regions_c_right'});
-% Ultrametric Contour Map
-ucm=contours2ucm(double(E)/255);
-computeWeightFun=@(x,y,spxPatch) computeWeights(x,y,spxPatch,model,T,I,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm);
+ucm=contours2ucm(E);
 processLocationFun=@(x,y) processLocation(x,y,model,T,I,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm);
 
-%% processing SPX edges
-c.edge_weights=cell(size(c.edges,1),1);
-x=58; y=28;
-assert(isequal(1,c.is_e(x,y))); % it is an edge
-assert(isequal(0,c.is_v(x,y))); % it is not a vertex
-edgeInd=c.assign(x,y); % 48 the index of the edge % or 40
-vInds=c.edges(edgeInd,:); % [42 44] the two indices of the end vertices
-v1Coords=c.vertices(vInds(1),:); % [56    29]
-v2Coords=c.vertices(vInds(2),:); % [60    28]
-X=c.edge_x_coords(edgeInd); X=X{1}; % X'  [57    57    58    59]
-Y=c.edge_y_coords(edgeInd); Y=Y{1}; % Y'  [29    28    28    28]
-
-r=rg; % patch radius 8
-for k=1:length(X)
-  ex=X(k); ey=Y(k);
-  % TODO patch should be cropped from ws or from ucm?
-  spxPatch=cropPatch(ws,ex,ey,r); % superpixels patch
-  w=computeWeightFun(ex,ey,spxPatch);
-  c.edge_weights{edgeInd}=[w c.edge_weights{edgeInd}];
-end
-
-if 0
+if true
 %% interactive demo loop
 while (true)
   clear functions; % clear the persistent vars in getFigPos
@@ -74,32 +46,6 @@ while (true)
 end % while(true)
 end
 end % patchesDemo
-
-% ----------------------------------------------------------------------
-function [w] = computeWeights(x,y,spxPatch,model,T,I,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm)
-% get 4 patches in leaves using .ind
-x1=ceil(((x+p(3))-opts.imWidth)/opts.stride)+rg; % rg<=x1<=w1, for w1 see edgesDetectMex.cpp
-y1=ceil(((y+p(1))-opts.imWidth)/opts.stride)+rg; % rg<=y1<=h1
-assert((x1==ceil(x/2)) && (y1==ceil(y/2)));
-ids=double(ind(y1,x1,:)); % indices come from cpp and are 0-based
-treeIds=uint32(floor(ids./nTreeNodes)+1);
-leafIds=uint32(mod(ids,nTreeNodes)+1);
-w=zeros(nTreesEval,1);
-for k=1:nTreesEval
-  treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
-  assert(~model.child(leafId,treeId)); % TODO add this to assertion (when also saving patches in forest) && ~isempty(model.patches{leafId,treeId}));
-  hs=T{treeId}.hs(:,:,leafId); % best segmentation
-  w(k)=patchDistance(spxPatch,hs);
-end
-end % computeWeights
-
-% ----------------------------------------------------------------------
-function d = patchDistance(patch1,patch2)
-% initFig(); im(patch1);
-% initFig(); im(patch2);
-% TODO compute distance
-d=0.75;
-end
 
 % ----------------------------------------------------------------------
 function processLocation(x,y,model,T,I,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm)
@@ -134,7 +80,8 @@ end
 Es4=fooMex(model,chnsReg,chnsSim,x1,y1); % mex-file was private edgesDetectMex(...)
 E4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
 % initFig(); im(E4); hold on; plot(x,y,'rx','MarkerSize',20);
-% TODO why these apparent off-by-ones when cropping the patch; to "remedy" cropping 1px bigger radius; check rounding errors
+% Q? Why these apparent off-by-ones when cropping the patch; to visualise properly, cropping 1px bigger radius; check rounding errors
+% A. The actual boundary is between two pixels; can't do any better
 initFig(); im(cropPatch(E4,x,y,rg+1)); title('Intermediate decision patch (4 trees voted)');
 
 % patch detected with the decision forest; result based on 16x16x4/4 trees
