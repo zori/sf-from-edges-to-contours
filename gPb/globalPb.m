@@ -26,6 +26,7 @@ function [gPb_orient, gPb_thin, textons] = globalPb(imFile, outFile, rsz, sfPb)
 
 if nargin<3, rsz = 1.0; end
 if nargin<2, outFile = ''; end
+assert(ismatrix(sfPb));
 
 if ((rsz<=0) || (rsz>1)),
     error('resizing factor rsz out of range (0,1]');
