@@ -9,11 +9,12 @@ dss=[...
   struct('name','BSDS500','isVideo',false),...
   struct('name','VSB100_40','isVideo',true),...
   struct('name','VSB100_full','isVideo',true),...
+  struct('name','VSB100_half','isVideo',true),... % only added so that we can run the memory-greedy "sf + sPb" on VSB100
   struct('name','VSB100_tiny','isVideo',true),...
   ];
 dsName='BSDS500';
 LOG.ds=dss(strcmp({dss.name},dsName));
-LOG.modelName=[LOG.ds.name '_patches'];
+LOG.modelName=[LOG.ds.name ''];
 % log directories
 LOG.dsDir=fullfile(LOG.evalDir, LOG.ds.name);
 LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');
@@ -45,7 +46,6 @@ segmDetectWrapper(model,LOG);
 %% Benchmark
 benchmarkWrapper(LOG);
 
-% TODO fix the legend
 % Optionally, plot additionally precomputed results from other algorithms
 % plotContext(LOG);
 
