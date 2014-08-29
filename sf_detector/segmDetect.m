@@ -158,9 +158,9 @@ function detectSPb(model, imDir, resDir, ids, do)
 % step from Arbelaez et. al.
 % slow detection
 m=length(do);
-% TODO why non-maximum suppression breaks the watershed?
-% model.opts.nms=1;
 outCell=cell(1,m);
+% TODO try nms or nnms
+% model.opts.nms=1;
 parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   imFile=fullfile(imDir,id.video,[id.name '.jpg']);
   I=imread(imFile);
