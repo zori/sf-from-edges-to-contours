@@ -12,4 +12,7 @@ if (~all(ismember({'model','T'},who)))
   end
 end
 clear k nTrees treeStr;
-patchesDemo(model,T);
+
+%patchesDemo(model,T);
+BW=repmat(eye(16),1,1,3);
+[ucmOrig,ucmWeigh]=ucmWeighted(BW,model,T);
