@@ -147,6 +147,7 @@ ps={patch1,patch2};
 nPs=length(ps);
 ms=false(nPs,nSamples);
 for k=1:nPs, ms(k,:)=ps{k}(is1)==ps{k}(is2); end;
+% assert(nPs==2);
 d=sum(~xor(ms(1,:),ms(2,:)))/nSamples;
 end % patchDistance
 
