@@ -150,7 +150,7 @@ for ff=1:numel(inFile)
     end
 
     % zero all counts
-    if (~exist('cntR','var'))
+    if ~exist('cntR','var')
         cntR = zeros(size(thresh));
         sumR = zeros(size(thresh));
         cntP = zeros(size(thresh));

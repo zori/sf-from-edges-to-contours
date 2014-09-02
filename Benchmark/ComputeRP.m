@@ -94,13 +94,13 @@ fprintf('%d images are in the folder (and first-level subfolders)\n',numel(iids)
 
 timeBmSegmEval = tic;
 if (isvalid)
-    Benchmarksegmeval(imgDir, gtDir, inDir, outDirA, nthresh, [], [], metrics, tempConsistency,justavideo);
+    Benchmarksegmevalparallel(imgDir, gtDir, inDir, outDirA, nthresh, [], [], metrics, tempConsistency,justavideo);
 end
 toc(timeBmSegmEval);
 
 timeBmEvalStats = tic;
 if (isvalid)
-    Benchmarkevalstats(imgDir, gtDir, inDir, outDirA, nthresh, [], [], metrics, tempConsistency, justavideo);
+    Benchmarkevalstatsparallel(imgDir, gtDir, inDir, outDirA, nthresh, [], [], metrics, tempConsistency, justavideo);
 end
 toc(timeBmEvalStats);
 

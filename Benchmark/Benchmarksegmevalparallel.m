@@ -1,5 +1,5 @@
-function Benchmarksegmeval(imgDir, gtDir, inDir, outDir, nthresh, maxDist, thinpb, bmetrics, considervideos, justavideo)
-% Benchmarksegmeval(imgDir, gtDir, inDir, outDir, nthresh, maxDist, thinpb)
+function Benchmarksegmevalparallel(imgDir, gtDir, inDir, outDir, nthresh, maxDist, thinpb, bmetrics, considervideos, justavideo)
+% Benchmarksegmevalparallel(imgDir, gtDir, inDir, outDir, nthresh, maxDist, thinpb)
 %
 % Run boundary and region benchmarks on dataset.
 %
@@ -24,7 +24,7 @@ function Benchmarksegmeval(imgDir, gtDir, inDir, outDir, nthresh, maxDist, thinp
 % all requires computation of all metrics
 %
 % modified by Fabio Galasso
-% February 2014
+% August 2014
 
 if (~exist('justavideo','var'))
   justavideo=[];
@@ -95,41 +95,50 @@ if (~isempty(offsetgt)), offsetgt, end%#ok<NOPRT>
 
 
 iids=Listacrossfolders(imgDir,'jpg',Inf); % iids = dir(fullfile(imgDir,'*.jpg'));
-encvideos=cell(0);
-fprintf('Evaluating images/frames (out of %d):',numel(iids));
-for i = 1:numel(iids)
+
+[encimagevideo,encisvideo]=Collectimagevideowithnames(iids,considervideos);
+fprintf('Encountered %d videos / images\n',numel(encimagevideo));
+fprintf('Evaluating images/frames (out of %d):',numel(encimagevideo));
+parfor i=1:numel(encimagevideo)
   fprintf(' %d', i);
   
-  if (considervideos)
-    [videodetected,videoimagename,fnames,nframes]=Detectvideo(iids,i); % disp(fnames(1))
-    videoimagenamewithunderscores=strrep(videoimagename, filesep, '_');
-  else
-    videodetected=false;
-  end
-  if (~videodetected)
-    videoimagename=iids(i).name(1:end-4); %Remove extension
-    videoimagenamewithunderscores=strrep(videoimagename, filesep, '_');
-  end
-  if (videodetected)
-    if (any(strcmp(encvideos,videoimagename))) % The video has already been processed
-      continue;
-    else
-      encvideos{numel(encvideos)+1}=videoimagename;
-    end
-  end
-  
-  if ( (analyzeonevideo) && (~strcmp(videoimagenamewithunderscores,justavideo)) ) % A policy for images may be introduced based on (considervideos)
+  if ( (analyzeonevideo) && (~strcmp(encimagevideo{i}.videoimagenamewithunderscores,justavideo)) ) % A policy for images may be introduced based on (considervideos)
     continue;
   end
+  
+  %Retrieve image / video variables
+  videodetected=encisvideo(i);
+  videoimagename=encimagevideo{i}.videoimagename;
+  nframes=encimagevideo{i}.nframes;
+  fnames=encimagevideo{i}.fnames;
+  videoimagenamewithunderscores=encimagevideo{i}.videoimagenamewithunderscores;
+  
+  
   
   evFile1 = fullfile(outDir, strcat(videoimagenamewithunderscores, '_ev1.txt')); %bdry
   evFile2 = fullfile(outDir, strcat(videoimagenamewithunderscores, '_ev2.txt')); %sc
   evFile3 = fullfile(outDir, strcat(videoimagenamewithunderscores, '_ev3.txt')); %sc
   evFile4 = fullfile(outDir, strcat(videoimagenamewithunderscores, '_ev4.txt')); %pri,vi
-  evFile5 = fullfile(outDir, strcat(videoimagenamewithunderscores, '_ev5.txt')); %3dbdry
+  % evFile5 = fullfile(outDir, strcat(videoimagenamewithunderscores, '_ev5.txt')); %3dbdry
   evFile6 = fullfile(outDir, strcat(videoimagenamewithunderscores, '_ev6.txt')); %regpr
   
-  if (~isempty(dir(evFile4))), continue; end
+  
+  
+  %Check if the requested metrics for the image/video are already computed
+  yettoprocess=false;
+  if ( (any(strcmp(bmetrics,'bdry'))) || (any(strcmp(bmetrics,'all'))) )
+    yettoprocess=yettoprocess|(isempty(dir(evFile1)));
+  end
+  if ( (any(strcmp(bmetrics,'sc'))) || (any(strcmp(bmetrics,'all'))) )
+    yettoprocess=yettoprocess|(isempty(dir(evFile3)));
+  end
+  if ( (any(strcmp(bmetrics,'pri'))) || (any(strcmp(bmetrics,'vi'))) || (any(strcmp(bmetrics,'all'))) )
+    yettoprocess=yettoprocess|(isempty(dir(evFile4)));
+  end
+  if ( (any(strcmp(bmetrics,'regpr'))) || (any(strcmp(bmetrics,'all'))) )
+    yettoprocess=yettoprocess|(isempty(dir(evFile6)));
+  end
+  if (~yettoprocess), continue; end
   
   
   

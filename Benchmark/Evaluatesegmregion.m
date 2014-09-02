@@ -125,7 +125,7 @@ for ff=1:numel(inFile)
     end
     
     clear segs;
-    if ( (strcmp(e,'.mat')) && exist(inFile{ff},'file') )
+    if (strcmp(e,'.mat')) && exist(inFile{ff},'file')
         load(inFile{ff}); % segs
     end
     
