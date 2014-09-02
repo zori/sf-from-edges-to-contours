@@ -225,7 +225,7 @@ S = dir(fullfile(outDir,'*_ev6.txt'));
 if ( (length(dir(fname))~=1) && (~isempty(S)) )
 
     % deduce nthresh from .pr files
-    AA = dlmread( fullfile(outDir,S(1).name) ); % thresh cntR sumR cntP sumP
+    AA = dlmread( fullfile(outDir,S(1).name) ); % thresh cntrec sumrec cntprec sumprec
     thresh = AA(:,1);
 
     nthresh = numel(thresh);
