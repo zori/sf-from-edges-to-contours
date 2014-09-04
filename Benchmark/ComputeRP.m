@@ -25,6 +25,7 @@ dfs={...
   'superposePlot',false,...     % superpose RP curves; true - new curves are added to the same graph; false - a new graph is initialized
   'confirmDel',false,...        % TODO is this interactive (if true) form useful
   'minNumIms',0,...             % number of images to wait for starting computation (0 means no wait)
+  'useParfor',false...          % parallelize if sufficient memory
   };
 
 opts=getPrmDflt(varargin,dfs,1);
@@ -75,9 +76,12 @@ if (minNumIms>0)
 end
 fprintf('%d images are in the folder (and first-level subfolders)\n',numel(iids));
 
-bmOpts={'imgDir',imgDir,'gtDir',gtDir,'inDir',inDir,'outDirA',outDirA,...
-  'nthresh',opts.nthresh,'metrics',opts.metrics,...
-  'tempConsistency',opts.tempConsistency,'justavideo',opts.justavideo};
+bmOpts=opts; % used are nthresh, metrics, tempConsistency, justavideo, useParfor
+bmOpts.imgDir=imgDir;
+bmOpts.gtDir=gtDir;
+bmOpts.inDir=inDir;
+bmOpts.outDirA=outDirA;
+
 timeBmSegmEval = tic;
 if (isvalid)
     Benchmarksegmevalparallel(bmOpts);

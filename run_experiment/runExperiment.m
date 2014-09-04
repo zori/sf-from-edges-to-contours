@@ -44,8 +44,9 @@ model=edgesTrainWrapper(LOG);
 segmDetectWrapper(model,LOG);
 
 %% Benchmark
-benchmarkWrapper(LOG);
+fhs=benchmarkWrapper(LOG);
 
+% TODO use fhs in plotContext
 % Optionally, plot additionally precomputed results from other algorithms
 % plotContext(LOG);
 
