@@ -1,37 +1,34 @@
-function Benchmarkevalstatsparallel(imgDir, gtDir, inDir, outDir, nthresh, maxDist, thinpb, bmetrics, considervideos, justavideo)
+function Benchmarkevalstatsparallel(varargin)
 % Fabio Galasso
 % August 2014
+%
+% modified by Zornitsa Kostadinova
+% Sep 2014
 
-if (~exist('justavideo','var'))
-    justavideo=[];
-end
-if (isempty(justavideo))
-    analyzeonevideo=false;
-else
-    analyzeonevideo=true;
-end
-if ( (~exist('considervideos','var')) || (isempty(considervideos)) )
-    considervideos=true;
-end
-if ( (~exist('bmetrics','var')) || (isempty(bmetrics)) )
-    bmetrics={'all'}; %bmetrics={'lengthsncl','all'}
-end
-if ( (~exist('thinpb','var')) || (isempty(thinpb)) )
-    thinpb=true;
-end
-if ( (~exist('maxDist','var')) || (isempty(maxDist)) )
-    maxDist=0.0075;
-end
-if ( (~exist('nthresh','var')) || (isempty(nthresh)) )
-    nthresh=99;
-end
+bms=benchmarkMetrics();
+dfs={...
+  'imgDir','REQ'...
+  'gtDir','REQ'...
+  'inDir','REQ'...
+  'outDirA','REQ'...
+  'nthresh',99,...              % number of thresholds (hierarchical levels to include) for evaluating the ucm
+  'metrics',bms{end},...
+  'tempConsistency',true,...    % true for videos TODO do this automatically - we know whether a dataset is images or videos
+  'justavideo',[],...
+  };
 
-
+opts=getPrmDflt(varargin,dfs,1);
+gtDir=opts.gtDir;
+inDir=opts.inDir;
+outDirA=opts.outDirA;
+metrics=opts.metrics;
+tempConsistency=opts.tempConsistency;
+justavideo=opts.justavideo;
 
 %Check if the requested metrics are already computed
 yettoprocess=false;
-if ( (any(strcmp(bmetrics,'lengthsncl'))) || (any(strcmp(bmetrics,'all'))) )
-    fname = fullfile(outDir, 'eval_nclustersstats_thr.txt');
+if ( (any(strcmp(metrics,'lengthsncl'))) || (any(strcmp(metrics,'all'))) )
+    fname = fullfile(outDirA, 'eval_nclustersstats_thr.txt');
     yettoprocess=yettoprocess|(~(length(dir(fname))==1));
 end
 if (~yettoprocess)
@@ -59,15 +56,15 @@ if (~isempty(offsetgt)), offsetgt, end%#ok<NOPRT>
 
 
 inds=Listacrossfolders(inDir,'mat',Inf); %List .mat files in Ucm2
-iids=Listacrossfolders(imgDir,'jpg',Inf); % iids = dir(fullfile(imgDir,'*.jpg'));
+iids=Listacrossfolders(opts.imgDir,'jpg',Inf);
 
-[encimagevideo,encisvideo]=Collectimagevideowithnames(iids,considervideos);
+[encimagevideo,encisvideo]=Collectimagevideowithnames(iids,tempConsistency);
 fprintf('Encountered %d videos / images\n',numel(encimagevideo));
 fprintf('Evaluating images/frames length statistics (out of %d):',numel(encimagevideo));
 parfor i = 1:numel(encimagevideo)
     fprintf(' %d', i);
-    
-    if ( (analyzeonevideo) && (~strcmp(encimagevideo{i}.videoimagenamewithunderscores,justavideo)) ) % A policy for images may be introduced based on (considervideos)
+    % if analyze one video
+    if ~isempty(justavideo) && ~strcmp(encimagevideo{i}.videoimagenamewithunderscores,justavideo) % A policy for images may be introduced based on (tempConsistency)
         continue;
     end
  
@@ -78,7 +75,7 @@ parfor i = 1:numel(encimagevideo)
     fnames=encimagevideo{i}.fnames;
     videoimagenamewithunderscores=encimagevideo{i}.videoimagenamewithunderscores;
 
-    evFile8 = fullfile(outDir, strcat(videoimagenamewithunderscores, '_ev8.txt')); %length and nclusters
+    evFile8 = fullfile(outDirA, strcat(videoimagenamewithunderscores, '_ev8.txt')); %length and nclusters
     if (~isempty(dir(evFile8))), continue; end
     
 
@@ -95,8 +92,8 @@ parfor i = 1:numel(encimagevideo)
     
     
     %Evaluate video statistics
-    if ( (any(strcmp(bmetrics,'lengthsncl'))) || (any(strcmp(bmetrics,'all'))) )
-        Evaluatesegmstat(inFile, gtFile, evFile8, nthresh, bmetrics, excludeth, offsetgt);
+    if ( (any(strcmp(metrics,'lengthsncl'))) || (any(strcmp(metrics,'all'))) )
+        Evaluatesegmstat(inFile, gtFile, evFile8, opts.nthresh, metrics, excludeth, offsetgt);
     end
 end
 fprintf('\n');
@@ -104,14 +101,14 @@ fprintf('\n');
 
 
 %% collect results
-if ( (any(strcmp(bmetrics,'lengthsncl'))) || (any(strcmp(bmetrics,'all'))) )
-    Collectevalaluatestat(outDir);
+if ( (any(strcmp(metrics,'lengthsncl'))) || (any(strcmp(metrics,'all'))) )
+    Collectevalaluatestat(outDirA);
 end
 
 
 
 %% clean up
-delete(sprintf('%s/*_ev8.txt', outDir));
+delete(sprintf('%s/*_ev8.txt', outDirA));
 
 
 

@@ -12,24 +12,14 @@ function [output,fhs]=ComputeRP(varargin)
 % modified by Zornitsa Kostadinova
 % Jun 2014
 
-% possible benchmark metrics
-metrics={
-  'bdry',...       % BPR - Boundary Precision-Recall
-  '3dbdry'...      % TODO is this not implemented
-  'regpr',...      % VPR - Volumetric Precision-Recall
-  'sc',...         % SC  - Segmentation Covering
-  'pri',...        % PRI - Probabilistic Rand Index
-  'vi',...         % VI  - Variation of Information
-  'lengthsncl',... % length statistics and number of clusters
-  'all'};          % computes all available
-
+bms=benchmarkMetrics();
 dfs={...
   'path',pwd...                 % path to `dirR'
   'dirR','tttttSegm',...        % directory (relative) that contains the directories `Images', `Groundtruth' and `Ucm2' (computed results)
   'outDirR',[],...              % The default directory in dirR is defined in the function Benchmarkcreateoutimvid
   'tempConsistency',true,...    % true for videos TODO do this automatically - we know whether a dataset is images or videos
   'justavideo',[],...
-  'metrics',metrics{end},...    % could be a cell, e.g. {'bdry','regpr'}
+  'metrics',bms{end},...        % could be a cell, e.g. {'bdry','regpr'}
   'nthresh',5,...               % number of thresholds (hierarchical levels to include) for evaluating the ucm
   'curveColor','r',...          % RP curves color
   'superposePlot',false,...     % superpose RP curves; true - new curves are added to the same graph; false - a new graph is initialized
@@ -41,13 +31,6 @@ opts=getPrmDflt(varargin,dfs,1);
 path_=opts.path;
 dirR=opts.dirR;
 outDirR=opts.outDirR;
-tempConsistency=opts.tempConsistency;
-justavideo=opts.justavideo;
-metrics=opts.metrics;
-nthresh=opts.nthresh;
-curveColor=opts.curveColor;
-superposePlot=opts.superposePlot;
-confirmDel=opts.confirmDel;
 minNumIms=opts.minNumIms;
 
 if (~isstruct(path_))
@@ -67,7 +50,7 @@ end
 onlyassignnames=true;
 [dirA,outDirA,isvalid] = Benchmarkcreateoutimvid(path_, dirR, onlyassignnames, outDirR); %#ok<ASGLU>
 if ( isvalid )
-    if (confirmDel)
+    if (opts.confirmDel)
         theanswer = input('Remove previous output? [ 1 , 0 (default) ] ');
     else
         theanswer=0;
@@ -82,29 +65,32 @@ if (~isvalid)
 end
 
 %Wait minNumIms for processing
-iids=Listacrossfolders(imgDir,'jpg',Inf); % iids = dir(fullfile(imgDir,'*.jpg'));
+iids=Listacrossfolders(imgDir,'jpg',Inf);
 if (minNumIms>0)
     while(numel(iids)<minNumIms)
         pause(10);
-        iids=Listacrossfolders(imgDir,'jpg',Inf); % iids = dir(fullfile(imgDir,'*.jpg'));
+        iids=Listacrossfolders(imgDir,'jpg',Inf);
     end
     fprintf('All images are in the directory\n');
 end
 fprintf('%d images are in the folder (and first-level subfolders)\n',numel(iids));
 
+bmOpts={'imgDir',imgDir,'gtDir',gtDir,'inDir',inDir,'outDirA',outDirA,...
+  'nthresh',opts.nthresh,'metrics',opts.metrics,...
+  'tempConsistency',opts.tempConsistency,'justavideo',opts.justavideo};
 timeBmSegmEval = tic;
 if (isvalid)
-    Benchmarksegmevalparallel(imgDir, gtDir, inDir, outDirA, nthresh, [], [], metrics, tempConsistency,justavideo);
+    Benchmarksegmevalparallel(bmOpts);
 end
 toc(timeBmSegmEval);
 
 timeBmEvalStats = tic;
 if (isvalid)
-    Benchmarkevalstatsparallel(imgDir, gtDir, inDir, outDirA, nthresh, [], [], metrics, tempConsistency, justavideo);
+    Benchmarkevalstatsparallel(bmOpts);
 end
 toc(timeBmEvalStats);
 
-[output,fhs]=Plotsegmeval(outDirA,superposePlot,curveColor);
+[output,fhs]=Plotsegmeval(outDirA,opts.superposePlot,opts.curveColor);
 
 % rmdir(dirA,'s')
 % rmdir(outDirA,'s')
