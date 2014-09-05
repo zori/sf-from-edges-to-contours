@@ -497,10 +497,6 @@ if ( (length(dir(fname))~=1) && (~isempty(S)) )
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% compute f-measure fromm recall and precision
-function [f] = fmeasure(r,p)
-f = 2*p.*r./(p+r+((p+r)==0));
-
 % interpolate to find best F and coordinates thereof
 function [bestT,bestR,bestP,bestF] = maxF(thresh,R,P)
 bestT = thresh(1);
@@ -521,7 +517,3 @@ for i = 2:numel(thresh),
     end
   end
 end
-
-
-
-
