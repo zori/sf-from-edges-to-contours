@@ -61,8 +61,7 @@ for e=1:nEdges
     
     % adjust indices for the padded superpixelised image
     spxPatch=cropPatch(wsPadded,ex+rg,ey+rg,rg); % crop from the padded watershed, to make sure a superpixels patch can always be cropped
-    % convert the superpixels patch to be a 0-1 boundary location
-    spxPatch=spxPatch==0;
+    w=computeWeightFun(ex,ey,spxPatch); w=sum(w)/numel(w);
     f=false;
     % TODO inspect pixel values at (47,89) in pb, and in the two finest partitions:
     % ws_wt(47,89) and sf_wt(47,89)
@@ -71,7 +70,6 @@ for e=1:nEdges
       initFig(1); im(wsPadded(1+rg:241+rg,1+rg:161+rg)); hold on;
       processLocationFun(ex,ey); % this needs a model with the patches saved
     end
-    w=computeWeightFun(ex,ey,spxPatch); w=sum(w)/numel(w);
     c.edge_weights(e,:)=c.edge_weights(e,:)+[w 1];
   end
   v1=c.vertices(c.edges(e,1),:);
@@ -117,20 +115,53 @@ for k=1:nTreesEval
   treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
   assert(~model.child(leafId,treeId)); % TODO add this to assertion (when also saving patches in forest) && ~isempty(model.patches{leafId,treeId}));
   hs=model.seg(:,:,leafId,treeId); %T{treeId}.hs(:,:,leafId); % best segmentation
-  % convert hs to be 0-1 boundary location
-  hs=gradientMag(single(hs))>.01;
   w(k)=patchDistance(spxPatch,hs);
 end
 end % computeWeights
 
 % ----------------------------------------------------------------------
-function d = patchDistance(patch1,patch2)
+function d = patchDistance(spx,seg)
 p=false;
 if p
-  initFig(); im(patch1);
-  initFig(); im(patch2);
+  initFig(); im(spx);
+  initFig(); im(seg);
+end
+% 2 options for inputs - bdry or seg
+% 2 options for distance metric - the original "crude" approximation or VPR
+% d=VPR(spx2bdry01(spx),seg2bdry01(seg));
+d=VPR(spx2seg(spx),seg);
+% d=CPD(spx2bdry01(spx),seg2bdry01(seg));
+% d=CPD(spx2seg(spx),seg);
 end
 
+% ----------------------------------------------------------------------
+function patch = spx2bdry01(patch)
+% convert the superpixels patch to be a 0-1 boundary location
+% the input has the boundary denoted by 0
+% the output has the boundary denoted by 1, non-boundary by 0
+patch=patch==0;
+end
+
+% ----------------------------------------------------------------------
+function patch = spx2seg(patch)
+% convert the superpixels patch to be a segmentation labeling (starting from 1)
+% the input has the boundary denoted by 0
+% see pb2ucm
+bdry=spx2bdry01(patch);
+labels2=bwlabel(clean_watersheds(super_contour_4c(bdry))==0,8);
+patch=uint8(labels2(2:2:end, 2:2:end));
+end
+
+% ----------------------------------------------------------------------
+function patch = seg2bdry01(patch)
+% convert the seg to be 0-1 boundary location
+patch=gradientMag(single(patch))>.01;
+end
+
+% ----------------------------------------------------------------------
+function d = CPD(patch1,patch2)
+% CPD - a crude patch distance metric
+% after Dollar patch comparison while training a structured decision tree
 nSamples=256;
 persistent cache; w=size(patch1,1); assert(size(patch1,2)==w); % w=16
 % is1, is2 - indices for simultaneous lookup in the segm patch
