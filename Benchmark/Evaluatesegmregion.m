@@ -82,9 +82,9 @@ if ( (~isempty(offsetgt)) && (isstruct(offsetgt)) )
     
         for i=1:ngts
             if (~isempty(groundTruth{i}))
-                segtmp=Doublebackconv(groundTruth{i}.Segmentation);
-                segtmp(segtmp<1)=max(segtmp(:));
-                allgtobjs{i}=[allgtobjs{i},reshape(unique(segtmp),1,[])];
+                segTmp=Doublebackconv(groundTruth{i}.Segmentation);
+                segTmp(segTmp<1)=max(segTmp(:));
+                allgtobjs{i}=[allgtobjs{i},reshape(unique(segTmp),1,[])];
 %                 allgtobjs{i}=[allgtobjs{i},reshape(unique(groundTruth{i}.Segmentation),1,[])];
             end
         end
@@ -103,8 +103,8 @@ for ff=1:numel(gtFile)
 
     for i=1:ngts
         if (~isempty(groundTruth{i}))
-            segtmp=Doublebackconv(groundTruth{i}.Segmentation);
-            maxgtlabelsngt(i)=max(maxgtlabelsngt(i),max(segtmp(:)));
+            segTmp=Doublebackconv(groundTruth{i}.Segmentation);
+            maxgtlabelsngt(i)=max(maxgtlabelsngt(i),max(segTmp(:)));
 %             maxgtlabelsngt(i)=max(maxgtlabelsngt(i),max(groundTruth{i}.Segmentation(:)));
         end
     end
@@ -126,7 +126,7 @@ for ff=1:numel(inFile)
     
     clear segs;
     if (strcmp(e,'.mat')) && exist(inFile{ff},'file')
-        load(inFile{ff}); % segs
+        load(inFile{ff}); % segs or ucm2
     end
     
     if (exist('ucm2', 'var'))
@@ -220,7 +220,7 @@ for ff=1:numel(inFile)
     [p,n,e]=fileparts(inFile{ff});
     clear segs;
     if ( (strcmp(e,'.mat')) && (exist(inFile{ff},'file')~=0) )
-        load(inFile{ff}); % segs
+        load(inFile{ff}); % segs or ucm2
     end
     
     if (exist('ucm2', 'var'))
@@ -256,7 +256,7 @@ for ff=1:numel(inFile)
             nthresh = numel(segs);
         end
         thresh = 1:nthresh; thresh=thresh';
-    else
+    else % ucm
         thresh = linspace(1/(nthresh+1),1-1/(nthresh+1),nthresh)';
     end
 
@@ -270,9 +270,10 @@ for ff=1:numel(inFile)
     count=0;
     for s = 1 : ngts
         if (~isempty(groundTruth{s}))
-            groundTruth{s}.Segmentation = Doublebackconv(groundTruth{s}.Segmentation); %#ok<AGROW> %touse: Doublebackconv
-            segtmp=groundTruth{s}.Segmentation; segtmp(segtmp<0)=0;
-            regionsTmp = regionprops(segtmp, 'Area');
+            segTmp=Doublebackconv(groundTruth{s}.Segmentation);
+            groundTruth{s}.Segmentation=segTmp; %#ok<AGROW>
+            segTmp(segTmp<0)=0;
+            regionsTmp=regionprops(segTmp, 'Area');
             for rr=1:numel(regionsTmp)
                 regionsGT(count+rr)=regionsGT(count+rr)+regionsTmp(rr).Area;
             end
@@ -297,7 +298,7 @@ for ff=1:numel(inFile)
                     seg(:) = spxcount + [1:numel(seg)];
                 end
             end
-        else
+        else % ucm
             labels2 = bwlabel(ucm <= thresh(t));
             seg = labels2(2:2:end, 2:2:end);
             seg = seg + countucm2(t); %we assume bwlabel assigns labels from 1
