@@ -297,10 +297,11 @@ for r = 1 : numel(R),
   xc = R(r).PixelList(1,2);
   yc = R(r).PixelList(1,1);
   
-  vec = [ max(ws_clean(xc-2, yc-1), ws_clean(xc-1, yc-2)) ...
-    max(ws_clean(xc+2, yc-1), ws_clean(xc+1, yc-2)) ...
-    max(ws_clean(xc+2, yc+1), ws_clean(xc+1, yc+2)) ...
-    max(ws_clean(xc-2, yc+1), ws_clean(xc-1, yc+2)) ];
+  % TODO how did this code work - without checks for out-of-matrix access?
+  vec = [ max(safe_matrix(ws_clean,xc-2,yc-1), safe_matrix(ws_clean,xc-1,yc-2)) ...
+    max(safe_matrix(ws_clean,xc+2,yc-1), safe_matrix(ws_clean,xc+1,yc-2)) ...
+    max(safe_matrix(ws_clean,xc+2,yc+1), safe_matrix(ws_clean,xc+1,yc+2)) ...
+    max(safe_matrix(ws_clean,xc-2,yc+1), safe_matrix(ws_clean,xc-1,yc+2)) ];
   
   [~,id] = min(vec);
   switch id,
@@ -347,7 +348,16 @@ end
 end
 
 % ----------------------------------------------------------------------
-function [pb_norm] = normalize_output(pb)
+function val = safe_matrix(m,x,y)
+try
+  val=m(x,y);
+catch
+  val=Inf;
+end
+end
+
+% ----------------------------------------------------------------------
+function pb_norm = normalize_output(pb)
 % map ucm values to [0 1] with sigmoid
 % learned on BSDS
 [tx, ty] = size(pb);
