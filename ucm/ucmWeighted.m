@@ -27,6 +27,7 @@ IPadded=imPad(I,p,'symmetric');
 % compute feature channels
 [chnsReg,chnsSim]=edgesChns(IPadded,model.opts);
 % apply forest to image
+model.opts.nms=1;
 [Es,ind]=edgesDetectMex(model,chnsReg,chnsSim);
 % normalize and finalize edge maps
 t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
@@ -215,8 +216,17 @@ if ~strcmp(fmt,'imageSize') && ~strcmp(fmt,'doubleSize'),
 end
 
 % create finest partition and transfer contour strength
+timerCfp=tic;
 ws_wt=finestPartFun(pb);
+cfpTime=toc(timerCfp);
+timerUcm=tic;
 ucm=pb2ucm(ws_wt,fmt);
+ucmTime=toc(timerUcm);
+
+% disp(cfpTime);
+% disp(ucmTime);
+% disp(seconds2human(cfpTime));
+% disp(seconds2human(ucmTime));
 end
 
 % ----------------------------------------------------------------------
