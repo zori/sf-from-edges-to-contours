@@ -15,4 +15,4 @@ clear k nTrees treeStr;
 
 %patchesDemo(model,T);
 BW=repmat(eye(16),1,1,3);
-[ucmOrig,ucmWeigh]=ucmWeighted(BW,model,T);
+ucmW=ucmWeighted(BW,model,T);

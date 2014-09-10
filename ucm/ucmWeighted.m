@@ -1,7 +1,8 @@
 % Zornitsa Kostadinova
 % Jul 2014
 % 8.3.0.532 (R2014a)
-function [ucmF,ucmS] = ucmWeighted(I,model,T)
+function ucm = ucmWeighted(I,model,T)
+% function [ucmOrig,ucm] = ucmWeighted(I,model,T)
 % creates a ucm of an image, that is weighted based on the patches in the leaves of a
 % decision forest
 %
@@ -33,23 +34,41 @@ Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:)*t; E=convTri(Es_,1);
 wsPadded=watershed(Es);
 computeWeightFun=@(x,y,spxPatch) computeWeights(x,y,spxPatch,model,opts,rg,nTreeNodes,nTreesEval,p,ind);
 processLocationFun=@(x,y) processLocation(x,y,model,T,I,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,watershed(E),contours2ucm(E));
-
-cFP=@(pb) create_finest_partition(pb,wsPadded,rg,computeWeightFun,processLocationFun);
-% TODO fixme: here there are two outputs for comparison - first and second
-[ucmF,ucmS]=weightedContours2ucm(E,'doubleSize',cFP);
+% cfp_orig=@(pb) create_finest_partition_orig(pb);
+% ucmOrig=weightedContours2ucm(E,'doubleSize',cfp_orig);
+cfp=@(pb) create_finest_partition(pb,wsPadded,rg,computeWeightFun,processLocationFun);
+ucm=weightedContours2ucm(E,'doubleSize',cfp);
 end
 
 % ----------------------------------------------------------------------
-function [ws_wt,sf_wt] = create_finest_partition(pb,wsPadded,rg,computeWeightFun, processLocationFun)
-ws_bw=(watershed(pb)==0);
+function ws_wt = create_finest_partition_orig(pb)
+ws=watershed(pb); ws_bw=double(ws==0);
+c=fit_contour(ws_bw);
+% remove empty fields
+c=rmfield(c,{'edge_equiv_ids','regions_v_left','regions_v_right','regions_e_left','regions_e_right','regions_c_left','regions_c_right'});
+ws_wt=zeros(size(ws_bw)); % weight
+for e=1:numel(c.edge_x_coords)
+  if c.is_completion(e), continue; end
+  for p=1:numel(c.edge_x_coords{e})
+    ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
+    ws_wt(ey,ex)=max(pb(ey,ex), ws_wt(ey,ex));
+  end
+  v1=c.vertices(c.edges(e,1),:);
+  v2=c.vertices(c.edges(e,2),:);
+  ws_wt(v1(1),v1(2))=max(pb(v1(1),v1(2)),ws_wt(v1(1),v1(2)));
+  ws_wt(v2(1),v2(2))=max(pb(v2(1),v2(2)),ws_wt(v2(1),v2(2)));
+end
+end
 
-c=fit_contour(double(ws_bw));
+% ----------------------------------------------------------------------
+function sf_wt = create_finest_partition(pb,wsPadded,ri,computeWeightFun, processLocationFun)
+ws=watershed(pb);
+
+c=fit_contour(double(ws==0));
 % remove empty fields
 c=rmfield(c,{'edge_equiv_ids','regions_v_left','regions_v_right','regions_e_left','regions_e_right','regions_c_left','regions_c_right'});
 nEdges=numel(c.edge_x_coords);
 c.edge_weights=zeros(nEdges,2); % tuples of accumulated weights and number of pixels per edge
-
-ws_wt=zeros(size(ws_bw)); % weight
 for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
   for p=1:numel(c.edge_x_coords{e})
@@ -57,27 +76,21 @@ for e=1:nEdges
     % the correct way is (for an image of dimensions h x w x 3)
     % first coord, in [1,h], is y, second coord, in [1,w], is x
     ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
-    ws_wt(ey,ex)=max(pb(ey,ex), ws_wt(ey,ex));
-    
     % adjust indices for the padded superpixelised image
-    spxPatch=cropPatch(wsPadded,ex+rg,ey+rg,rg); % crop from the padded watershed, to make sure a superpixels patch can always be cropped
+    spxPatch=cropPatch(wsPadded,ex+ri,ey+ri,ri); % crop from the padded watershed, to make sure a superpixels patch can always be cropped
     w=computeWeightFun(ex,ey,spxPatch); w=sum(w)/numel(w);
     f=false;
     if f
       % close all;
-      initFig(1); im(wsPadded(1+rg:241+rg,1+rg:161+rg)); hold on;
+      initFig(1); im(ws); hold on; plot(ey,ex,'x');
       processLocationFun(ex,ey); % this needs a model with the patches saved
     end
     c.edge_weights(e,:)=c.edge_weights(e,:)+[w 1];
   end
-  v1=c.vertices(c.edges(e,1),:);
-  v2=c.vertices(c.edges(e,2),:);
-  ws_wt(v1(1),v1(2))=max(pb(v1(1),v1(2)),ws_wt(v1(1),v1(2)));
-  ws_wt(v2(1),v2(2))=max(pb(v2(1),v2(2)),ws_wt(v2(1),v2(2)));
 end % for e - edge index
 
 % apply weights to ucm
-sf_wt=zeros(size(ws_bw));
+sf_wt=zeros(size(pb));
 for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
   W=c.edge_weights(e,1)/c.edge_weights(e,2); % avg weight on edge e
@@ -191,7 +204,7 @@ d=sum(~xor(ms(1,:),ms(2,:)))/nSamples;
 end % patchDistance
 
 % ----------------------------------------------------------------------
-function [ucmF,ucmS] = weightedContours2ucm(pb, fmt, finestPartFun)
+function ucm = weightedContours2ucm(pb, fmt, finestPartFun)
 % TODO copy-pasted from contours2ucm.m
 if nargin<2, fmt = 'imageSize'; end;
 
@@ -200,22 +213,21 @@ if ~strcmp(fmt,'imageSize') && ~strcmp(fmt,'doubleSize'),
 end
 
 % create finest partition and transfer contour strength
-[ws_wt,sf_wt] = finestPartFun(pb);
-[ucmF,ucmS]=pb2ucm(ws_wt,sf_wt,fmt);
+ws_wt=finestPartFun(pb);
+ucm=pb2ucm(ws_wt,fmt);
 end
 
 % ----------------------------------------------------------------------
-function [ucmF, ucmS] = pb2ucm(ws_wt,sf_wt,fmt)
+function ucm = pb2ucm(ws_wt,fmt)
 % prepare pb for ucm
-ws_wt2 = double(super_contour_4c(ws_wt)); sf_wt2 = double(super_contour_4c(sf_wt));
+ws_wt2 = double(super_contour_4c(ws_wt));
 ws_wt2 = clean_watersheds(ws_wt2);
 labels2 = bwlabel(ws_wt2 == 0, 8);
 labels = labels2(2:2:end, 2:2:end) - 1; % labels begin at 0 in mex file.
-ws_wt2=hedge(ws_wt2); sf_wt2=hedge(sf_wt2);
+ws_wt2=hedge(ws_wt2);
 
-% compute ucm with mean pb.
-ucmF=pb2ucmDo(ws_wt2,labels,fmt);
-ucmS=pb2ucmDo(sf_wt2,labels,fmt);
+% compute ucm with mean pb
+ucm=pb2ucmDo(ws_wt2,labels,fmt);
 end
 
 % ----------------------------------------------------------------------
