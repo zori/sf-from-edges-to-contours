@@ -26,7 +26,7 @@ IPadded=imPad(I,p,'symmetric');
 % compute feature channels
 [chnsReg,chnsSim]=edgesChns(IPadded,model.opts);
 % apply forest to image
-[Es,ind]=fooMex(model,chnsReg,chnsSim); % mex-file was private edgesDetectMex(...)
+[Es,ind]=edgesDetectMex(model,chnsReg,chnsSim);
 % normalize and finalize edge maps
 t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
 Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:)*t; E=convTri(Es_,1);
@@ -63,8 +63,6 @@ for e=1:nEdges
     spxPatch=cropPatch(wsPadded,ex+rg,ey+rg,rg); % crop from the padded watershed, to make sure a superpixels patch can always be cropped
     w=computeWeightFun(ex,ey,spxPatch); w=sum(w)/numel(w);
     f=false;
-    % TODO inspect pixel values at (47,89) in pb, and in the two finest partitions:
-    % ws_wt(47,89) and sf_wt(47,89)
     if f
       % close all;
       initFig(1); im(wsPadded(1+rg:241+rg,1+rg:161+rg)); hold on;
@@ -85,9 +83,6 @@ for e=1:nEdges
   W=c.edge_weights(e,1)/c.edge_weights(e,2); % avg weight on edge e
   for p=1:numel(c.edge_x_coords{e})
     ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
-    if ey==3 && ex==10
-      disp(e); % hold on; plot(10,3,'x');
-    end
     sf_wt(ey,ex)=max(W,sf_wt(ey,ex));
   end
   v1=c.vertices(c.edges(e,1),:);
@@ -162,6 +157,7 @@ end
 function d = CPD(patch1,patch2)
 % CPD - a crude patch distance metric
 % after Dollar patch comparison while training a structured decision tree
+% since there is random sampling inside, exact numbers are not reproducible
 nSamples=256;
 persistent cache; w=size(patch1,1); assert(size(patch1,2)==w); % w=16
 % is1, is2 - indices for simultaneous lookup in the segm patch
@@ -193,8 +189,6 @@ end
 
 % create finest partition and transfer contour strength
 [ws_wt,sf_wt] = finestPartFun(pb);
-% TODO inspect pixel values at (47,89) in pb, and in the two finest partitions:
-% ws_wt(47,89) and sf_wt(47,89)
 [ucmF,ucmS]=pb2ucm(ws_wt,sf_wt,fmt);
 end
 
@@ -205,7 +199,6 @@ ws_wt2 = double(super_contour_4c(ws_wt)); sf_wt2 = double(super_contour_4c(sf_wt
 ws_wt2 = clean_watersheds(ws_wt2);
 labels2 = bwlabel(ws_wt2 == 0, 8);
 labels = labels2(2:2:end, 2:2:end) - 1; % labels begin at 0 in mex file.
-
 ws_wt2=hedge(ws_wt2); sf_wt2=hedge(sf_wt2);
 
 % compute ucm with mean pb.
@@ -273,7 +266,7 @@ for r = 1 : numel(R),
     max(ws_clean(xc+2, yc+1), ws_clean(xc+1, yc+2)) ...
     max(ws_clean(xc-2, yc+1), ws_clean(xc-1, yc+2)) ];
   
-  [nd,id] = min(vec);
+  [~,id] = min(vec);
   switch id,
     case 1,
       if ws_clean(xc-2, yc-1) < ws_clean(xc-1, yc-2),

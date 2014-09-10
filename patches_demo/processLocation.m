@@ -30,7 +30,7 @@ for k=1:nTreesEval
 end
 
 % Compute the intermediate decision at the given pixel location (of 4 trees)
-Es4=fooMex(model,chnsReg,chnsSim,x1,y1); % mex-file was private edgesDetectMex(...)
+Es4=edgesDetectMex(model,chnsReg,chnsSim,x1,y1);
 E4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
 % initFig(); im(E4); hold on; plot(x,y,'rx','MarkerSize',20);
 % Q? Why these apparent off-by-ones when cropping the patch; to visualise properly, cropping 1px bigger radius; check rounding errors
