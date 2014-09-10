@@ -116,17 +116,27 @@ end % computeWeights
 
 % ----------------------------------------------------------------------
 function d = patchDistance(spx,seg)
+% 2 options for inputs - bdry or seg
+% bdrys01={spx2bdry01(spx) seg2bdry01(seg)}; % type: logical
+% bdrys12={spx2bdry01(spx)+1 seg2bdry01(seg)+1}; % type: double
+segs={spx2seg(spx) seg}; % type: uint8
 p=false;
 if p
-  initFig(); im(spx);
+  initFig(1); im(spx);
   initFig(); im(seg);
+  initFig(); im(bdrys01{1}); %montage2(cell2array(segs));
+  initFig(); im(bdrys01{2});
+  initFig(); im(bdrys12{1});
+  initFig(); im(bdrys12{2});
+  initFig(); im(segs{1});
+  initFig(); im(segs{2});
 end
-% 2 options for inputs - bdry or seg
 % 2 options for distance metric - the original "crude" approximation or VPR
-% d=VPR(spx2bdry01(spx),seg2bdry01(seg));
-d=VPR(spx2seg(spx),seg);
-% d=CPD(spx2bdry01(spx),seg2bdry01(seg));
-% d=CPD(spx2seg(spx),seg);
+% d=VPR(bdrys01{:}); % 0.3169 % 11s -runtimes on a small example 241x161
+% d=VPR(bdrys12{:}); % 0.8402 % 11 seconds
+d=VPR(segs{:}); % 17 seconds
+% d=CPD(bdrys01{:}); % 7 seconds
+% d=CPD(segs{:}); % 11 seconds
 end
 
 % ----------------------------------------------------------------------
@@ -143,8 +153,10 @@ function patch = spx2seg(patch)
 % the input has the boundary denoted by 0
 % see pb2ucm
 bdry=spx2bdry01(patch);
-labels2=bwlabel(clean_watersheds(super_contour_4c(bdry))==0,8);
-patch=uint8(labels2(2:2:end, 2:2:end));
+% labels2=bwlabel(clean_watersheds(super_contour_4c(bdry))==0,8); % TODO don't
+% clean the watersheds for speed
+labels2=bwlabel(super_contour_4c(bdry)==0,8); % type: double; 0 indicates boundary
+patch=uint8(labels2(2:2:end, 2:2:end)); % labels start from 1
 end
 
 % ----------------------------------------------------------------------
