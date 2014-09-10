@@ -30,13 +30,14 @@ IPadded=imPad(I,p,'symmetric');
 [Es,ind]=edgesDetectMex(model,chnsReg,chnsSim);
 % normalize and finalize edge maps
 t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
-Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:)*t; E=convTri(Es_,1);
-wsPadded=watershed(Es);
+Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg)*t;
+E=convTri(Es_,1);
+wsPadded=imPad(double(watershed(E)),p,'symmetric');
 computeWeightFun=@(x,y,spxPatch) computeWeights(x,y,spxPatch,model,opts,rg,nTreeNodes,nTreesEval,p,ind);
-processLocationFun=@(x,y) processLocation(x,y,model,T,I,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,watershed(E),contours2ucm(E));
+processLocationFun=@(x,y) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,watershed(E),contours2ucm(E));
 % cfp_orig=@(pb) create_finest_partition_orig(pb);
 % ucmOrig=weightedContours2ucm(E,'doubleSize',cfp_orig);
-cfp=@(pb) create_finest_partition(pb,wsPadded,rg,computeWeightFun,processLocationFun);
+cfp=@(pb) create_finest_partition(pb,wsPadded,ri,computeWeightFun,processLocationFun);
 ucm=weightedContours2ucm(E,'doubleSize',cfp);
 end
 
@@ -63,6 +64,7 @@ end
 % ----------------------------------------------------------------------
 function sf_wt = create_finest_partition(pb,wsPadded,ri,computeWeightFun, processLocationFun)
 ws=watershed(pb);
+assert(all(all(ws==wsPadded(1+ri:size(pb,1)+ri,1+ri:size(pb,2)+ri))));
 
 c=fit_contour(double(ws==0));
 % remove empty fields
@@ -77,7 +79,7 @@ for e=1:nEdges
     % first coord, in [1,h], is y, second coord, in [1,w], is x
     ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
     % adjust indices for the padded superpixelised image
-    spxPatch=cropPatch(wsPadded,ex+ri,ey+ri,ri); % crop from the padded watershed, to make sure a superpixels patch can always be cropped
+    spxPatch=cropPatch(wsPadded,ex+ri,ey+ri,ri/2); % crop from the padded watershed, to make sure a superpixels patch can always be cropped
     w=computeWeightFun(ex,ey,spxPatch); w=sum(w)/numel(w);
     f=false;
     if f
