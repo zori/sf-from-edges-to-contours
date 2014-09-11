@@ -39,7 +39,8 @@ processLocationFun=@(x,y) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreeNo
 % cfp_orig=@(pb) create_finest_partition_orig(pb);
 % ucmOrig=weightedContours2ucm(E,'doubleSize',cfp_orig);
 cfp=@(pb) create_finest_partition(pb,wsPadded,ri,computeWeightFun,processLocationFun);
-ucm=weightedContours2ucm(E,'doubleSize',cfp);
+fmt='doubleSize';
+ucm=weightedContours2ucm(E,fmt,cfp);
 end
 
 % ----------------------------------------------------------------------

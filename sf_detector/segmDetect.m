@@ -76,6 +76,8 @@ switch outType
     detectUcm(model,imDir,resDir,ids,do);
   case 'sPb'
     detectSPb(model,imDir,resDir,ids,do);
+  case 'voteUcm'
+    detectUcmWeighted(model,imDir,resDir,ids,do);
   otherwise
     warning('Unexpected output type. No output created.');
 end
@@ -169,6 +171,28 @@ parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   sf_gPb_orient = globalPb(imFile,'',1.0,E);
   % compute a (double-sized) ucm - as we will use it for regions benchmark
   ucm2=contours2ucm(sf_gPb_orient,'doubleSize');
+  outCell{i}=struct( ...
+    'file', fullfile(resDir,id.video,[id.name '.mat']), ...
+    'ucm2', ucm2);
+end
+
+for i=1:m
+  ucm2=outCell{i}.ucm2; %#ok<NASGU>
+  save(outCell{i}.file,'ucm2');
+end
+end
+
+% ----------------------------------------------------------------------
+function detectUcmWeighted(model, imDir, resDir, ids, do)
+% ucm on top of the watershed
+m=length(do);
+outCell=cell(1,m);
+parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
+  imFile=fullfile(imDir,id.video,[id.name '.jpg']);
+  I=imread(imFile);
+  if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
+  % compute a (double-sized) ucm - as we will use it for regions benchmark
+  ucm2=ucmWeighted(I,model,[]);
   outCell{i}=struct( ...
     'file', fullfile(resDir,id.video,[id.name '.mat']), ...
     'ucm2', ucm2);
