@@ -7,6 +7,9 @@ model.opts.nTreesEval=4;          % for top speed set nTreesEval=1
 model.opts.nThreads=4;            % max number threads for evaluation; used in edgesDetectMex
 model.opts.nms=false;             % set to true to enable nms (fairly slow)
 
+% attach mex file needed for detection to parallel pool
+addAttachedFiles(gcp(),fullfile('sf_detector/edgesDetectMex.mexa64'));
+
 % run edge/segment detector
 detOpts={
   'imDir',  fullfile(LOG.dsDir, 'test/Images'),...

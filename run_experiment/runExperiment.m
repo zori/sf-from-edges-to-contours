@@ -14,6 +14,8 @@ dss=[...
   ];
 dsName='BSDS500';
 LOG.ds=dss(strcmp({dss.name},dsName));
+% TODO remove this when we add temporal features
+LOG.ds.isVideo=false;
 LOG.modelName=[LOG.ds.name ''];
 % log directories
 LOG.dsDir=fullfile(LOG.evalDir, LOG.ds.name);
@@ -35,7 +37,6 @@ cd(LOG.repoDir);
 [status, gitCommitId]=system('git --no-pager log --format="%H" -n 1');
 if (status), warning('no git repository in %s', pwd); else
   fprintf(LOG.fid, 'Last git commit %s \n', gitCommitId); end
-cd(fileparts(mfilename('fullpath')));
 
 %% Training
 model=edgesTrainWrapper(LOG);

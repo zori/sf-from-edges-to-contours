@@ -100,16 +100,10 @@ opts=getPrmDflt(varargin,dfs,1);
 if(nargin==0), model=opts; return; end
 
 % if forest exists load it and return
-cd(fileparts(mfilename('fullpath')));
 forestDir=fullfile(opts.modelDir, 'forest/');
 forestFn=fullfile(forestDir, opts.modelFnm);
 if(exist([forestFn '.mat'], 'file'))
   load([forestFn '.mat']); return; end
-
-if (opts.useParfor && isempty(gcp('nocreate')))
-  % start parallel pool for training and attach mex file needed for detection
-  addAttachedFiles(parpool(8),fullfile('sf_detector/private/edgesDetectMex.mexa64'));
-end
 
 % compute constants and store in opts
 nTrees=opts.nTrees; nCells=opts.nCells; shrink=opts.shrink;
