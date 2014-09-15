@@ -1,12 +1,12 @@
-function [gPb_orient, gPb_thin, textons] = globalPb(imFile, outFile, rsz, sfPb)
+function [gPb_orient, gPb_thin, textons] = globalPb(I, outFile, rsz, sfPb)
 % syntax:
-%   [gPb_orient, gPb_thin, textons] = globalPb(imgFile, outFile, rsz)
+%   [gPb_orient, gPb_thin, textons] = globalPb(I, outFile, rsz)
 %
 % description:
 %   compute Globalized Probability of Boundary of an image.
 %
 % arguments:
-%   imFile :  image file
+%   I:        input image
 %   outFile:  mat format (optional)
 %   rsz:      resizing factor in (0,1], to speed-up eigenvector computation
 %   sfPb:     (optional) probability of boundary as output from the structured forest
@@ -32,7 +32,7 @@ if ((rsz<=0) || (rsz>1)),
     error('resizing factor rsz out of range (0,1]');
 end
 
-img = double(imread(imFile)) / 255;
+img = double(I) / 255;
 [tx, ty, nchan] = size(img);
 orig_sz = [tx, ty];
 
@@ -57,7 +57,7 @@ else
   % original Arbelaez algorithm uses the multiscale probability of boundary
   pb = mPb_rsz;
 end
-[sPb] = spectralPb(pb, orig_sz, outFile2);
+sPb = spectralPb(pb, orig_sz, outFile2);
 if ~strcmp(outFile,''), delete(outFile2); end
 
 %% gPb

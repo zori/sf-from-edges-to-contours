@@ -62,29 +62,18 @@ end
 % detect edges (and output a seg or a ucm)
 if ~exist(resDir,'dir'), mkdir(resDir); end; do=false(1,n);
 for i=1:n, do(i)=~existOutput(fullfile(resDir,ids(i).video), ids(i).name); end
-do=find(do);
-detect(outType,model,imDir,resDir,ids,do);
-end
-
-function detect(outType, model, imDir, resDir, ids, do)
-switch outType
-  case 'edge'
-    detectEdge(model,imDir,resDir,ids,do);
-  case 'seg'
-    detectSeg(model,imDir,resDir,ids,do);
-  case 'ucm'
-    detectUcm(model,imDir,resDir,ids,do);
-  case 'sPb'
-    detectSPb(model,imDir,resDir,ids,do);
-  case 'voteUcm'
-    detectUcmWeighted(model,imDir,resDir,ids,do);
-  otherwise
-    warning('Unexpected output type. No output created.');
+do=find(do); m=length(do);
+parfor i=1:m, id=ids(do(i));%#ok<PFBNS>
+  if ~exist(fullfile(resDir,id.video),'dir'), mkdir(fullfile(resDir,id.video)); end;
+  imFile=fullfile(imDir,id.video,[id.name '.jpg']);
+  I=imread(imFile);
+  detection=detect(outType,I,model);
+  writeDetection(outType,detection,resDir,id);
 end
 end
 
 % ----------------------------------------------------------------------
-function exists = existOutput(filePath, fileName)
+function exists = existOutput(filePath,fileName)
 % check the existance of an output file with an extension .mat, .png or .bmp
 exists = exist(fullfile(filePath, [fileName, '.mat']),'file') ||...
   exist(fullfile(filePath, [fileName, '.png']),'file') ||...
@@ -92,85 +81,67 @@ exists = exist(fullfile(filePath, [fileName, '.mat']),'file') ||...
 end
 
 % ----------------------------------------------------------------------
-function detectEdge(model, imDir, resDir, ids, do)
-m=length(do);
-model.opts.nms=1;
-parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
-  imFile=fullfile(imDir,id.video,[id.name '.jpg']);
-  I=imread(imFile);
-  E=edgesDetect(I,model);
-  if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
-  imwrite(uint8(E*255),fullfile(resDir,id.video,[id.name '.png'])); % save probability of boundary (pb)
+function d = detect(outType,I,model)
+switch outType
+  case 'edge'
+    d=edgesDetect(I,model);
+  case 'seg'
+    d=detectSeg(I,model);
+  case 'ucm'
+    d=detectUcm(I,model);
+  case 'sPb'
+    d=detectSPb(I,model);
+  case 'voteUcm'
+    d=ucmWeighted(I,model,[]);
+  otherwise
+    warning('Unexpected output type. No output created.');
 end
 end
 
 % ----------------------------------------------------------------------
-function detectSeg(model, imDir, resDir, ids, do)
-m=length(do);
+function writeDetection(outType,detection,resDir,id)
+switch outType
+  case 'edge'
+    % probability of boundary (pb)
+    imwrite(uint8(detection*255),getFilename(resDir,id,'.png'));
+  otherwise
+    f=matfile(getFilename(resDir,id,'.mat'),'Writable',true);
+    switch outType
+      case 'seg'
+        % watershed - oversegmentation
+        f.segs={Uintconv(detection)};
+      otherwise
+        % super-ucm (double-sized) - as we will use it for regions benchmark
+        f.ucm2=detection;
+    end
+end
+end
+
+% ----------------------------------------------------------------------
+function ws = detectSeg(I,model)
 % TODO why non-maximum suppression breaks the watershed?
-% model.opts.nms=1;
-parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
-  imFile=fullfile(imDir,id.video,[id.name '.jpg']);
-  I=imread(imFile);
-  E=edgesDetect(I,model);
-  if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
-  % run vanilla watershed and save the (over-)seg
-  ws=watershed(E);
-  f=matfile(fullfile(resDir,id.video,[id.name '.mat']),'Writable',true);
-  f.segs={Uintconv(ws)};
-end
+E=edgesDetect(I,model);
+% run vanilla watershed, which is an (over-)seg
+ws=watershed(E);
 end
 
 % ----------------------------------------------------------------------
-function detectUcm(model, imDir, resDir, ids, do)
-% ucm on top of the watershed
-m=length(do);
-% TODO why non-maximum suppression breaks the watershed?
-% model.opts.nms=1;
-parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
-  imFile=fullfile(imDir,id.video,[id.name '.jpg']);
-  I=imread(imFile);
-  E=edgesDetect(I,model);
-  if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
-  % compute a (double-sized) ucm - as we will use it for regions benchmark
-  ucm2=contours2ucm(E,'doubleSize');
-  f=matfile(fullfile(resDir,id.video,[id.name '.mat']),'Writable',true);
-  f.ucm2=ucm2;
-end
+function ucm2 = detectUcm(I,model)
+E=edgesDetect(I,model);
+ucm2=contours2ucm(E,'doubleSize');
 end
 
 % ----------------------------------------------------------------------
-function detectSPb(model, imDir, resDir, ids, do)
-% detection is done using the SF output as an input to the sPb globalization
-% step from Arbelaez et. al.
-% slow detection
-m=length(do);
-% TODO try nms or nnms
-% model.opts.nms=1;
-parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
-  imFile=fullfile(imDir,id.video,[id.name '.jpg']);
-  I=imread(imFile);
-  E=edgesDetect(I,model);
-  if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
-  sf_gPb_orient=globalPb(imFile,'',1.0,E);
-  % compute a (double-sized) ucm - as we will use it for regions benchmark
-  ucm2=contours2ucm(sf_gPb_orient,'doubleSize');
-  f=matfile(fullfile(resDir,id.video,[id.name '.mat']),'Writable',true);
-  f.ucm2=ucm2;
-end
+function ucm2 = detectSPb(I,model)
+% detection is done using the SE output as an input to the sPb globalization from Arbelaez et. al.
+% slow detection because of the spectral NCuts
+% TODO try nms or nnms as options for the model
+E=edgesDetect(I,model);
+sf_gPb_orient=globalPb(I,'',1.0,E);
+ucm2=contours2ucm(sf_gPb_orient,'doubleSize');
 end
 
 % ----------------------------------------------------------------------
-function detectUcmWeighted(model, imDir, resDir, ids, do)
-% ucm on top of the watershed
-m=length(do);
-parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
-  imFile=fullfile(imDir,id.video,[id.name '.jpg']);
-  I=imread(imFile);
-  if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
-  % compute a (double-sized) ucm - as we will use it for regions benchmark
-  ucm2=ucmWeighted(I,model,[]);
-  f=matfile(fullfile(resDir,id.video,[id.name '.mat']),'Writable',true);
-  f.ucm2=ucm2;
-end
+function fn = getFilename(resDir,id,ext)
+fn=fullfile(resDir,id.video,[id.name ext]);
 end
