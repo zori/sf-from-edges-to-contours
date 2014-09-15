@@ -109,23 +109,15 @@ function detectSeg(model, imDir, resDir, ids, do)
 m=length(do);
 % TODO why non-maximum suppression breaks the watershed?
 % model.opts.nms=1;
-outCell=cell(1,m);
 parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   imFile=fullfile(imDir,id.video,[id.name '.jpg']);
   I=imread(imFile);
   E=edgesDetect(I,model);
   if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
   % run vanilla watershed and save the (over-)seg
-  ws=watershed(E);  
-  outCell{i}=struct( ...
-    'file', fullfile(resDir,id.video,[id.name '.mat']), ...
-    'segs', Uintconv(ws));
-end
-
-% TODO can this be done inside the above parfor loop
-for i=1:m
-	segs{1}=outCell{i}.segs; %#ok<NASGU>
-  save(outCell{i}.file,'segs');
+  ws=watershed(E);
+  f=matfile(fullfile(resDir,id.video,[id.name '.mat']),'Writable',true);
+  f.segs={Uintconv(ws)};
 end
 end
 
@@ -135,7 +127,6 @@ function detectUcm(model, imDir, resDir, ids, do)
 m=length(do);
 % TODO why non-maximum suppression breaks the watershed?
 % model.opts.nms=1;
-outCell=cell(1,m);
 parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   imFile=fullfile(imDir,id.video,[id.name '.jpg']);
   I=imread(imFile);
@@ -143,14 +134,8 @@ parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
   % compute a (double-sized) ucm - as we will use it for regions benchmark
   ucm2=contours2ucm(E,'doubleSize');
-  outCell{i}=struct( ...
-    'file', fullfile(resDir,id.video,[id.name '.mat']), ...
-    'ucm2', ucm2);
-end
-
-for i=1:m
-  ucm2=outCell{i}.ucm2; %#ok<NASGU>
-  save(outCell{i}.file,'ucm2');
+  f=matfile(fullfile(resDir,id.video,[id.name '.mat']),'Writable',true);
+  f.ucm2=ucm2;
 end
 end
 
@@ -160,7 +145,6 @@ function detectSPb(model, imDir, resDir, ids, do)
 % step from Arbelaez et. al.
 % slow detection
 m=length(do);
-outCell=cell(1,m);
 % TODO try nms or nnms
 % model.opts.nms=1;
 parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
@@ -168,17 +152,11 @@ parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   I=imread(imFile);
   E=edgesDetect(I,model);
   if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
-  sf_gPb_orient = globalPb(imFile,'',1.0,E);
+  sf_gPb_orient=globalPb(imFile,'',1.0,E);
   % compute a (double-sized) ucm - as we will use it for regions benchmark
   ucm2=contours2ucm(sf_gPb_orient,'doubleSize');
-  outCell{i}=struct( ...
-    'file', fullfile(resDir,id.video,[id.name '.mat']), ...
-    'ucm2', ucm2);
-end
-
-for i=1:m
-  ucm2=outCell{i}.ucm2; %#ok<NASGU>
-  save(outCell{i}.file,'ucm2');
+  f=matfile(fullfile(resDir,id.video,[id.name '.mat']),'Writable',true);
+  f.ucm2=ucm2;
 end
 end
 
@@ -186,20 +164,13 @@ end
 function detectUcmWeighted(model, imDir, resDir, ids, do)
 % ucm on top of the watershed
 m=length(do);
-outCell=cell(1,m);
 parfor i=1:m, id=ids(do(i)); %#ok<PFBNS>
   imFile=fullfile(imDir,id.video,[id.name '.jpg']);
   I=imread(imFile);
   if (~exist(fullfile(resDir,id.video),'dir')), mkdir(fullfile(resDir,id.video)); end;
   % compute a (double-sized) ucm - as we will use it for regions benchmark
   ucm2=ucmWeighted(I,model,[]);
-  outCell{i}=struct( ...
-    'file', fullfile(resDir,id.video,[id.name '.mat']), ...
-    'ucm2', ucm2);
-end
-
-for i=1:m
-  ucm2=outCell{i}.ucm2; %#ok<NASGU>
-  save(outCell{i}.file,'ucm2');
+  f=matfile(fullfile(resDir,id.video,[id.name '.mat']),'Writable',true);
+  f.ucm2=ucm2;
 end
 end
