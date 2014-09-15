@@ -90,7 +90,7 @@ switch outType
   case 'ucm'
     d=detectUcm(I,model);
   case 'sPb'
-    d=detectSPb(I,model);
+    d=structuredEdgeSPb(I,model);
   case 'voteUcm'
     d=ucmWeighted(I,model,[]);
   otherwise
@@ -129,16 +129,6 @@ end
 function ucm2 = detectUcm(I,model)
 E=edgesDetect(I,model);
 ucm2=contours2ucm(E,'doubleSize');
-end
-
-% ----------------------------------------------------------------------
-function ucm2 = detectSPb(I,model)
-% detection is done using the SE output as an input to the sPb globalization from Arbelaez et. al.
-% slow detection because of the spectral NCuts
-% TODO try nms or nnms as options for the model
-E=edgesDetect(I,model);
-sf_gPb_orient=globalPb(I,'',1.0,E);
-ucm2=contours2ucm(sf_gPb_orient,'doubleSize');
 end
 
 % ----------------------------------------------------------------------
