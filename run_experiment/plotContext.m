@@ -6,9 +6,9 @@ function plotContext(LOG)
 % INPUT
 %  LOG        - (optional) see runExperiment
 
-% flag to indicate whether we are plotting the standard curves or the weighted
-% (voted) ucms
-PLOT_STANDARD=true;
+% flag to indicate whether we are plotting the best curves or our experiments -
+% the weighted (voted) ucms
+PLOT_BEST=true;
 
 if nargin==0
   LOG.evalDir='/BS/kostadinova/work/video_segm_evaluation';
@@ -23,7 +23,7 @@ plotOpts=struct('path',fullfile(LOG.dsDir,'test'),'dirR','precomputed','superpos
 % directories, labels and colors for the precomputed results
 % structure is defined in this manner to allow easy rearrangement of order of
 % curves (in the legend)
-if PLOT_STANDARD
+if PLOT_BEST
   data=[...
     struct('outDir','Output_sf_segs','legend','SF watershed','color','b'),...
     struct('outDir','Output_sf_ucm','legend','SF ucm','color','m--'),...
@@ -32,12 +32,20 @@ if PLOT_STANDARD
     struct('outDir','Output_bsds_downloaded','legend','gPb+ucm','color','y')...
     ];
 else
+  % initial experiments with metrics and input types
   data=[...
     struct('outDir','Output_sf_ucm','legend','SF ucm','color','k-x'),...
     struct('outDir','Output_VprBdry01','legend','VprBdry01','color','c-x'),... % unsuitable: struct('outDir','Output_VprBdry12','legend','VprBdry12','color','y'),...
     struct('outDir','Output_VprSegs','legend','VprSegs','color','g-x'),...
     struct('outDir','Output_CpdBdry01','legend','CpdBdry01','color','b-x'),...
     struct('outDir','Output_CpdSegs','legend','CpdSegs','color','r-x'),...
+    ];
+  % best performing from the above - CpdSegs
+  data=[...
+    struct('outDir','Output_sf_ucm','legend','SF ucm','color','k-x'),...
+    struct('outDir','Output_CpdSegs','legend','vote','color','r-x'),...
+    struct('outDir','Output_sf_vote','legend','vote++','color','g-x'),... % CpdSegs improved by merging some regions of the superpixelisation
+    struct('outDir','Output_sf_votePb','legend','vote .* pb','color','b-x'),... % vote++ multiplied with the pb from create_finest_partition by Arbelaez
     ];
 end
 
@@ -51,7 +59,7 @@ for d=1:length(data)
   l{2,d}=[l{2,d} ' ' fscoreStr(output.R_G_ODS, output.R_G_OSS)]; % VPR
 end
 
-if PLOT_STANDARD, [fhSf,legendSf]=plotBprForSfEdges(plotOpts); end
+if PLOT_BEST, [fhSf,legendSf]=plotBprForSfEdges(plotOpts); end
 
 assert(isequal(fsz,length(fhs)));
 for f=1:fsz
@@ -72,7 +80,7 @@ end
 
 % ----------------------------------------------------------------------
 function [fhSf,legendSf] = plotBprForSfEdges(plotOpts)
-% BPR for SF edges
+% SF is an edge detector; segmentation benchmarks are not applicable, only BPR
 plotOpts.outDirR='Output_sf_edges';
 plotOpts.metrics='bdry';
 plotOpts.curveColor='k';
