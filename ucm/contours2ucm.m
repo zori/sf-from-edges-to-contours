@@ -33,8 +33,23 @@ if ndims(pb) == 3
 else
   cfpFun=@(pb) create_finest_partition(pb);
 end
-[ws_wt] = cfpFun(pb);
 
+% timerCfp=tic;
+ws_wt = cfpFun(pb);
+% cfpTime=toc(timerCfp);
+
+% timerUcm=tic;
+ucm=finest_partition2ucm(ws_wt,fmt);
+% ucmTime=toc(timerUcm);
+
+% disp(cfpTime);
+% disp(ucmTime);
+% disp(seconds2human(cfpTime));
+% disp(seconds2human(ucmTime));
+end % contours2ucm
+
+% ----------------------------------------------------------------------
+function ucm = finest_partition2ucm(ws_wt,fmt)
 % prepare pb for ucm
 ws_wt2 = double(super_contour_4c(ws_wt));
 ws_wt2 = clean_watersheds(ws_wt2);
@@ -43,7 +58,7 @@ labels = labels2(2:2:end, 2:2:end) - 1; % labels begin at 0 in mex file.
 ws_wt2(end+1, :) = ws_wt2(end, :);
 ws_wt2(:, end+1) = ws_wt2(:, end);
 
-% compute ucm with mean pb.
+% compute ucm with mean pb
 super_ucm = double(ucm_mean_pb(ws_wt2, labels));
 
 % output
