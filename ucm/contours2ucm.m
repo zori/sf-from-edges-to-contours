@@ -105,12 +105,19 @@ for r = 1 : numel(R),
   xc = R(r).PixelList(1,2);
   yc = R(r).PixelList(1,1);
   
+  % TODO(zori) how does this code work - without checks for out-of-matrix access?
+  % should be the following:
+%   vec = [ max(safe_matrix(ws_clean,xc-2,yc-1), safe_matrix(ws_clean,xc-1,yc-2)) ...
+%     max(safe_matrix(ws_clean,xc+2,yc-1), safe_matrix(ws_clean,xc+1,yc-2)) ...
+%     max(safe_matrix(ws_clean,xc+2,yc+1), safe_matrix(ws_clean,xc+1,yc+2)) ...
+%     max(safe_matrix(ws_clean,xc-2,yc+1), safe_matrix(ws_clean,xc-1,yc+2)) ];
+
   vec = [ max(ws_clean(xc-2, yc-1), ws_clean(xc-1, yc-2)) ...
     max(ws_clean(xc+2, yc-1), ws_clean(xc+1, yc-2)) ...
     max(ws_clean(xc+2, yc+1), ws_clean(xc+1, yc+2)) ...
     max(ws_clean(xc-2, yc+1), ws_clean(xc-1, yc+2)) ];
   
-  [nd,id] = min(vec);
+  [~,id] = min(vec);
   switch id,
     case 1,
       if ws_clean(xc-2, yc-1) < ws_clean(xc-1, yc-2),
@@ -151,6 +158,15 @@ for r = 1 : numel(R),
       end
       ws_clean(xc-1, yc+1) = vec(4);
   end
+end
+end
+
+% ----------------------------------------------------------------------
+function val = safe_matrix(m,x,y)
+try
+  val=m(x,y);
+catch
+  val=Inf;
 end
 end
 
