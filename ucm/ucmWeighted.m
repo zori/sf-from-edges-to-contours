@@ -110,12 +110,21 @@ for k=1:nTreesEval
   treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
   assert(~model.child(leafId,treeId)); % TODO add this to assertion (when also saving patches in forest) && ~isempty(model.patches{leafId,treeId}));
   hs=model.seg(:,:,leafId,treeId); %T{treeId}.hs(:,:,leafId); % best segmentation
-  w(k)=patchDistance(spxPatch,hs);
+  w(k)=patchScore(spxPatch,hs);
 end
 end % computeWeights
 
 % ----------------------------------------------------------------------
-function d = patchDistance(spx,seg)
+function w = patchScore(spx,seg)
+% return a score in [0,1] for the similarity of the superpixel and the
+% segmentation patch; 0 - no similarity; 1 - maximal similarity
+fst=spx2seg(spx); % type: uint8
+snd=seg;
+w=compareSegs(fst,snd);
+end
+
+% ----------------------------------------------------------------------
+function w = patchScoreDeprecated(spx,seg)
 % 2 options for inputs - bdry or seg
 % bdrys01={spx2bdry01(spx) seg2bdry01(seg)}; % type: logical
 % bdrys12={spx2bdry01(spx)+1 seg2bdry01(seg)+1}; % type: double
@@ -132,11 +141,11 @@ if p
   initFig(); im(segs{2});
 end
 % 2 options for distance metric - the original "crude" approximation or VPR
-% d=VPR(bdrys01{:}); % 0.3169 % 11s -runtimes on a small example 241x161
-% d=VPR(bdrys12{:}); % 0.8402 % 11 seconds
-% d=VPR(segs{:}); % 17 seconds
-% d=CPD(bdrys01{:}); % 7 seconds
-d=CPD(segs{:}); % 11 seconds
+% w=VPR(bdrys01{:}); % 0.3169 % 11s -runtimes on a small example 241x161
+% w=VPR(bdrys12{:}); % 0.8402 % 11 seconds
+% w=VPR(segs{:}); % 17 seconds
+% w=CPD(bdrys01{:}); % 7 seconds
+w=CPD(segs{:}); % 11 seconds
 end
 
 % ----------------------------------------------------------------------
@@ -184,4 +193,3 @@ pb2(2:2:end-2, 1:2:end) = V;
 pb2(end,:) = pb2(end-1, :);
 pb2(:,end) = max(pb2(:,end), pb2(:,end-1));
 end
-
