@@ -46,7 +46,7 @@ function model = edgesTrain( varargin )
 %   .nCells     - [5] number of self similarity cells, i.e. grid cells
 %   (4) detection parameters (can be altered after training):
 %   TODO Detection parameters are not used here; figure out how to
-%       incorporate these options in VSB100 benchmark and remove them here.
+%       incorporate these options in VSB100 benchmark and remove them from here.
 %   .stride     - [2] stride at which to compute edges
 %   .multiscale - [1] if true run multiscale edge detector
 %   .nTreesEval - [4] number of trees to evaluate per location, i.e. nTrees/2

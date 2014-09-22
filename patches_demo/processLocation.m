@@ -34,15 +34,23 @@ E4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
 % initFig(); im(E4); hold on; plot(x,y,'rx','MarkerSize',20);
 % Q? Why these apparent off-by-ones when cropping the patch; to visualise properly, cropping 1px bigger radius; check rounding errors
 % A. The actual boundary is between two pixels; can't do any better
-initFig(); im(cropPatch(E4,x,y,rg+1)); title('Intermediate decision patch (4 trees voted)');
+% TODO this was a quick fix
+% szOrig=size(I); p=[ri ri ri ri];
+% p([2 4])=p([2 4])+mod(4-mod(szOrig(1:2)+2*ri,4),4);
+E4Padded=imPad(E4,p,'symmetric');
+initFig(); im(cropPatch(E4Padded,x+ri,y+ri,rg+1)); title('Intermediate decision patch (4 trees voted)');
 
 % patch detected with the decision forest; result based on 16x16x4/4 trees
 % that vote for each pixel
-initFig(); im(cropPatch(E,x,y,rg)); title('SRF decision patch');
+EPadded=imPad(E,p,'symmetric');
+initFig(); im(cropPatch(EPadded,x+ri,y+ri,rg)); title('SRF decision patch');
 % Superpixelization (over-segmentation patch)
-initFig(); imagesc(label2rgb(cropPatch(ws,x,y,rg),'jet',[1 1 1],'shuffle')); axis('image'); title('Superpixels patch');
+% initFig(); im(wsPadded); hold on; plot(x+ri,y+ri,'rx');
+spxPatch=cropPatch(wsPadded,x+ri,y+ri,rg); % ri/2 == rg
+initFig(); imagesc(label2rgb(spxPatch,'jet',[1 1 1],'shuffle')); axis('image'); title('Superpixels patch');
 % Ultrametric Contour Map patch
-h=initFig(); im(cropPatch(ucm,x,y,rg)); title('UCM patch');
+ucmPadded=imPad(ucm,p,'symmetric');
+h=initFig(); im(cropPatch(ucmPadded,x+ri,y+ri,rg)); title('UCM patch');
 
 % TODO use a global var 'h' and a function cleanUpFigs to close old figs
 % remove all figures that were not created on this iteration
