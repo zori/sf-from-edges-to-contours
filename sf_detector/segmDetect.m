@@ -82,17 +82,18 @@ end
 
 % ----------------------------------------------------------------------
 function d = detect(outType,I,model)
+fmt='doubleSize';
 switch outType
   case 'edge'
     d=edgesDetect(I,model);
   case 'seg'
     d=detectSeg(I,model);
   case 'ucm'
-    d=detectUcm(I,model);
+    d=detectUcm(I,model,fmt);
   case 'sPb'
-    d=structuredEdgeSPb(I,model);
+    d=structuredEdgeSPb(I,model,fmt);
   case 'voteUcm'
-    d=ucmWeighted(I,model,[]);
+    d=ucmWeighted(I,model,fmt,[]);
   otherwise
     warning('Unexpected output type. No output created.');
 end
@@ -126,9 +127,9 @@ ws=watershed(E);
 end
 
 % ----------------------------------------------------------------------
-function ucm2 = detectUcm(I,model)
+function ucm2 = detectUcm(I,model,fmt)
 E=edgesDetect(I,model);
-ucm2=contours2ucm(E,'doubleSize');
+ucm2=contours2ucm(E,fmt);
 end
 
 % ----------------------------------------------------------------------

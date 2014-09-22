@@ -13,6 +13,8 @@ if (~all(ismember({'model','T'},who)))
 end
 clear k nTrees treeStr;
 
-%patchesDemo(model,T);
+% patchesDemo(model,T);
 BW=repmat(eye(16),1,1,3);
-ucmW=ucmWeighted(BW,model,T);
+l=zeros(16,16); l(:,8)=1;
+L=repmat(l,1,1,3); clear l;
+ucmW=ucmWeighted(L,model,'doubleSize',T);

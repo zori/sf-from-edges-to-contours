@@ -1,20 +1,24 @@
 % Zornitsa Kostadinova
 % Jul 2014
 % 8.3.0.532 (R2014a)
-function ucm = ucmWeighted(I,model,T)
-% function [ucmOrig,ucm] = ucmWeighted(I,model,T)
+function ucm = ucmWeighted(I,model,fmt,T)
+% function ucm = ucmWeighted(I,model,fmt,T)
 % creates a ucm of an image, that is weighted based on the patches in the leaves of a
 % decision forest
 %
 % INPUTS
 %  I            - image
 %  model        - structured decision forest (SF)
+%  fmt          - output format; 'imageSize' (default) or 'doubleSize'
 %  T            - individual trees of the SF (for visualisation only - processLocation)
 %
 % OUTPUTS
 %  ucm          - Ultrametric Contour Map
 %
 % See also contours2ucm
+if ~exist('fmt','var'), fmt='imageSize'; end;
+if ~exist('T','var'), T=[]; end;
+
 opts=model.opts;
 ri=opts.imWidth/2; % patch radius 16
 rg=opts.gtWidth/2; % patch radius 8
@@ -37,7 +41,6 @@ coords2forestLocationFun=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(mode
 computeWeightFun=@(x,y,spxPatch) computeWeights(x,y,coords2forestLocationFun,spxPatch,model,nTreesEval);
 processLocationFun=@(x,y,w) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,contours2ucm(E),w);
 cfp=@(pb) create_finest_partition_voting(pb,wsPadded,ri,computeWeightFun,processLocationFun);
-fmt='doubleSize';
 ucm=contours2ucm(E,fmt,cfp);
 end
 

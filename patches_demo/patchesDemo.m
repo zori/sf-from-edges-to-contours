@@ -4,14 +4,12 @@ function patchesDemo(model,T)
 assert(~isempty(model) && ~isempty(T));
 
 % an image from BSDS500 validation subset
-% imFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/detect/Images/101085.jpg';
-imFile='/BS/kostadinova/work/BSR/grouping/data/101087_small.jpg';
-% gtFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/detect/Groundtruth/101085.mat';
+imFile='/BS/kostadinova/work/BSR/BSDS500/data/images/val/101085.jpg';
+% imFile='/BS/kostadinova/work/BSR/grouping/data/101087_small.jpg';
 I=imread(imFile);
 opts=model.opts;
 ri=opts.imWidth/2; % patch radius 16
 rg=opts.gtWidth/2; % patch radius 8
-nTreeNodes=length(model.fids);
 nTreesEval=opts.nTreesEval;
 % pad image, making divisible by 4
 szOrig=size(I); p=[ri ri ri ri];
@@ -26,8 +24,10 @@ t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
 Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:)*t; E=convTri(Es_,1);
 % Superpixelization (over-segmentation)
 ws=watershed(E);
-ucm=contours2ucm(E);
-processLocationFun=@(x,y) processLocation(x,y,model,T,I,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm);
+% ucm=contours2ucm(E); % the small arcs between the statues are erroneously
+% up-voted
+ucm=structuredEdgeSPb(I,model,'imageSize');
+processLocationFun=@(x,y) processLocation(x,y,model,T,I,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm);
 
 if true
 % interactive demo loop
