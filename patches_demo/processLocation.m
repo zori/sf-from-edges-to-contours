@@ -1,17 +1,12 @@
 % Zornitsa Kostadinova
 % Aug 2014
 % 8.3.0.532 (R2014a)
-function processLocation(x,y,model,T,I,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm)
-plot(x,y,'rx','MarkerSize',20);
+function processLocation(x,y,model,T,I,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,ucm,w)
+% plot(x,y,'rx','MarkerSize',20);
 % display image patch
 initFig(); imagesc(cropPatch(I,x,y,ri)); axis('image'); title('Selected image patch');
 
-x1=ceil(((x+p(3))-opts.imWidth)/opts.stride)+rg; % rg<=x1<=w1, for w1 see edgesDetectMex.cpp
-y1=ceil(((y+p(1))-opts.imWidth)/opts.stride)+rg; % rg<=y1<=h1
-assert((x1==ceil(x/2)) && (y1==ceil(y/2)));
-ids=double(ind(y1,x1,:)); % indices come from cpp and are 0-based
-treeIds=uint32(floor(ids./nTreeNodes)+1);
-leafIds=uint32(mod(ids,nTreeNodes)+1);
+[treeIds,leafIds,x1,y1]=coords2forestLocation(x,y,ind,opts,p,length(model.fids));
 for k=1:nTreesEval
   treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
   assert(~model.child(leafId,treeId)); % TODO add this to assertion (when also saving patches in forest) && ~isempty(model.patches{leafId,treeId}));
@@ -19,11 +14,15 @@ for k=1:nTreesEval
   imgPs=T{treeId}.imgPs{leafId};
   assert(~xor(isempty(segPs),isempty(imgPs)));
   treeStr=num2str(treeId);
+  if exist('w','var'), treeStr=[treeStr ' - dist ' num2str(w(k))]; end
   if ~isempty(segPs) % only leaves with no more than 40 samples have the patches stored
     initFig(); montage2(cell2array(segPs));
     montage2Title(['Segmentations; tree ' treeStr]);
-    initFig(); montage2(imgPs,struct('hasChn', true));
-    montage2Title(['Image patches; tree ' treeStr]);
+    if ~exist('w','var')
+      % if we have the weights, don't show the image patches to reduce clutter
+      initFig(); montage2(imgPs,struct('hasChn', true));
+      montage2Title(['Image patches; tree ' treeStr]);
+    end
   else
     initFig(); im(T{treeId}.hs(:,:,leafId)); title(['Best segmentation; tree ' treeStr]);
   end

@@ -18,7 +18,6 @@ function ucm = ucmWeighted(I,model,T)
 opts=model.opts;
 ri=opts.imWidth/2; % patch radius 16
 rg=opts.gtWidth/2; % patch radius 8
-nTreeNodes=length(model.fids);
 nTreesEval=opts.nTreesEval;
 % pad image, making divisible by 4
 szOrig=size(I); p=[ri ri ri ri];
@@ -34,8 +33,9 @@ t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
 Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg)*t;
 E=convTri(Es_,1);
 wsPadded=imPad(double(watershed(E)),p,'symmetric');
-computeWeightFun=@(x,y,spxPatch) computeWeights(x,y,spxPatch,model,opts,rg,nTreeNodes,nTreesEval,p,ind);
-processLocationFun=@(x,y) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,watershed(E),contours2ucm(E));
+coords2forestLocationFun=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
+computeWeightFun=@(x,y,spxPatch) computeWeights(x,y,coords2forestLocationFun,spxPatch,model,nTreesEval);
+processLocationFun=@(x,y,w) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,contours2ucm(E),w);
 cfp=@(pb) create_finest_partition_voting(pb,wsPadded,ri,computeWeightFun,processLocationFun);
 fmt='doubleSize';
 ucm=contours2ucm(E,fmt,cfp);
@@ -68,7 +68,7 @@ for e=1:nEdges
     if f
       % close all;
       initFig(1); im(wsPadded); hold on; plot(ex+ri,ey+ri,'x');
-      processLocationFun(ex,ey); % this needs a model with the patches saved
+      processLocationFun(ex,ey,w); % this needs a model with the patches saved
     end
     w=sum(w)/numel(w);
     c.edge_weights(e,:)=c.edge_weights(e,:)+[w 1];
@@ -93,22 +93,13 @@ end % for e - edge index
 end % create_finest_partition
 
 % ----------------------------------------------------------------------
-function w = computeWeights(x,y,spxPatch,model,opts,rg,nTreeNodes,nTreesEval,p,ind)
-% get 4 patches in leaves using .ind
-x1=ceil(((x+p(3))-opts.imWidth)/opts.stride)+rg; % rg<=x1<=w1, for w1 see edgesDetectMex.cpp
-y1=ceil(((y+p(1))-opts.imWidth)/opts.stride)+rg; % rg<=y1<=h1
-assert((x1==ceil(x/2)) && (y1==ceil(y/2)));
-indSz=size(ind);
-if y1 > indSz(1) || x1 > indSz(2)
-  disp({y1,x1});
-end
-ids=double(ind(y1,x1,:)); % indices come from cpp and are 0-based
-treeIds=uint32(floor(ids./nTreeNodes)+1);
-leafIds=uint32(mod(ids,nTreeNodes)+1);
+function w = computeWeights(x,y,coords2forestLocationFun,spxPatch,model,nTreesEval)
+% get 4 patches in leaves using ind
+[treeIds,leafIds]=coords2forestLocationFun(x,y);
 w=zeros(nTreesEval,1);
 for k=1:nTreesEval
   treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
-  assert(~model.child(leafId,treeId)); % TODO add this to assertion (when also saving patches in forest) && ~isempty(model.patches{leafId,treeId}));
+  % assert(~model.child(leafId,treeId));
   hs=model.seg(:,:,leafId,treeId); %T{treeId}.hs(:,:,leafId); % best segmentation
   w(k)=patchScore(spxPatch,hs);
 end
