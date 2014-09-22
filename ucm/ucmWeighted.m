@@ -36,37 +36,15 @@ E=convTri(Es_,1);
 wsPadded=imPad(double(watershed(E)),p,'symmetric');
 computeWeightFun=@(x,y,spxPatch) computeWeights(x,y,spxPatch,model,opts,rg,nTreeNodes,nTreesEval,p,ind);
 processLocationFun=@(x,y) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreeNodes,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,watershed(E),contours2ucm(E));
-% cfp_orig=@(pb) create_finest_partition_orig(pb);
-% ucmOrig=weightedContours2ucm(E,'doubleSize',cfp_orig);
-cfp=@(pb) create_finest_partition(pb,wsPadded,ri,computeWeightFun,processLocationFun);
+cfp=@(pb) create_finest_partition_voting(pb,wsPadded,ri,computeWeightFun,processLocationFun);
 fmt='doubleSize';
-ucm=weightedContours2ucm(E,fmt,cfp);
+ucm=contours2ucm(E,fmt,cfp);
 end
 
 % ----------------------------------------------------------------------
-function ws_wt = create_finest_partition_orig(pb)
-ws=watershed(pb); ws_bw=double(ws==0);
-c=fit_contour(ws_bw);
-% remove empty fields
-c=rmfield(c,{'edge_equiv_ids','regions_v_left','regions_v_right','regions_e_left','regions_e_right','regions_c_left','regions_c_right'});
-ws_wt=zeros(size(ws_bw)); % weight
-for e=1:numel(c.edge_x_coords)
-  if c.is_completion(e), continue; end
-  for p=1:numel(c.edge_x_coords{e})
-    ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
-    ws_wt(ey,ex)=max(pb(ey,ex), ws_wt(ey,ex));
-  end
-  v1=c.vertices(c.edges(e,1),:);
-  v2=c.vertices(c.edges(e,2),:);
-  ws_wt(v1(1),v1(2))=max(pb(v1(1),v1(2)),ws_wt(v1(1),v1(2)));
-  ws_wt(v2(1),v2(2))=max(pb(v2(1),v2(2)),ws_wt(v2(1),v2(2)));
-end
-end
-
-% ----------------------------------------------------------------------
-function sf_wt = create_finest_partition(pb,wsPadded,ri,computeWeightFun, processLocationFun)
+function sf_wt = create_finest_partition_voting(pb,wsPadded,ri,computeWeightFun, processLocationFun)
 ws=watershed(pb);
-assert(all(all(ws==wsPadded(1+ri:size(pb,1)+ri,1+ri:size(pb,2)+ri))));
+% assert(all(all(ws==wsPadded(1+ri:size(pb,1)+ri,1+ri:size(pb,2)+ri))));
 
 c=fit_contour(double(ws==0));
 % remove empty fields
@@ -75,20 +53,24 @@ nEdges=numel(c.edge_x_coords);
 c.edge_weights=zeros(nEdges,2); % tuples of accumulated weights and number of pixels per edge
 for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
+%   if e == 10
+%     disp(e);
+%   end
   for p=1:numel(c.edge_x_coords{e})
     % NOTE x and y are swapped here (in the output from fit_contour)
     % the correct way is (for an image of dimensions h x w x 3)
     % first coord, in [1,h], is y, second coord, in [1,w], is x
     ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
     % adjust indices for the padded superpixelised image
-    spxPatch=cropPatch(wsPadded,ex+ri,ey+ri,ri/2); % crop from the padded watershed, to make sure a superpixels patch can always be cropped
-    w=computeWeightFun(ex,ey,spxPatch); w=sum(w)/numel(w);
+    spxPatch=cropPatch(wsPadded,ex+ri,ey+ri,ri/2); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % ri/2 == rg
+    w=computeWeightFun(ex,ey,spxPatch);
     f=false;
     if f
       % close all;
-      initFig(1); im(ws); hold on; plot(ey,ex,'x');
+      initFig(1); im(wsPadded); hold on; plot(ex+ri,ey+ri,'x');
       processLocationFun(ex,ey); % this needs a model with the patches saved
     end
+    w=sum(w)/numel(w);
     c.edge_weights(e,:)=c.edge_weights(e,:)+[w 1];
   end
 end % for e - edge index
@@ -100,7 +82,8 @@ for e=1:nEdges
   W=c.edge_weights(e,1)/c.edge_weights(e,2); % avg weight on edge e
   for p=1:numel(c.edge_x_coords{e})
     ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
-    sf_wt(ey,ex)=max(W,sf_wt(ey,ex));
+    % assert(sf_wt(ey,ex)==0);
+    sf_wt(ey,ex)=W;
   end
   v1=c.vertices(c.edges(e,1),:);
   v2=c.vertices(c.edges(e,2),:);
@@ -188,66 +171,6 @@ patch=gradientMag(single(patch))>.01;
 end
 
 % ----------------------------------------------------------------------
-function ucm = weightedContours2ucm(pb, fmt, finestPartFun)
-% TODO copy-pasted from contours2ucm.m
-if nargin<2, fmt = 'imageSize'; end;
-
-if ~strcmp(fmt,'imageSize') && ~strcmp(fmt,'doubleSize'),
-  error('possible values for fmt are: imageSize and doubleSize');
-end
-
-% create finest partition and transfer contour strength
-timerCfp=tic;
-ws_wt=finestPartFun(pb);
-cfpTime=toc(timerCfp);
-timerUcm=tic;
-ucm=pb2ucm(ws_wt,fmt);
-ucmTime=toc(timerUcm);
-
-% disp(cfpTime);
-% disp(ucmTime);
-% disp(seconds2human(cfpTime));
-% disp(seconds2human(ucmTime));
-end
-
-% ----------------------------------------------------------------------
-function ucm = pb2ucm(ws_wt,fmt)
-% prepare pb for ucm
-ws_wt2 = double(super_contour_4c(ws_wt));
-ws_wt2 = clean_watersheds(ws_wt2);
-labels2 = bwlabel(ws_wt2 == 0, 8);
-labels = labels2(2:2:end, 2:2:end) - 1; % labels begin at 0 in mex file.
-ws_wt2=hedge(ws_wt2);
-
-% compute ucm with mean pb
-ucm=pb2ucmDo(ws_wt2,labels,fmt);
-end
-
-% ----------------------------------------------------------------------
-function a = hedge(a)
-a(end+1, :) = a(end, :);
-a(:, end+1) = a(:, end);
-end
-
-% ----------------------------------------------------------------------
-function ucm = pb2ucmDo(wt2, labels, fmt)
-try
-  super_ucm = double(ucm_mean_pb(wt2,labels));
-catch err
-  rethrow(err);
-end
-
-% output
-super_ucm = normalize_output(super_ucm); % ojo
-
-if strcmp(fmt,'doubleSize'),
-  ucm = super_ucm;
-else
-  ucm = super_ucm(3:2:end, 3:2:end);
-end
-end
-
-% ----------------------------------------------------------------------
 function [pb2, V, H] = super_contour_4c(pb)
 
 V = min(pb(1:end-1,:), pb(2:end,:));
@@ -262,91 +185,3 @@ pb2(end,:) = pb2(end-1, :);
 pb2(:,end) = max(pb2(:,end), pb2(:,end-1));
 end
 
-% ----------------------------------------------------------------------
-function [ws_clean] = clean_watersheds(ws)
-% remove artifacts created by non-thin watersheds (2x2 blocks) that produce
-% isolated pixels in super_contour
-
-ws_clean = ws;
-
-c = bwmorph(ws_clean == 0, 'clean', inf);
-
-artifacts = ( c==0 & ws_clean==0 );
-R = regionprops(bwlabel(artifacts), 'PixelList');
-
-for r = 1 : numel(R),
-  xc = R(r).PixelList(1,2);
-  yc = R(r).PixelList(1,1);
-  
-  % TODO how did this code work - without checks for out-of-matrix access?
-  vec = [ max(safe_matrix(ws_clean,xc-2,yc-1), safe_matrix(ws_clean,xc-1,yc-2)) ...
-    max(safe_matrix(ws_clean,xc+2,yc-1), safe_matrix(ws_clean,xc+1,yc-2)) ...
-    max(safe_matrix(ws_clean,xc+2,yc+1), safe_matrix(ws_clean,xc+1,yc+2)) ...
-    max(safe_matrix(ws_clean,xc-2,yc+1), safe_matrix(ws_clean,xc-1,yc+2)) ];
-  
-  [~,id] = min(vec);
-  switch id,
-    case 1,
-      if ws_clean(xc-2, yc-1) < ws_clean(xc-1, yc-2),
-        ws_clean(xc, yc-1) = 0;
-        ws_clean(xc-1, yc) = vec(1);
-      else
-        ws_clean(xc, yc-1) = vec(1);
-        ws_clean(xc-1, yc) = 0;
-        
-      end
-      ws_clean(xc-1, yc-1) = vec(1);
-    case 2,
-      if ws_clean(xc+2, yc-1) < ws_clean(xc+1, yc-2),
-        ws_clean(xc, yc-1) = 0;
-        ws_clean(xc+1, yc) = vec(2);
-      else
-        ws_clean(xc, yc-1) = vec(2);
-        ws_clean(xc+1, yc) = 0;
-      end
-      ws_clean(xc+1, yc-1) = vec(2);
-      
-    case 3,
-      if ws_clean(xc+2, yc+1) < ws_clean(xc+1, yc+2),
-        ws_clean(xc, yc+1) = 0;
-        ws_clean(xc+1, yc) = vec(3);
-      else
-        ws_clean(xc, yc+1) = vec(3);
-        ws_clean(xc+1, yc) = 0;
-      end
-      ws_clean(xc+1, yc+1) = vec(3);
-    case 4,
-      if ws_clean(xc-2, yc+1) < ws_clean(xc-1, yc+2),
-        ws_clean(xc, yc+1) = 0;
-        ws_clean(xc-1, yc) = vec(4);
-      else
-        ws_clean(xc, yc+1) = vec(4);
-        ws_clean(xc-1, yc) = 0;
-      end
-      ws_clean(xc-1, yc+1) = vec(4);
-  end
-end
-end
-
-% ----------------------------------------------------------------------
-function val = safe_matrix(m,x,y)
-try
-  val=m(x,y);
-catch
-  val=Inf;
-end
-end
-
-% ----------------------------------------------------------------------
-function pb_norm = normalize_output(pb)
-% map ucm values to [0 1] with sigmoid
-% learned on BSDS
-[tx, ty] = size(pb);
-beta = [-2.7487; 11.1189];
-pb_norm = pb(:);
-x = [ones(size(pb_norm)) pb_norm]';
-pb_norm = 1 ./ (1 + (exp(-x'*beta)));
-pb_norm = (pb_norm - 0.0602) / (1 - 0.0602);
-pb_norm=min(1,max(0,pb_norm));
-pb_norm = reshape(pb_norm, [tx ty]);
-end
