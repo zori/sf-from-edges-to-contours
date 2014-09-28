@@ -30,7 +30,6 @@ IPadded=imPad(I,p,'symmetric');
 % compute feature channels
 [chnsReg,chnsSim]=edgesChns(IPadded,model.opts);
 % apply forest to image
-model.opts.nms=1;
 [Es,ind]=edgesDetectMex(model,chnsReg,chnsSim);
 % normalize and finalize edge maps
 t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;

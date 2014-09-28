@@ -93,6 +93,7 @@ switch outType
   case 'sPb'
     d=structuredEdgeSPb(I,model,fmt);
   case 'voteUcm'
+    assert(model.opts.nms);
     d=ucmWeighted(I,model,fmt,[]);
   otherwise
     warning('Unexpected output type. No output created.');

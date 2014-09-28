@@ -5,16 +5,18 @@ function model = segmDetectWrapper(model,LOG)
 model.opts.multiscale=false;      % for top accuracy set multiscale=true
 model.opts.nTreesEval=4;          % for top speed set nTreesEval=1
 model.opts.nThreads=4;            % max number threads for evaluation; used in edgesDetectMex
-model.opts.nms=false;             % set to true to enable nms (fairly slow)
+model.opts.nms=true;              % set to true to enable nms (fairly slow)
 
 % attach mex file needed for detection to parallel pool
-addAttachedFiles(gcp(),fullfile('sf_detector/edgesDetectMex.mexa64'));
+addAttachedFiles(gcp(),...
+  {fullfile('sf_detector','edgesDetectMex.mexa64'),...
+   fullfile('ucm','ucm_mean_pb.mexa64')});
 
 % run edge/segment detector
 detOpts={
   'imDir',  fullfile(LOG.dsDir, 'test/Images'),...
   'resDir', fullfile(LOG.dsDir, 'test/Ucm2')...
-  'outType', 'seg'... % edge, seg, ucm, sPb, voteUcm
+  'outType', 'voteUcm'... % edge, seg, ucm, sPb, voteUcm
   };
 
 timerDet=tic;
