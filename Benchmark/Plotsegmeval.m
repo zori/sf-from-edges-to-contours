@@ -1,4 +1,4 @@
-function [output,fhs]=Plotsegmeval(outDirA,superposePlot,curveColor)
+function [output,fhs]=Plotsegmeval(outDirA,superposePlot,plotStyle)
 % Plot evaluation results.
 %
 % INPUTS
@@ -27,9 +27,15 @@ fhs=[];
 if ( (~exist('superposePlot','var')) || (isempty(superposePlot)) )
     superposePlot=false;
 end
-if ( (~exist('curveColor','var')) || (isempty(curveColor)) )
-    curveColor='r';
+if ( (~exist('plotStyle','var')) || (isempty(plotStyle)) )
+    plotStyle={'r'};
 end
+plotColor=plotStyle{1};
+if numel(plotStyle)==1, plotStyle={}; else plotStyle=plotStyle(2:end); end
+ODS_plotStyle=getPrmDflt(plotStyle,{'Color',plotColor,'LineWidth',3},-1);
+ODS_plotStyle=struct2cell2(ODS_plotStyle);
+G_ODS_plotStyle=getPrmDflt(plotStyle,{'Marker','o','MarkerFaceColor',plotColor,'MarkerEdgeColor',plotColor,'MarkerSize',8},-1);
+G_ODS_plotStyle=struct2cell2(G_ODS_plotStyle);
 
 % %Determine case dir for printing hline
 % wherefilesep=strfind(outDirA(1:end-1),filesep); %one character (t from Output) is truncated or filesep is removed)
@@ -57,12 +63,14 @@ if (exist(fullfile(outDirA,'eval_bdry_globalthr.txt'),'file'))
     end
     hold on
     if (size(prvals,1)>1) %if only one hierarchical level is present, the figures correspond to ODS
-        plot(prvals(1:end,2),prvals(1:end,3),curveColor,'LineWidth',3);
-        title('Boundary Global PR Curve');
+        plot(prvals(1:end,2),prvals(1:end,3),ODS_plotStyle{:});
     else
-        plot(evalRes(2),evalRes(3),'o','MarkerFaceColor',curveColor,'MarkerEdgeColor',curveColor,'MarkerSize',8);
-        title('Boundary Global PR Curve'); %Just the value corresponding to the maxmimum F is plotted, i.e. G-ODS
+        % Just the value corresponding to the maxmimum F is plotted, i.e. G-ODS
+        plot(evalRes(2),evalRes(3),G_ODS_plotStyle{:});
     end
+    xlabel('recall');
+    ylabel('precision');
+    title('Boundary Global PR Curve');
     hold off
     if ~superposePlot, saveas(gcf,fullfile(outDirA,'_BPR'),'jpg'); end
     fhs=[fhs gcf];
@@ -90,12 +98,14 @@ if (exist(fullfile(outDirA,'eval_regpr_globalthr.txt'),'file'))
     end
     hold on
     if (size(prvals,1)>1) %if only one hierarchical level is present, the figures correspond to ODS
-        plot(prvals(1:end,2),prvals(1:end,3),curveColor,'LineWidth',3);
-        title('Volume Global PR Curve');
+        plot(prvals(1:end,2),prvals(1:end,3),ODS_plotStyle{:});
     else
-        plot(evalRes(2),evalRes(3),'o','MarkerFaceColor',curveColor,'MarkerEdgeColor',curveColor,'MarkerSize',8);
-        title('Volume Global PR Curve'); %Just the value corresponding to the maxmimum F is plotted, i.e. G-ODS
+        % Just the value corresponding to the maxmimum F is plotted, i.e. G-ODS
+        plot(evalRes(2),evalRes(3),G_ODS_plotStyle{:});
     end
+    xlabel('recall');
+    ylabel('precision');
+    title('Volume Global PR Curve');
     hold off
     if ~superposePlot, saveas(gcf,fullfile(outDirA,'_VPR'),'jpg'); end
     fhs=[fhs gcf];
@@ -143,14 +153,12 @@ if ( (exist(fullfile(outDirA,'eval_regpr_avgthr.txt'),'file')) && (exist(fullfil
             end
             hold on
             if (size(prvals,1)>1)
-                plot(lengthvals(1:end,2),prvals(1:end,3),curveColor,'LineWidth',3);
-                xlabel('Avg Length');
-                title('Length Precision Curve Global');
+                plot(lengthvals(1:end,2),prvals(1:end,3),ODS_plotStyle{:});
             else
-                plot(lengthvals(2),evalRes(3),'o','MarkerFaceColor',curveColor,'MarkerEdgeColor',curveColor,'MarkerSize',8);
-                xlabel('Avg Length');
-                title('Length Precision Curve Global');
+                plot(lengthvals(2),evalRes(3),G_ODS_plotStyle{:});
             end
+            xlabel('avg length');
+            title('Length Precision Curve Global');
             hold off
             if ~superposePlot, saveas(gcf,fullfile(outDirA,'_length_precision'),'jpg'); end
             fhs=[fhs gcf];
@@ -178,14 +186,12 @@ if ( (exist(fullfile(outDirA,'eval_regpr_avgthr.txt'),'file')) && (exist(fullfil
             end
             hold on
             if (size(prvals,1)>1)
-                plot(log10(nclustervals(1:end,2)),prvals(1:end,3),curveColor,'LineWidth',3);
-                xlabel('Avg N Clusters (log10)');
-                title('Ncluster Precision Curve Global');
+                plot(log10(nclustervals(1:end,2)),prvals(1:end,3),ODS_plotStyle{:});
             else
-                plot(log10(nclustervals(2)),evalRes(3),'o','MarkerFaceColor',curveColor,'MarkerEdgeColor',curveColor,'MarkerSize',8);
-                xlabel('Avg N Clusters (log10)');
-                title('Ncluster Precision Curve Global');
+                plot(log10(nclustervals(2)),evalRes(3),G_ODS_plotStyle{:});
             end
+            xlabel('avg N clusters (log10)');
+            title('Ncluster Precision Curve Global');
             hold off
             if ~superposePlot, saveas(gcf,fullfile(outDirA,'_ncluster_precision'),'jpg'); end
             fhs=[fhs gcf];
@@ -206,4 +212,13 @@ end
 if (exist(fullfile(outDirA,'eval_regpr_globossods.txt'),'file')) %R G
     evalRes = dlmread(fullfile(outDirA,'eval_regpr_globossods.txt')); %bestT,bestR,bestP,bestF,R_max,P_max,F_max,Area_PR
     output.R_ODSG_R=evalRes(2); output.R_ODSG_P=evalRes(3);
+end
+end
+
+% ----------------------------------------------------------------------
+function c = struct2cell2(s)
+  fs=fieldnames(s);
+  vs=struct2cell(s);
+  tmp=[fs';vs'];
+  c=tmp(:);
 end

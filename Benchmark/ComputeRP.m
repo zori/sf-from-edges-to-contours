@@ -21,7 +21,7 @@ dfs={...
   'justavideo',[],...
   'metrics',bms{end},...        % could be a cell, e.g. {'bdry','regpr'}
   'nthresh',5,...               % number of thresholds (hierarchical levels to include) for evaluating the ucm
-  'curveColor','r',...          % RP curves color
+  'plotStyle',{'r'},...         % plot style of curves (color, marker, line width, etc.)
   'superposePlot',false,...     % superpose RP curves; true - new curves are added to the same graph; false - a new graph is initialized
   'confirmDel',false,...        % TODO is this interactive (if true) form useful
   'minNumIms',0,...             % number of images to wait for starting computation (0 means no wait)
@@ -94,7 +94,7 @@ if (isvalid)
 end
 toc(timeBmEvalStats);
 
-[output,fhs]=Plotsegmeval(outDirA,opts.superposePlot,opts.curveColor);
+[output,fhs]=Plotsegmeval(outDirA,opts.superposePlot,opts.plotStyle);
 
 % rmdir(dirA,'s')
 % rmdir(outDirA,'s')
