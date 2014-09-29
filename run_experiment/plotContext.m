@@ -34,10 +34,11 @@ dataBest=[...
   ];
 dataOurs=[...
   struct('out','Output_CpdSegs','legend','vote','style',{{'r','Marker','x'}}),...
-  struct('out','Output_sf_vote','legend','vote++','style',{{'g','LineStyle','--','Marker','x'}}),... % CpdSegs improved by merging some regions of the superpixelisation
-  struct('out','Output_Pri_vote','legend','PRI vote','style',{{'m','LineStyle',':','Marker','x'}}),... % rather than CPD, increases the nSample to the max, so we have a PRI measure; same results, only slower
+  struct('out','Output_sf_vote','legend','vote++','style',{{'g','Marker','x'}}),... % CpdSegs improved by merging some regions of the superpixelisation
   struct('out','Output_sf_votePb','legend','vote .* pb','style',{{'b','Marker','x'}}),... % vote++ multiplied with the pb from create_finest_partition by Arbelaez
-  struct('out','Output_VprSegsNormalised','legend','vote VprNormalised','style',{{'c','LineStyle','--','Marker','x'}}),... % normalised VPR
+  struct('out','Output_Pri_vote','legend','PRI','style',{{[0.6,0.2,0.6],'LineStyle',':','Marker','x'}}),... % rather than CPD, increases the nSample to the max, so we have a PRI measure; same results, only slower
+  struct('out','Output_VprSegsNormalised','legend','VprSegsNormalised','style',{{[1,0.5,0.5],'Marker','x'}}),... % normalised VPR
+  struct('out','Output_VprSegsUnnormalised','legend','VprSegsUnnormalised','style',{{[0.2,0.8,0.2],'Marker','x'}}),... % unnormalised VPR
   ];
 switch experimentsToPlot
   case 'best'
