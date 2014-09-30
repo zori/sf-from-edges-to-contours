@@ -33,8 +33,8 @@ LOG.matFile=fullfile(LOG.timestampDir, '_recordings.mat');
 LOG.fid=fopen(LOG.txtFile, 'w');
 save(LOG.matFile,'LOG');
 
-cd(LOG.repoDir);
-[status, gitCommitId]=system('git --no-pager log --format="%H" -n 1');
+gitCmd=sprintf('git --git-dir=%s/.git --work-tree=%s --no-pager log --format="%%H" -n 1',LOG.repoDir,LOG.repoDir);
+[status, gitCommitId]=system(gitCmd);
 if (status), warning('no git repository in %s', pwd); else
   fprintf(LOG.fid, 'Last git commit %s \n', gitCommitId); end
 
