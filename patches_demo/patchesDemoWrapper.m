@@ -14,7 +14,8 @@ end
 clear k nTrees treeStr;
 
 % patchesDemo(model,T);
-BW=repmat(eye(16),1,1,3);
-l=zeros(16,16); l(:,8)=1;
-L=repmat(l,1,1,3); clear l;
-ucmW=ucmWeighted(L,model,'doubleSize',T);
+BW=repmat(eye(260),1,1,3);
+% l=zeros(16,16); l(:,8)=1;
+% L=repmat(l,1,1,3); clear l;
+% ucmL=ucmWeighted(L,model,'doubleSize',T);
+ucmBW=ucmWeighted(BW,model,'doubleSize',T);
