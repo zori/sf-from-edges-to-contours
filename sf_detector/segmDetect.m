@@ -93,7 +93,7 @@ switch outType
   case 'sPb'
     d=structuredEdgeSPb(I,model,fmt);
   case 'voteUcm'
-    assert(model.opts.nms);
+    % assert(model.opts.nms); % TODO DRY! .nms option neglected, since I don't use the edgesDetect
     d=ucmWeighted(I,model,fmt,[]);
   otherwise
     warning('Unexpected output type. No output created.');
@@ -131,6 +131,13 @@ end
 function ucm2 = detectUcm(I,model,fmt)
 E=edgesDetect(I,model);
 ucm2=contours2ucm(E,fmt);
+end
+
+% ----------------------------------------------------------------------
+function ucm2 = gPbOwtUcm(I,fmt)
+% the original algorithm that uses oriented gradient (in 8 angular directions)
+gPb_orient=globalPb(I);
+ucm2=contours2ucm(gPb_orient,fmt);
 end
 
 % ----------------------------------------------------------------------
