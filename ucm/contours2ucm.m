@@ -2,7 +2,7 @@ function ucm = contours2ucm(pb, fmt, cfp_fun)
 % Creates Ultrametric Contour Map from oriented contours
 %
 % syntax:
-%   ucm = contours2ucm(pb_oriented, fmt)
+%   ucm = contours2ucm(pb_oriented, fmt, cfp_fun)
 %
 % description:
 %   Computes UCM by considering
@@ -11,6 +11,8 @@ function ucm = contours2ucm(pb, fmt, cfp_fun)
 % arguments:
 %   pb:          Probability of Boundary (optionally oriented)
 %   fmt:         Output format. 'imageSize' (default) or 'doubleSize'
+%   cfp_fun:     (optional) function for creating the finest partition of the
+%                UCM hierarchy
 %
 % output:
 %   ucm:    Ultrametric Contour Map in double
