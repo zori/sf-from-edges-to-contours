@@ -13,12 +13,13 @@ for e=1:numel(c.edge_x_coords)
   if c.is_completion(e), continue; end
   for p=1:numel(c.edge_x_coords{e})
     ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
-    ws_wt(ey,ex)=max(pb(ey,ex), ws_wt(ey,ex));
+    assert(~ws_wt(ey,ex)); % the max() in the following code in create_finest_partition_oriented is because of the multiple orientations
+    ws_wt(ey,ex)=pb(ey,ex);
   end
   v1=c.vertices(c.edges(e,1),:);
   v2=c.vertices(c.edges(e,2),:);
-  ws_wt(v1(1),v1(2))=max(pb(v1(1),v1(2)),ws_wt(v1(1),v1(2)));
-  ws_wt(v2(1),v2(2))=max(pb(v2(1),v2(2)),ws_wt(v2(1),v2(2)));
+  ws_wt(v1(1),v1(2))=pb(v1(1),v1(2));
+  ws_wt(v2(1),v2(2))=pb(v2(1),v2(2));
 end
 ws_wt=double(ws_wt);
 end

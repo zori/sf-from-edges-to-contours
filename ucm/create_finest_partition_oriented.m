@@ -39,6 +39,9 @@ ws_wt = zeros(size(ws_bw));
 for e = 1 : numel(c.edge_x_coords)
   if c.is_completion(e), continue; end
   for p = 1 : numel(c.edge_x_coords{e}),
+    % TODO (on the uselessness of the following max(..)) why does this never happen for edges, but sometimes for vertices
+    % that is equivalent:
+    % ws_wt(c.edge_x_coords{e}(p), c.edge_y_coords{e}(p)) = pb_oriented(c.edge_x_coords{e}(p), c.edge_y_coords{e}(p), orient(e));
     ws_wt(c.edge_x_coords{e}(p), c.edge_y_coords{e}(p)) = ...
       max(pb_oriented(c.edge_x_coords{e}(p), c.edge_y_coords{e}(p), orient(e)), ws_wt(c.edge_x_coords{e}(p), c.edge_y_coords{e}(p)));
   end
