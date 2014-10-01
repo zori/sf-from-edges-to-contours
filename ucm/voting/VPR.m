@@ -11,7 +11,7 @@ maxGtLabel=max(snd(:));  % maximum label in the second patch
 %Volume precision and recall
 EXCZEROFORMS=true; % see Evaluatesegmregion.m line 50
 EXCZEROFORGT=false;
-NORMALISE=false;
+NORMALISE=true;
 
 confcounts=Getconfcounts(seg, groundTruth, maxGtLabel);
 
