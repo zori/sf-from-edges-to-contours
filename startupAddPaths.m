@@ -1,6 +1,8 @@
 cd /BS/kostadinova/work/video_segm
 addpath('.')
 addpath('auxiliary')
+addpath('auxiliary/geom2d/geom2d')
+addpath('auxiliary/geom2d/polygons2d')
 addpath('Benchmark')
 addpath('Benchmark/Auxbenchmark')
 addpath('gPb')
