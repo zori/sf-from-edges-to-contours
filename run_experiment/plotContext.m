@@ -14,8 +14,8 @@ experimentsToPlot=experiments{2};
 if nargin==0
   LOG.evalDir='/BS/kostadinova/work/video_segm_evaluation';
   LOG.ds.name='BSDS500';
-  LOG.dsDir=fullfile(LOG.evalDir, LOG.ds.name);
 end
+LOG.dsDir=fullfile(LOG.evalDir, LOG.ds.name);
 
 plotOpts=struct('path',fullfile(LOG.dsDir,'test'),'dirR','precomputed','superposePlot',true);
 
@@ -80,19 +80,28 @@ switch experimentsToPlot
     data=[dataBest,dataOurs];
 end
 
-fsz=4; % number of figures, BPR, VPR, length statistics and number of clusters
-l=repmat({data.legend},[fsz 1]); % metric-specific label
+fhs=[1 6 9 11];
+fsz=length(fhs); % number of figures, BPR, VPR, length statistics and number of clusters
+l=cell(fsz,length(data)); % metric-specific label
+cnt=0; % number of curves plotted
 for d=1:length(data)
   plotOpts.plotStyle=[{colorMap(d,:)} data(d).style];
   plotOpts.outDirR=data(d).out;
-  [output,fhs]=ComputeRP(plotOpts);
-  l{1,d}=[l{1,d} ' ' fscoreStr(output.B_G_ODS, output.B_G_OSS)]; % BPR
-  l{2,d}=[l{2,d} ' ' fscoreStr(output.R_G_ODS, output.R_G_OSS)]; % VPR
+  [output,fhs_assert]=ComputeRP(plotOpts);
+  if ~isempty(fhs_assert), assert(all(fhs==fhs_assert)); end
+  if isempty(fieldnames(output))
+    warning('No output produced for directory %s',plotOpts.outDirR);
+  else
+    cnt=cnt+1;
+    l(:,cnt)={data(d).legend};
+    l{1,cnt}=[l{1,cnt} ' ' fscoreStr(output.B_G_ODS, output.B_G_OSS)]; % BPR
+    l{2,cnt}=[l{2,cnt} ' ' fscoreStr(output.R_G_ODS, output.R_G_OSS)]; % VPR
+  end
 end
+l=l(:,1:cnt);
 
 if ~strcmp(experimentsToPlot,'ours'), [fhSf,legendSf]=plotBprForSfEdges(plotOpts); end
 
-assert(isequal(fsz,length(fhs)));
 for f=1:fsz
   figure(fhs(f));
   l1=l(f,:);
