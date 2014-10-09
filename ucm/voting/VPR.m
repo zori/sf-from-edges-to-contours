@@ -2,7 +2,7 @@
 % Sep 2014
 % 8.3.0.532 (R2014a)
 % from Benchmark/Evaluatesegmregion.m
-function F = VPR(fst,snd)
+function F = VPR(fst,snd,NORMALISE)
 % returns F-value of the VPR
 seg=fst;  % machine segmentation; output of algorithm; first patch
 groundTruth={struct('Segmentation',snd)}; % a cell with a structure with a field .Segmentation
@@ -11,7 +11,7 @@ maxGtLabel=max(snd(:));  % maximum label in the second patch
 %Volume precision and recall
 EXCZEROFORMS=true; % see Evaluatesegmregion.m line 50
 EXCZEROFORGT=false;
-NORMALISE=true;
+if ~exist('NORMALISE','var'), NORMALISE=true; end
 
 confcounts=Getconfcounts(seg, groundTruth, maxGtLabel);
 
