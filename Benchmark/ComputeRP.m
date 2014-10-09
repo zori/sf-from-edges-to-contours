@@ -61,12 +61,12 @@ if ( isvalid )
         isvalid=false;
     end
 end
-if (~isvalid)
+iids=Listacrossfolders(imgDir,'jpg',Inf);
+if ~isvalid && ~isempty(iids)
     [dirA,outDirA,isvalid] = Benchmarkcreateoutimvid(path_, dirR, [], outDirR); %#ok<ASGLU>
 end
 
 %Wait minNumIms for processing
-iids=Listacrossfolders(imgDir,'jpg',Inf);
 if (minNumIms>0)
     while(numel(iids)<minNumIms)
         pause(10);
