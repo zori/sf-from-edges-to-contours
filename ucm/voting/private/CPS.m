@@ -1,10 +1,18 @@
 % Zornitsa Kostadinova
 % Sep 2014
 % 8.3.0.532 (R2014a)
-function s = CPD(patch1,patch2,nSamples)
-% CPD - a crude patch distance metric
-% After Dollar's patch comparison while training a structured decision tree.
-% Since it uses random sampling, exact numbers are not reproducible.
+function s = CPS(patch1,patch2,nSamples)
+% CPS - a crude patch similarity metric
+%
+% INPUTS
+%  patch1       - w x w input patch
+%  patch2       - w x w input patch
+%  nSamples     - [256] (optional) number of unique pixel pairs to sample
+%
+% OUTPUTS
+%  s            - patch similarity score in [0;1]
+%
+% see edgesTrain.m discretize()
 persistent cache; w=size(patch1,1); assert(size(patch1,2)==w); % w=16
 % is1, is2 - indices for simultaneous lookup in the segm patch
 if ~isempty(cache) && cache{1}==w, [~,is1,is2]=deal(cache{:}); else
