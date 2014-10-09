@@ -137,8 +137,8 @@ end
 % w=VPR(bdrys01{:}); % 0.3169 % 11s -runtimes on a small example 241x161
 % w=VPR(bdrys12{:}); % 0.8402 % 11 seconds
 % w=VPR(segs{:}); % 17 seconds
-% w=CPD(bdrys01{:}); % 7 seconds
-w=CPD(segs{:}); % 11 seconds
+% w=RSRI(bdrys01{:}); % 7 seconds
+w=RSRI(segs{:}); % 11 seconds
 end
 
 % ----------------------------------------------------------------------

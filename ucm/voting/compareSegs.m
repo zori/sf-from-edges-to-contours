@@ -32,6 +32,6 @@ else
     initFig(); im(fst);
     initFig(); im(snd);
   end
-  w=CPD(fst,snd);
+  w=RSRI(fst,snd);
 end
 end
