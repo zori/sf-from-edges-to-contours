@@ -2,11 +2,22 @@
 % Sep 2014
 % 8.3.0.532 (R2014a)
 % from Benchmark/Evaluatesegmregion.m
-function F = VPR(fst,snd,NORMALISE)
+function F = VPR(S,G,NORMALISE)
+% VPR (Volumetric Precision Recall)
+% After Galasso, et al.
+%
+% INPUTS
+%  S            - w x w test segmentation patch
+%  G            - w x w ground truth patch
+%  NORMALISE    - [true] (optional) whether to apply normalisation; note that
+%                 score is not symmetric w.r.t S and G when normalised
+%
+% OUTPUTS
+%  s            - patch similarity score in [0;1]
 % returns F-value of the VPR
-seg=fst;  % machine segmentation; output of algorithm; first patch
-groundTruth={struct('Segmentation',snd)}; % a cell with a structure with a field .Segmentation
-maxGtLabel=max(snd(:));  % maximum label in the second patch
+seg=S;  % machine segmentation; output of algorithm; first patch
+groundTruth={struct('Segmentation',G)}; % a cell with a structure with a field .Segmentation
+maxGtLabel=max(G(:));  % maximum label in the second patch
 
 %Volume precision and recall
 EXCZEROFORMS=true; % see Evaluatesegmregion.m line 50
