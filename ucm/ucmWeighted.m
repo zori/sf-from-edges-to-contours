@@ -37,7 +37,7 @@ Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg)*t;
 E=convTri(Es_,1);
 wsPadded=imPad(double(watershed(E)),p,'symmetric');
 coords2forestLocationFun=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
-computeWeightFun=@(x,y,spxPatch) computeWeights(x,y,coords2forestLocationFun,spxPatch,model,nTreesEval);
+computeWeightFun=@(x,y,wsPatch) computeWeights(x,y,coords2forestLocationFun,wsPatch,model,nTreesEval);
 processLocationFun=@(x,y,w) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,contours2ucm(E),w);
 cfp=@(pb) create_finest_partition_voting(pb,wsPadded,ri,computeWeightFun,processLocationFun);
 ucm=contours2ucm(E,fmt,cfp);
@@ -55,21 +55,26 @@ nEdges=numel(c.edge_x_coords);
 c.edge_weights=zeros(nEdges,2); % tuples of accumulated weights and number of pixels per edge
 for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
-%   if e == 10
-%     disp(e);
-%   end
+  if e == 40 || e == 48
+    disp(e);
+  end
+  v1=c.vertices(c.edges(e,1),:); % fst coord is y - row ind
+  v2=c.vertices(c.edges(e,2),:);
+  l=fitLine(v1,v2,ri);
   for p=1:numel(c.edge_x_coords{e})
     % NOTE x and y are swapped here (in the output from fit_contour)
     % the correct way is (for an image of dimensions h x w x 3)
     % first coord, in [1,h], is y, second coord, in [1,w], is x
     ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
-    % adjust indices for the padded superpixelised image
-    spxPatch=cropPatch(wsPadded,ex+ri,ey+ri,ri/2); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % ri/2 == rg
-    w=computeWeightFun(ex,ey,spxPatch);
+    x=ex+ri; y=ey+ri; r=ri/2; % adjust patch dimensions
+    % wsPatch=cropPatch(wsPadded,x,y,r); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % ri/2 == rg
+    wsPatch=createWsPatch(x,y,r,l);
+    w=computeWeightFun(ex,ey,wsPatch);
     f=false;
     if f
       % close all;
-      initFig(1); im(wsPadded); hold on; plot(ex+ri,ey+ri,'x');
+      initFig(1); im(wsPadded); hold on; plot(ex+ri,ey+ri,'rx','MarkerSize',12);
+      initFig(); im(wsPatch);
       processLocationFun(ex,ey,w); % this needs a model with the patches saved
     end
     w=sum(w)/numel(w);
@@ -84,7 +89,6 @@ for e=1:nEdges
   W=c.edge_weights(e,1)/c.edge_weights(e,2); % avg weight on edge e
   for p=1:numel(c.edge_x_coords{e})
     ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
-    % assert(sf_wt(ey,ex)==0);
     sf_wt(ey,ex)=W;
   end
   v1=c.vertices(c.edges(e,1),:);
@@ -92,10 +96,42 @@ for e=1:nEdges
   sf_wt(v1(1),v1(2))=max(W,sf_wt(v1(1),v1(2)));
   sf_wt(v2(1),v2(2))=max(W,sf_wt(v2(1),v2(2)));
 end % for e - edge index
+% sf_wt=sf_wt.*create_finest_partition_non_oriented(pb); % VPR .* pb
 end % create_finest_partition
 
 % ----------------------------------------------------------------------
-function w = computeWeights(x,y,coords2forestLocationFun,spxPatch,model,nTreesEval)
+function l = fitLine(v1,v2,ri)
+% adjust indices for the padded superpixelised image
+v1=v1+ri;v2=v2+ri;
+l=createLine([v1(2),v1(1)],[v2(2),v2(1)]);
+end
+
+% ----------------------------------------------------------------------
+function wsPatch = createWsPatch(x,y,r,l)
+% these are the 4 end pnts of the (previously cropped) ri x ri patch
+ul=[x-r+1 y-r+1]; ur=[x+r y-r+1]; % fst the x coords, then the y
+ll=[x-r+1 y+r];   lr=[x+r y+r];
+sq=[ul; ll; lr; ur];
+ints=intersectLinePolygon(l, sq);
+%     if ~all(size(ints)==[2 2])
+%       disp(ints);
+%     end
+% assert(all(size(ints)==[2 2]));
+ints=ints-[ul;ul]; % go to the coord system of a ri x ri patch
+ints=floor(ints')+1; % TODO correct?
+ints=num2cell(ints);
+[lx,ly]=bresenham(ints{:});
+wsPatch=zeros(2*r);
+idx=sub2ind(size(wsPatch),ly,lx);
+wsPatch(idx)=1;
+% TODO fst=bdry2seg(spx);
+% spx is a bdry
+wsPatch=watershed(wsPatch,4);
+wsPatch(wsPatch==0)=1; % TODO fix
+end
+
+% ----------------------------------------------------------------------
+function w = computeWeights(x,y,coords2forestLocationFun,wsPatch,model,nTreesEval)
 % get 4 patches in leaves using ind
 [treeIds,leafIds]=coords2forestLocationFun(x,y);
 w=zeros(nTreesEval,1);
@@ -103,7 +139,7 @@ for k=1:nTreesEval
   treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
   % assert(~model.child(leafId,treeId));
   hs=model.seg(:,:,leafId,treeId); %T{treeId}.hs(:,:,leafId); % best segmentation
-  w(k)=patchScore(spxPatch,hs);
+  w(k)=patchScore(wsPatch,hs);
 end
 end % computeWeights
 
@@ -111,9 +147,11 @@ end % computeWeights
 function w = patchScore(spx,seg)
 % return a score in [0,1] for the similarity of the superpixel and the
 % segmentation patch; 0 - no similarity; 1 - maximal similarity
-fst=spx2seg(spx); % type: uint8
+% fst=spx2seg(spx); % type: uint8
+fst=spx;
 snd=seg;
-w=compareSegs(fst,snd);
+w=VPR(fst,snd);
+% w=compareSegs(fst,snd);
 end
 
 % ----------------------------------------------------------------------

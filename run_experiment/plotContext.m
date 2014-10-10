@@ -60,6 +60,8 @@ dataOurs=[...
   struct('out','Output_VprSegsNormalised','legend','VPR norm. segs','style',{{'Marker','x'}}),... % normalised VPR
   struct('out','Output_VprSegsUnnormalised','legend','VPR unnorm. segs','style',{{'Marker','x'}}),... % unnormalised VPR
   struct('out','Output_VprNormalisedPb','legend','VPR norm. .* pb','style',{{'LineStyle',':','Marker','x'}}),... % normalised VPR multiplied with the pb from create_finest_partition by Arbelaez
+  struct('out','Output_VPR_line_segs','legend','VPR line segs','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; normalised VPR segs
+  struct('out','Output_RSRI_line_segs','legend','RSRI line segs','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; RSRI segs
   ];
 switch experimentsToPlot
   case 'best'
