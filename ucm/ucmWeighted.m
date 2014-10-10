@@ -37,14 +37,14 @@ Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg)*t;
 E=convTri(Es_,1);
 wsPadded=imPad(double(watershed(E)),p,'symmetric');
 coords2forestLocationFun=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
-computeWeightFun=@(x,y,wsPatch) computeWeights(x,y,coords2forestLocationFun,wsPatch,model,nTreesEval);
+getTreePatchesFun=@(x,y) getTreePatches(x,y,coords2forestLocationFun,model,nTreesEval);
 processLocationFun=@(x,y,w) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,contours2ucm(E),w);
-cfp=@(pb) create_finest_partition_voting(pb,wsPadded,ri,computeWeightFun,processLocationFun);
+cfp=@(pb) create_finest_partition_voting(pb,wsPadded,ri,getTreePatchesFun,processLocationFun);
 ucm=contours2ucm(E,fmt,cfp);
 end
 
 % ----------------------------------------------------------------------
-function sf_wt = create_finest_partition_voting(pb,wsPadded,ri,computeWeightFun, processLocationFun)
+function sf_wt = create_finest_partition_voting(pb,wsPadded,ri,getTreePatchesFun, processLocationFun)
 ws=watershed(pb);
 % assert(all(all(ws==wsPadded(1+ri:size(pb,1)+ri,1+ri:size(pb,2)+ri))));
 
@@ -69,7 +69,8 @@ for e=1:nEdges
     x=ex+ri; y=ey+ri; r=ri/2; % adjust patch dimensions
     % wsPatch=cropPatch(wsPadded,x,y,r); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % ri/2 == rg
     wsPatch=createWsPatch(x,y,r,l);
-    w=computeWeightFun(ex,ey,wsPatch);
+    hs=getTreePatchesFun(ex,ey);
+    w=computeWeights(wsPatch,hs);
     f=false;
     if f
       % close all;
@@ -131,15 +132,24 @@ wsPatch(wsPatch==0)=1; % TODO fix
 end
 
 % ----------------------------------------------------------------------
-function w = computeWeights(x,y,coords2forestLocationFun,wsPatch,model,nTreesEval)
+function hs = getTreePatches(x,y,coords2forestLocationFun,model,nTreesEval)
 % get 4 patches in leaves using ind
 [treeIds,leafIds]=coords2forestLocationFun(x,y);
-w=zeros(nTreesEval,1);
+segs=model.seg;
+hs=uint8(zeros(size(segs,1),size(segs,2),nTreesEval));
 for k=1:nTreesEval
   treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
   % assert(~model.child(leafId,treeId));
-  hs=model.seg(:,:,leafId,treeId); %T{treeId}.hs(:,:,leafId); % best segmentation
-  w(k)=patchScore(wsPatch,hs);
+  hs(:,:,k)=segs(:,:,leafId,treeId); %T{treeId}.hs(:,:,leafId); % best segmentation
+end
+end
+
+% ----------------------------------------------------------------------
+function w = computeWeights(wsPatch,hs)
+nTreesEval=size(hs,3);
+w=zeros(nTreesEval,1);
+for k=1:nTreesEval
+  w(k)=patchScore(wsPatch,hs(:,:,k));
 end
 end % computeWeights
 
@@ -149,7 +159,7 @@ function w = patchScore(spx,seg)
 % segmentation patch; 0 - no similarity; 1 - maximal similarity
 % fst=spx2seg(spx); % type: uint8
 fst=spx;
-snd=seg;
+snd=seg; % type uint8
 w=VPR(fst,snd);
 % w=compareSegs(fst,snd);
 end
