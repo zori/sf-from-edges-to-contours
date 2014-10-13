@@ -86,6 +86,8 @@ fmt='doubleSize';
 switch outType
   case 'edge'
     d=edgesDetect(I,model);
+  case 'edgeContours'
+    d=edgesDetectOnContours(I,model);
   case 'seg'
     d=detectSeg(I,model);
   case 'ucm'
@@ -103,7 +105,7 @@ end
 % ----------------------------------------------------------------------
 function writeDetection(outType,detection,resDir,id)
 switch outType
-  case 'edge'
+  case {'edge','edgeContours'}
     % probability of boundary (pb)
     imwrite(uint8(detection*255),getFilename(resDir,id,'.png'));
   otherwise
