@@ -70,7 +70,7 @@ if (exist(fullfile(outDirA,'eval_bdry_globalthr.txt'),'file'))
     end
     xlabel('recall');
     ylabel('precision');
-    title('Boundary Global PR Curve');
+    title('BPR');
     hold off
     if ~superposePlot, saveas(gcf,fullfile(outDirA,'_BPR'),'jpg'); end
     fhs=[fhs gcf];
@@ -105,7 +105,7 @@ if (exist(fullfile(outDirA,'eval_regpr_globalthr.txt'),'file'))
     end
     xlabel('recall');
     ylabel('precision');
-    title('Volume Global PR Curve');
+    title('VPR');
     hold off
     if ~superposePlot, saveas(gcf,fullfile(outDirA,'_VPR'),'jpg'); end
     fhs=[fhs gcf];
@@ -158,7 +158,7 @@ if ( (exist(fullfile(outDirA,'eval_regpr_avgthr.txt'),'file')) && (exist(fullfil
                 plot(lengthvals(2),evalRes(3),G_ODS_plotStyle{:});
             end
             xlabel('avg length');
-            title('Length Precision Curve Global');
+            title('length precision'); % Length Precision Curve Global
             hold off
             if ~superposePlot, saveas(gcf,fullfile(outDirA,'_length_precision'),'jpg'); end
             fhs=[fhs gcf];
@@ -191,7 +191,7 @@ if ( (exist(fullfile(outDirA,'eval_regpr_avgthr.txt'),'file')) && (exist(fullfil
                 plot(log10(nclustervals(2)),evalRes(3),G_ODS_plotStyle{:});
             end
             xlabel('avg N clusters (log10)');
-            title('Ncluster Precision Curve Global');
+            title('ncluster precision'); % Ncluster Precision Curve Global
             hold off
             if ~superposePlot, saveas(gcf,fullfile(outDirA,'_ncluster_precision'),'jpg'); end
             fhs=[fhs gcf];
