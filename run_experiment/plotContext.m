@@ -53,15 +53,16 @@ dataBest=[...
   struct('out','Output_BSDS_downloaded','legend','gPb+ucm','style',{{}})...
   ];
 dataOurs=[...
-  struct('out','Output_RSRI_segs','legend','RSRI 256 segs','style',{{'Marker','x'}}),... % used to be calles 'CpdSegs', now 256
-  struct('out','Output_RSRI_segs_merge','legend','RSRI segs merge','style',{{'Marker','x'}}),... % RSRI segs improved by merging some regions of the superpixelisation
-  struct('out','Output_RSRI_segs_merge_Pb','legend','RSRI segs merge .* pb','style',{{'Marker','x'}}),... % RSRI segs merge, value-multiplied with the pb from create_finest_partition by Arbelaez
-  struct('out','Output_RI','legend','RI 32640','style',{{'LineStyle',':','Marker','x'}}),... % rather than RSRI, increases the nSample to the max, so we have a RI measure; same results, only slower (is it really slower?)
-  struct('out','Output_VprSegsNormalised','legend','VPR norm. segs','style',{{'Marker','x'}}),... % normalised VPR
-  struct('out','Output_VprSegsUnnormalised','legend','VPR unnorm. segs','style',{{'Marker','x'}}),... % unnormalised VPR
-  struct('out','Output_VprNormalisedPb','legend','VPR norm. .* pb','style',{{'LineStyle',':','Marker','x'}}),... % normalised VPR multiplied with the pb from create_finest_partition by Arbelaez
-  struct('out','Output_VPR_line_segs','legend','VPR line segs','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; normalised VPR segs
-  struct('out','Output_RSRI_line_segs','legend','RSRI line segs','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; RSRI segs
+  struct('out','Output_RSRI_segs','legend','segs 256 RSRI','style',{{'Marker','x'}}),... % used to be calles 'CpdSegs', now 256
+  struct('out','Output_RSRI_segs_merge','legend','s. merge RSRI','style',{{'Marker','x'}}),... % RSRI segs improved by merging some regions of the superpixelisation
+  struct('out','Output_RSRI_segs_merge_Pb','legend','s. merge RSRI .*pb','style',{{'LineStyle','--','Marker','x'}}),... % RSRI segs merge, value-multiplied with the pb from create_finest_partition by Arbelaez
+  struct('out','Output_RI','legend','RI (32640)','style',{{'LineStyle',':','Marker','x'}}),... % rather than RSRI, increases the nSample to the max, so we have a RI measure; same results, only slower (is it really slower?)
+  struct('out','Output_segs_VPR_unnormalised','legend','s. VPR unnorm','style',{{'Marker','x'}}),... % unnormalised VPR
+  struct('out','Output_segs_VPR_normalised_trees','legend','s. VPR norm Ts','style',{{'Marker','x'}}),... % VPR normalised on the side of the trees
+  struct('out','Output_segs_VPR_normalised_trees_pb','legend','s. VPR Ts .*pb','style',{{'LineStyle','--','Marker','x'}}),... % VPR normalised w.r.t. trees, value-multiplied with the pb from create_finest_partition by Arbelaez
+  struct('out','Output_segs_line_VPR_normalised_trees','legend','s. line VPR Ts norm','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; segs, VPR normalised on the side of the trees
+  struct('out','Output_segs_line_RSRI','legend','s. l. RSRI','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; RSRI segs
+  struct('out','Output_segs_line_VPR_normalised_ws','legend','s. l. VPR ws norm','style',{{'Marker','x'}}),...
   ];
 
 switch experimentsToPlot
