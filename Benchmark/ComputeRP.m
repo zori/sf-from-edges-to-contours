@@ -26,9 +26,9 @@ dfs={...
   'confirmDel',false,...        % TODO is this interactive (if true) form useful
   'minNumIms',0,...             % number of images to wait for starting computation (0 means no wait)
   'useParfor',false...          % parallelize if sufficient memory
-  'imDirR','REQ'...             % relative directory with the test images, e.g. 'Images'
-  'gtDirR','REQ'...             % relative directory with ground truths corresponding to the test images, e.g. 'Groundtruths'
-  'inDirR','REQ'...             % relative directory where the input to benchmark is located (result of the detection), e.g. 'Ucm2'
+  'imDirR','Images'...          % relative directory with the test images, e.g. 'Images'
+  'gtDirR','Groundtruth'...     % relative directory with ground truths corresponding to the test images, e.g. 'Groundtruths'
+  'inDirR','Ucm2'...            % relative directory where the input to benchmark is located (result of the detection), e.g. 'Ucm2'
   };
 
 opts=getPrmDflt(varargin,dfs,1);
