@@ -44,7 +44,7 @@ colorMap = [ ...
 % directories, labels and colors for the precomputed results
 % structure is defined in this manner to allow easy rearrangement of order of
 % curves (in the legend)
-dataSfUcm=struct('out','Output_sf_ucm','legend','SF ucm','style',{{'LineStyle','--'}});
+dataSfUcm=struct('out','Output_sf_ucm','legend','SF ucm','style',{{'LineStyle','--'}}); % multiscale, model.opts.nms=1
 dataBest=[...
   struct('out','Output_sf_segs','legend','SF watershed','style',{{}}),...
   dataSfUcm,...
@@ -63,10 +63,20 @@ dataOurs=[...
   struct('out','Output_VPR_line_segs','legend','VPR line segs','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; normalised VPR segs
   struct('out','Output_RSRI_line_segs','legend','RSRI line segs','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; RSRI segs
   ];
+
 switch experimentsToPlot
   case 'best'
     data=dataBest;
   case 'ours'
+    % experiment for checking if anything is lost by reweighing only on the
+    % boundary location
+    % in all, the E (pb) is not nms (opts.model.nms=0), and detection was single scale
+    data=[...
+      struct('out','Output_SF_single_scale','legend','SF ucm','style',{{'Marker','x'}}),...
+      struct('out','Output_SF_single_scale_on_contours','legend','SF ucm, on contours','style',{{'Marker','x'}}),...
+      struct('out','Output_SF_single_scale_png','legend','SF edge','style',{{'Marker','x'}}),...
+      struct('out','Output_SF_single_scale_on_contours_png','legend','SF edge, on contours','style',{{'Marker','x'}}),...
+      ];
     % initial experiments with metrics and input types
     data=[...
       dataSfUcm,...
@@ -89,15 +99,14 @@ cnt=0; % number of curves plotted
 for d=1:length(data)
   plotOpts.plotStyle=[{colorMap(d,:)} data(d).style];
   plotOpts.outDirR=data(d).out;
-  [output,fhs_assert]=ComputeRP(plotOpts);
-  if ~isempty(fhs_assert), assert(all(fhs==fhs_assert)); end
+  [output,fhs_curr]=ComputeRP(plotOpts);
   if isempty(fieldnames(output))
     warning('No output produced for directory %s',plotOpts.outDirR);
   else
     cnt=cnt+1;
     l(:,cnt)={data(d).legend};
     l{1,cnt}=[l{1,cnt} ' ' fscoreStr(output.B_G_ODS, output.B_G_OSS)]; % BPR
-    l{2,cnt}=[l{2,cnt} ' ' fscoreStr(output.R_G_ODS, output.R_G_OSS)]; % VPR
+    if numel(fhs_curr) > 1, l{2,cnt}=[l{2,cnt} ' ' fscoreStr(output.R_G_ODS, output.R_G_OSS)]; end % VPR
   end
 end
 l=l(:,1:cnt);
