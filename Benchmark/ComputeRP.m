@@ -26,6 +26,9 @@ dfs={...
   'confirmDel',false,...        % TODO is this interactive (if true) form useful
   'minNumIms',0,...             % number of images to wait for starting computation (0 means no wait)
   'useParfor',false...          % parallelize if sufficient memory
+  'imDirR','REQ'...             % relative directory with the test images, e.g. 'Images'
+  'gtDirR','REQ'...             % relative directory with ground truths corresponding to the test images, e.g. 'Groundtruths'
+  'inDirR','REQ'...             % relative directory where the input to benchmark is located (result of the detection), e.g. 'Ucm2'
   };
 
 opts=getPrmDflt(varargin,dfs,1);
@@ -33,6 +36,7 @@ path_=opts.path;
 dirR=opts.dirR;
 outDirR=opts.outDirR;
 minNumIms=opts.minNumIms;
+names=struct('imDirR',opts.imDirR,'gtDirR',opts.gtDirR,'inDirR',opts.inDirR);
 
 if (~isstruct(path_))
     tmp=path_; clear path_; path_.benchmark=tmp; clear tmp;
@@ -40,7 +44,7 @@ end
 
 %Assign input directory names and check existance of folders
 onlyassignnames=true;
-[~,imgDir,gtDir,inDir,isvalid] = Benchmarkcreatedirsimvid(path_, dirR, onlyassignnames);
+[~,imgDir,gtDir,inDir,isvalid] = Benchmarkcreatedirsimvid(path_, dirR, onlyassignnames,names);
 %imgDir images (for name listing), gtDir ground truth, inDir ucm2, outDirR output
 if (~isvalid)
     fprintf('Some Directories are not existing\n');

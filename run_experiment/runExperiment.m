@@ -2,7 +2,6 @@
 % Jun 2014
 function runExperiment()
 % SRF training and evaluation (using the VSB100 benchmark)
-
 LOG.repoDir='/BS/kostadinova/work/video_segm';
 LOG.evalDir='/BS/kostadinova/work/video_segm_evaluation';
 dss=[...
@@ -23,8 +22,13 @@ LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');
 if (~exist(LOG.recordingsDir, 'dir')), mkdir(LOG.recordingsDir), end
 LOG.timestamp=datestr(clock,'yyyy-mm-dd_HH-MM-SS'); disp(LOG.timestamp);
 LOG.timestampDir=fullfile(LOG.recordingsDir, LOG.timestamp);
-%%
 mkdir(LOG.timestampDir);
+
+% for detection and benchmark; relative directories name
+LOG.imDirR='Images'; % input test images
+LOG.resDirR='Ucm2'; % result of the detector; output type can be .png, .mat
+LOG.gtDirR='Groundtruth'; % ground truths for the test images
+
 % example log files:
 % video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.txt - git version, runtimes
 % video_segm_evaluation/VSB100_40/test/recordings/2014-06-05_13-37-46/_recordings.mat - training, detection and benchmark options; benchmark output

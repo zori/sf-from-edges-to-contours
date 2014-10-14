@@ -1,6 +1,6 @@
-function Removebenchmarkdirimvid(path_,dirR)
+function Removebenchmarkdirimvid(path_,dirR,names)
 
-[dirA,~,~,~,isvalid] = Benchmarkcreatedirsimvid(path_, dirR, true);
+[dirA,~,~,~,isvalid] = Benchmarkcreatedirsimvid(path_, dirR, true,names);
 
 if (isvalid)
   rmdir(dirA,'s')

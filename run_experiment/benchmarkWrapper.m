@@ -1,9 +1,15 @@
 % Zornitsa Kostadinova
 % Jul 2014
 function fhs=benchmarkWrapper(LOG)
-bmOpts={'path',LOG.dsDir,'dirR','test',...
-  'outDirR',fullfile('recordings', LOG.timestamp),...
-  'tempConsistency',LOG.ds.isVideo,'nthresh',51,'useParfor',true};
+bmOpts.path=LOG.dsDir;
+bmOpts.dirR='test';
+bmOpts.outDirR=fullfile('recordings', LOG.timestamp);
+bmOpts.tempConsistency=LOG.ds.isVideo;
+bmOpts.nthresh=51;
+bmOpts.useParfor=true;
+bmOpts.imDirR=LOG.imDirR;
+bmOpts.gtDirR=LOG.gtDirR;
+bmOpts.inDirR=LOG.resDirR;
 
 timerBm=tic;
 [output,fhs]=ComputeRP(bmOpts);  %#ok<ASGLU>
