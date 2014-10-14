@@ -9,8 +9,9 @@ function F = VPR(S,G,NORMALISE)
 % INPUTS
 %  S            - w x w test segmentation patch
 %  G            - w x w ground truth patch
-%  NORMALISE    - [true] (optional) whether to apply normalisation; note that
-%                 score is not symmetric w.r.t S and G when normalised
+%  NORMALISE    - [true] (optional) whether to apply normalisation on the side
+%                 of the ground truth (G); note that when normalised, the score
+%                 is not symmetric w.r.t S and G
 %
 % OUTPUTS
 %  s            - patch similarity score in [0;1]
