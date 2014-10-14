@@ -22,23 +22,30 @@ plotOpts=struct('path',fullfile(LOG.dsDir,'test'),'dirR','precomputed','superpos
 % TODO add avg human agreement ComputeRP(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'k',false,[],'all',[],'Output_general_human');
 
 % courtesy jhosang; colors for up to 16 curves
-colorMap = [ ...
-228, 229, 97 ; ...
-163, 163, 163 ; ...
-218, 71, 56 ; ...
-219, 135, 45 ; ...
-145, 92, 146 ; ...
-83, 136, 173 ; ...
-135, 130, 174 ; ...
-225, 119, 174 ; ...
-142, 195, 129 ; ...
-138, 180, 66 ; ...
-223, 200, 51 ; ...
-92, 172, 158 ; ...
+colorMap = [
+238, 130, 238;
+135, 130, 174;
+135,206,235;
+228, 229, 97;
+0, 250, 154;
+163, 163, 163;
+218, 71, 56;
+219, 135, 45;
+145, 92, 146;
+83, 136, 173;
+255,228,225;
+225, 119, 174;
+142, 195, 129;
+139, 69, 19;
+240, 128, 128;
+92, 172, 158;
 177,89,40;
 0, 255, 255;
 188, 128, 189;
+138, 180, 66;
 255, 255, 0;
+223, 200, 51;
+0, 0, 205;
 ] ./ 256;
 
 % directories, labels and colors for the precomputed results
@@ -60,9 +67,9 @@ dataOurs=[...
   struct('out','Output_segs_VPR_unnormalised','legend','s. VPR unnorm','style',{{'Marker','x'}}),... % unnormalised VPR
   struct('out','Output_segs_VPR_normalised_trees','legend','s. VPR norm Ts','style',{{'Marker','x'}}),... % VPR normalised on the side of the trees
   struct('out','Output_segs_VPR_normalised_trees_pb','legend','s. VPR Ts .*pb','style',{{'LineStyle','--','Marker','x'}}),... % VPR normalised w.r.t. trees, value-multiplied with the pb from create_finest_partition by Arbelaez
-  struct('out','Output_segs_line_VPR_normalised_trees','legend','s. line VPR Ts norm','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; segs, VPR normalised on the side of the trees
+  struct('out','Output_segs_line_VPR_normalised_trees','legend','s. line VPR norm Ts','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; segs, VPR normalised on the side of the trees
   struct('out','Output_segs_line_RSRI','legend','s. l. RSRI','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; RSRI segs
-  struct('out','Output_segs_line_VPR_normalised_ws','legend','s. l. VPR ws norm','style',{{'Marker','x'}}),...
+  struct('out','Output_segs_line_VPR_normalised_ws','legend','s. l. VPR norm ws','style',{{'Marker','x'}}),...
   ];
 
 switch experimentsToPlot
