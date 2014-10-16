@@ -96,7 +96,7 @@ switch outType
     d=structuredEdgeSPb(I,model,fmt);
   case 'voteUcm'
     % assert(model.opts.nms); % TODO DRY! .nms option neglected, since I don't use the edgesDetect
-    d=ucmWeighted(I,model,fmt,[]);
+    d=ucm_weighted(I,model,fmt,[]);
   otherwise
     warning('Unexpected output type. No output created.');
 end
