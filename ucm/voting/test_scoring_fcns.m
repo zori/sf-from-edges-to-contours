@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-function testMetrics()
+function test_scoring_fcns()
 sz=16;
 % z=zeros(sz);
 % o=ones(sz);
