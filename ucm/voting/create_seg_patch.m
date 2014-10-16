@@ -17,6 +17,11 @@ function seg_patch = create_seg_patch(x,y,r,l)
 %                 segments labeled '1' and '2' respectively
 %
 % these are the 4 end pnts of the r x r patch
+% note the y axis is pointing "down":
+%  -------> x
+%  |
+%  |
+%  y
 ul=[x-r+1 y-r+1]; ur=[x+r y-r+1]; % fst the x coords, then the y
 ll=[x-r+1 y+r];   lr=[x+r y+r];
 sq=[ul; ll; lr; ur];
