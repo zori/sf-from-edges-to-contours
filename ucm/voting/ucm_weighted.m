@@ -36,15 +36,15 @@ t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
 Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg)*t;
 E=convTri(Es_,1);
 wsPadded=imPad(double(watershed(E)),p,'symmetric');
-coords2forestLocationFun=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
-getTreePatchesFun=@(x,y) getTreePatches(x,y,coords2forestLocationFun,model,nTreesEval);
-processLocationFun=@(x,y,w) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,contours2ucm(E),w);
-cfp=@(pb) create_finest_partition_voting(pb,wsPadded,ri,getTreePatchesFun,processLocationFun);
+coords2forest_location_fcn=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
+get_tree_patches_fcn=@(x,y) get_tree_patches(x,y,coords2forest_location_fcn,model,nTreesEval);
+process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,contours2ucm(E),w);
+cfp=@(pb) create_finest_partition_voting(pb,wsPadded,ri,get_tree_patches_fcn,process_location_fcn);
 ucm=contours2ucm(E,fmt,cfp);
 end
 
 % ----------------------------------------------------------------------
-function sf_wt = create_finest_partition_voting(pb,wsPadded,ri,getTreePatchesFun, processLocationFun)
+function sf_wt = create_finest_partition_voting(pb,wsPadded,ri,get_tree_patches_fcn, process_location_fcn)
 ws=watershed(pb);
 % assert(all(all(ws==wsPadded(1+ri:size(pb,1)+ri,1+ri:size(pb,2)+ri))));
 
@@ -60,7 +60,7 @@ for e=1:nEdges
   end
   v1=c.vertices(c.edges(e,1),:); % fst coord is y - row ind
   v2=c.vertices(c.edges(e,2),:);
-  l=fitLine(v1,v2,ri);
+  l=fit_line(v1,v2,ri);
   for p=1:numel(c.edge_x_coords{e})
     % NOTE x and y are swapped here (in the output from fit_contour)
     % the correct way is (for an image of dimensions h x w x 3)
@@ -69,14 +69,15 @@ for e=1:nEdges
     x=ex+ri; y=ey+ri; r=ri/2; % adjust patch dimensions
     % wsPatch=cropPatch(wsPadded,x,y,r); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % ri/2 == rg
     wsPatch=create_seg_patch(x,y,r,l);
-    hs=getTreePatchesFun(ex,ey);
-    w=computeWeights(wsPatch,hs);
+    hs=get_ground_truths_fcn(x,y);
+    % hs=get_tree_patches_fcn(ex,ey);
+    w=compute_weights(wsPatch,hs);
     f=false;
     if f
       % close all;
       initFig(1); im(wsPadded); hold on; plot(ex+ri,ey+ri,'rx','MarkerSize',12);
       initFig(); im(wsPatch);
-      processLocationFun(ex,ey,w); % this needs a model with the patches saved
+      process_location_fcn(ex,ey,w); % this needs a model with the patches saved
     end
     w=sum(w)/numel(w);
     c.edge_weights(e,:)=c.edge_weights(e,:)+[w 1];
@@ -101,16 +102,16 @@ end % for e - edge index
 end % create_finest_partition
 
 % ----------------------------------------------------------------------
-function l = fitLine(v1,v2,ri)
+function l = fit_line(v1,v2,ri)
 % adjust indices for the padded superpixelised image
 v1=v1+ri;v2=v2+ri;
 l=createLine([v1(2),v1(1)],[v2(2),v2(1)]);
 end
 
 % ----------------------------------------------------------------------
-function hs = getTreePatches(x,y,coords2forestLocationFun,model,nTreesEval)
+function hs = get_tree_patches(x,y,coords2forest_location_fcn,model,nTreesEval)
 % get 4 patches in leaves using ind
-[treeIds,leafIds]=coords2forestLocationFun(x,y);
+[treeIds,leafIds]=coords2forest_location_fcn(x,y);
 segs=model.seg;
 hs=uint8(zeros(size(segs,1),size(segs,2),nTreesEval));
 for k=1:nTreesEval
@@ -121,16 +122,16 @@ end
 end
 
 % ----------------------------------------------------------------------
-function w = computeWeights(wsPatch,hs)
+function w = compute_weights(wsPatch,hs)
 nTreesEval=size(hs,3);
 w=zeros(nTreesEval,1);
 for k=1:nTreesEval
-  w(k)=patchScore(wsPatch,hs(:,:,k));
+  w(k)=patch_score(wsPatch,hs(:,:,k));
 end
 end % computeWeights
 
 % ----------------------------------------------------------------------
-function w = patchScore(spx,seg)
+function w = patch_score(spx,seg)
 % return a score in [0,1] for the similarity of the superpixel and the
 % segmentation patch; 0 - no similarity; 1 - maximal similarity
 % fst=spx2seg(spx); % type: uint8
@@ -141,7 +142,7 @@ w=VPR(fst,snd);
 end
 
 % ----------------------------------------------------------------------
-function w = patchScoreDeprecated(spx,seg)
+function w = patch_score_deprecated(spx,seg)
 % 2 options for inputs - bdry or seg
 % bdrys01={spx2bdry01(spx) seg2bdry01(seg)}; % type: logical
 % bdrys12={spx2bdry01(spx)+1 seg2bdry01(seg)+1}; % type: double
