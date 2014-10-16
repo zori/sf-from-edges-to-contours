@@ -68,7 +68,7 @@ for e=1:nEdges
     ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
     x=ex+ri; y=ey+ri; r=ri/2; % adjust patch dimensions
     % wsPatch=cropPatch(wsPadded,x,y,r); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % ri/2 == rg
-    wsPatch=createWsPatch(x,y,r,l);
+    wsPatch=create_seg_patch(x,y,r,l);
     hs=getTreePatchesFun(ex,ey);
     w=computeWeights(wsPatch,hs);
     f=false;
@@ -105,30 +105,6 @@ function l = fitLine(v1,v2,ri)
 % adjust indices for the padded superpixelised image
 v1=v1+ri;v2=v2+ri;
 l=createLine([v1(2),v1(1)],[v2(2),v2(1)]);
-end
-
-% ----------------------------------------------------------------------
-function wsPatch = createWsPatch(x,y,r,l)
-% these are the 4 end pnts of the (previously cropped) ri x ri patch
-ul=[x-r+1 y-r+1]; ur=[x+r y-r+1]; % fst the x coords, then the y
-ll=[x-r+1 y+r];   lr=[x+r y+r];
-sq=[ul; ll; lr; ur];
-ints=intersectLinePolygon(l, sq);
-%     if ~all(size(ints)==[2 2])
-%       disp(ints);
-%     end
-% assert(all(size(ints)==[2 2]));
-ints=ints-[ul;ul]; % go to the coord system of a ri x ri patch
-ints=floor(ints')+1; % TODO correct?
-ints=num2cell(ints);
-[lx,ly]=bresenham(ints{:});
-wsPatch=zeros(2*r);
-idx=sub2ind(size(wsPatch),ly,lx);
-wsPatch(idx)=1;
-% TODO fst=bdry2seg(spx);
-% spx is a bdry
-wsPatch=watershed(wsPatch,4);
-wsPatch(wsPatch==0)=1; % TODO fix
 end
 
 % ----------------------------------------------------------------------
