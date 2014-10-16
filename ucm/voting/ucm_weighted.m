@@ -1,8 +1,8 @@
 % Zornitsa Kostadinova
 % Jul 2014
 % 8.3.0.532 (R2014a)
-function ucm = ucmWeighted(I,model,fmt,T)
-% function ucm = ucmWeighted(I,model,fmt,T)
+function ucm = ucm_weighted(I,model,fmt,T)
+% function ucm = ucm_weighted(I,model,fmt,T)
 % creates a ucm of an image, that is weighted based on the patches in the leaves of a
 % decision forest
 %
