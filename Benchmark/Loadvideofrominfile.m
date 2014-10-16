@@ -90,8 +90,7 @@ for ff=1:numel(inFile)
     elseif exist('allthesegmentations', 'var')
       collectedvs{t}=Doublebackconv(allthesegmentations{thresh(t)});
     else
-      labels2 = bwlabel(ucm <= thresh(t));
-      seg = labels2(2:2:end, 2:2:end);
+      seg = threshold_ucm2(ucm,thresh(t));
       seg = seg + countucm2(t); %we assume bwlabel assigns labels from 1
       countucm2(t) = max(seg(:));
       collectedvs{t}(:,:,ff)=seg;

@@ -188,8 +188,7 @@ for ff=1:numel(inFile)
                 end
             end
         else
-            labels2 = bwlabel(ucm <= thresh(t));
-            seg = labels2(2:2:end, 2:2:end);
+            seg = threshold_ucm2(ucm,thresh(t));
             seg = seg + countucm2(t); %we assume bwlabel assigns labels from 1
             countucm2(t) = max(seg(:));
         end
@@ -299,8 +298,7 @@ for ff=1:numel(inFile)
                 end
             end
         else % ucm
-            labels2 = bwlabel(ucm <= thresh(t));
-            seg = labels2(2:2:end, 2:2:end);
+            seg = threshold_ucm2(ucm,thresh(t));  
             seg = seg + countucm2(t); %we assume bwlabel assigns labels from 1
             countucm2(t) = max(seg(:));
         end
