@@ -26,45 +26,35 @@ D=trr+1; % second diagonal
 % t=v; t(sz/2+1:end,sz/2+1:end)=3;
 t=trl+trup+(~trl)*3; % three segments
 x=t+trlo; % the two diagonals
-% S={b,b,d,d,d,d,x,b};
-% G={b,d,d,v,D,t,d,a};
+% p={{b b} {b d} {d d} {d v} {d D} {d t} {x d} {b a}};
 
-% test segmentation (e.g. watershed)
-S={b,v,v,v,v,...
-  v,t3,h,t3,... % yellow in google doc
-  t3v,...
-  v,v,... % purple in gdoc
-  t3h,...
-  v,f4,... % blue in gdoc
-  b
+% tuples of patches
+p={{b b} {v v} {v b} {v d} {v h}...
+  {v t3} {t3 v} {h t3} {t3 h}... % yellow in google doc
+  {t3v v}...
+  {v t3v} {v t3h}... % purple in gdoc
+  {t3h v}...
+  {v f4} {f4 v}... % blue in gdoc
+  {b a}...
   };
-% ground truth (e.g. from the tree)
-G={b,v,b,d,h,...
-  t3,v,t3,h,... % yellow in google doc
-  v,...
-  t3v,t3h,... % purple in gdoc
-  v,...
-  f4,v,... % blue in gdoc
-  a
-  };
-nPatches=length(S);
-assert(nPatches==length(G));
+
+psz=length(p);
 vpr_norm=@(fst,snd) VPR(fst,snd);
 vpr_unnorm=@(fst,snd) VPR(fst,snd,false);
-metrics={vpr_norm}; % {@RSRI,@RI,vpr_unnorm,vpr_norm};
-res=zeros(length(metrics),nPatches);
-m=1;
-for metric = metrics
-  for k=1:nPatches
-    f=false;
-    if f
-      disp(k);
-      initFig(1); im(S{k});
-      initFig(); im(G{k});
-    end
-    res(m,k)=metric{1}(S{k},G{k});
+scoring_fcns={@RSRI,@RI,vpr_unnorm,vpr_norm};
+res=zeros(psz,length(scoring_fcns));
+for k=1:psz
+  f=false;
+  if f
+    disp(k);
+    initFig(1); im(p{k}{1}); % test segmentation (e.g. watershed)
+    initFig(); im(p{k}{2}); % ground truth (e.g. from the tree)
+  end  
+  cnt=1;
+  for fcn = scoring_fcns
+    res(k,cnt)=fcn{1}(p{k}{:});
+  cnt=cnt+1;
   end
-  m=m+1;
 end
-disp(res');
+disp(res);
 end
