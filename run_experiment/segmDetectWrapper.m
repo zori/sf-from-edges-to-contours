@@ -15,8 +15,9 @@ addAttachedFiles(gcp(),...
 % run edge/segment detector
 detOpts={
   'imDir',  fullfile(LOG.dsDir,'test',LOG.imDirR),...
+  'gtDir',  fullfile(LOG.dsDir,'test',LOG.gtDirR),... % for the oracle
   'resDir', fullfile(LOG.dsDir,'test',LOG.resDirR)...
-  'outType', 'voteUcm'... % edge, edgeContours, seg, ucm, sPb, voteUcm
+  'outType', 'oracle'... % edge, edgeContours, seg, ucm, sPb, voteUcm, oracle
   };
 
 timerDet=tic;

@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Jul 2014
 % 8.3.0.532 (R2014a)
-function ucm = ucm_weighted(I,model,fmt,T)
+function ucm = ucm_weighted(I,model,fmt,T,gts)
 % function ucm = ucm_weighted(I,model,fmt,T)
 % creates a ucm of an image, that is weighted based on the patches in the leaves of a
 % decision forest
@@ -11,6 +11,9 @@ function ucm = ucm_weighted(I,model,fmt,T)
 %  model        - structured decision forest (SF)
 %  fmt          - output format; 'imageSize' (default) or 'doubleSize'
 %  T            - individual trees of the SF (for visualisation only - processLocation)
+%  gts          - (optional) ground truth segmentations; for oracle only; used
+%                 to analyse the performance of similarity scoring functions on
+%                 patches
 %
 % OUTPUTS
 %  ucm          - Ultrametric Contour Map
@@ -35,16 +38,26 @@ IPadded=imPad(I,p,'symmetric');
 t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
 Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg)*t;
 E=convTri(Es_,1);
+if exist('gts','var')
+  % oracle, use ground truth segmentations corresponding to I
+  for k=1:length(gts)
+    % pad similarly the gts
+    gts{k}=imPad(double(gts{k}),p,'symmetric'); % ground truths were uint16, which can't be padded
+  end
+  get_hs_fcn=@(x,y) get_groundtruth_patches(x+p(3),y+p(1),ri/2,gts); % coords are offset for padded ground truth images
+else
+  % voting on the watershed contour
+  coords2forest_location_fcn=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
+  get_hs_fcn=@(x,y) get_tree_patches(x,y,coords2forest_location_fcn,model,nTreesEval);
+end
 wsPadded=imPad(double(watershed(E)),p,'symmetric');
-coords2forestLocationFun=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
-getTreePatchesFun=@(x,y) getTreePatches(x,y,coords2forestLocationFun,model,nTreesEval);
-processLocationFun=@(x,y,w) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,contours2ucm(E),w);
-cfp=@(pb) create_finest_partition_voting(pb,wsPadded,ri,getTreePatchesFun,processLocationFun);
+process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,contours2ucm(E),w);
+cfp=@(pb) create_finest_partition_voting(pb,wsPadded,ri,get_hs_fcn,process_location_fcn);
 ucm=contours2ucm(E,fmt,cfp);
 end
 
 % ----------------------------------------------------------------------
-function sf_wt = create_finest_partition_voting(pb,wsPadded,ri,getTreePatchesFun, processLocationFun)
+function sf_wt = create_finest_partition_voting(pb,wsPadded,ri,get_hs_fcn,process_location_fcn)
 ws=watershed(pb);
 % assert(all(all(ws==wsPadded(1+ri:size(pb,1)+ri,1+ri:size(pb,2)+ri))));
 
@@ -60,23 +73,23 @@ for e=1:nEdges
   end
   v1=c.vertices(c.edges(e,1),:); % fst coord is y - row ind
   v2=c.vertices(c.edges(e,2),:);
-  l=fitLine(v1,v2,ri);
+  l=fit_line(v1,v2,ri);
   for p=1:numel(c.edge_x_coords{e})
     % NOTE x and y are swapped here (in the output from fit_contour)
     % the correct way is (for an image of dimensions h x w x 3)
     % first coord, in [1,h], is y, second coord, in [1,w], is x
     ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
     x=ex+ri; y=ey+ri; r=ri/2; % adjust patch dimensions
-    % wsPatch=cropPatch(wsPadded,x,y,r); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % ri/2 == rg
-    wsPatch=createWsPatch(x,y,r,l);
-    hs=getTreePatchesFun(ex,ey);
-    w=computeWeights(wsPatch,hs);
+    % wsPatch=cropPatch(wsPadded,x,y,r); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % r=ri/2 == rg
+    wsPatch=create_seg_patch(x,y,r,l);
+    hs=get_hs_fcn(ex,ey);
+    w=compute_weights(wsPatch,hs);
     f=false;
     if f
       % close all;
       initFig(1); im(wsPadded); hold on; plot(ex+ri,ey+ri,'rx','MarkerSize',12);
       initFig(); im(wsPatch);
-      processLocationFun(ex,ey,w); % this needs a model with the patches saved
+      process_location_fcn(ex,ey,w); % this needs a model with the patches saved
     end
     w=sum(w)/numel(w);
     c.edge_weights(e,:)=c.edge_weights(e,:)+[w 1];
@@ -101,42 +114,18 @@ end % for e - edge index
 end % create_finest_partition
 
 % ----------------------------------------------------------------------
-function l = fitLine(v1,v2,ri)
+function l = fit_line(v1,v2,ri)
 % adjust indices for the padded superpixelised image
 v1=v1+ri;v2=v2+ri;
 l=createLine([v1(2),v1(1)],[v2(2),v2(1)]);
 end
 
 % ----------------------------------------------------------------------
-function wsPatch = createWsPatch(x,y,r,l)
-% these are the 4 end pnts of the (previously cropped) ri x ri patch
-ul=[x-r+1 y-r+1]; ur=[x+r y-r+1]; % fst the x coords, then the y
-ll=[x-r+1 y+r];   lr=[x+r y+r];
-sq=[ul; ll; lr; ur];
-ints=intersectLinePolygon(l, sq);
-%     if ~all(size(ints)==[2 2])
-%       disp(ints);
-%     end
-% assert(all(size(ints)==[2 2]));
-ints=ints-[ul;ul]; % go to the coord system of a ri x ri patch
-ints=floor(ints')+1; % TODO correct?
-ints=num2cell(ints);
-[lx,ly]=bresenham(ints{:});
-wsPatch=zeros(2*r);
-idx=sub2ind(size(wsPatch),ly,lx);
-wsPatch(idx)=1;
-% TODO fst=bdry2seg(spx);
-% spx is a bdry
-wsPatch=watershed(wsPatch,4);
-wsPatch(wsPatch==0)=1; % TODO fix
-end
-
-% ----------------------------------------------------------------------
-function hs = getTreePatches(x,y,coords2forestLocationFun,model,nTreesEval)
+function hs = get_tree_patches(x,y,coords2forest_location_fcn,model,nTreesEval)
 % get 4 patches in leaves using ind
-[treeIds,leafIds]=coords2forestLocationFun(x,y);
+[treeIds,leafIds]=coords2forest_location_fcn(x,y);
 segs=model.seg;
-hs=uint8(zeros(size(segs,1),size(segs,2),nTreesEval));
+hs=zeros(size(segs,1),size(segs,2),nTreesEval);
 for k=1:nTreesEval
   treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
   % assert(~model.child(leafId,treeId));
@@ -145,31 +134,42 @@ end
 end
 
 % ----------------------------------------------------------------------
-function w = computeWeights(wsPatch,hs)
-nTreesEval=size(hs,3);
-w=zeros(nTreesEval,1);
-for k=1:nTreesEval
-  w(k)=patchScore(wsPatch,hs(:,:,k));
+function hs = get_groundtruth_patches(x,y,r,gts)
+gtsz=length(gts);
+hs=zeros(2*r,2*r,gtsz);
+for k=1:gtsz
+  hs(:,:,k)=cropPatch(gts{k},x,y,r);
+end
+end
+
+% ----------------------------------------------------------------------
+function w = compute_weights(wsPatch,hs)
+hsz=size(hs,3); % number of ground truth patches
+w=zeros(hsz,1);
+for k=1:hsz
+  w(k)=patch_score(wsPatch,hs(:,:,k));
 end
 end % computeWeights
 
 % ----------------------------------------------------------------------
-function w = patchScore(spx,seg)
+function w = patch_score(spx,seg)
 % return a score in [0,1] for the similarity of the superpixel and the
 % segmentation patch; 0 - no similarity; 1 - maximal similarity
-% fst=spx2seg(spx); % type: uint8
+% fst=spx2seg(spx); % important when not fitting a line
 fst=spx;
-snd=seg; % type uint8
-w=VPR(fst,snd);
+snd=seg;
+fst=double(fst); snd=double(snd); % could work with uint8, but not desirable in case some of the segments have labels bigger than 255
+w=VPR(snd, fst); % normalisation on the watershed side
+% w=VPR(fst,snd); % normalisation on the trees side
 % w=compareSegs(fst,snd);
 end
 
 % ----------------------------------------------------------------------
-function w = patchScoreDeprecated(spx,seg)
+function w = patch_score_deprecated(spx,seg)
 % 2 options for inputs - bdry or seg
 % bdrys01={spx2bdry01(spx) seg2bdry01(seg)}; % type: logical
 % bdrys12={spx2bdry01(spx)+1 seg2bdry01(seg)+1}; % type: double
-segs={spx2seg(spx) seg}; % type: uint8
+segs={spx2seg(spx) seg};
 p=false;
 if p
   initFig(1); im(spx);
@@ -211,7 +211,7 @@ patch=labels2(2:2:end, 2:2:end); % labels should start from 1
 % TODO labels sometimes start from 0; bug due to artifacts from the watershed;
 % workaround:
 [~,~,patch]=unique(patch);
-patch=uint8(reshape(patch,sz));
+patch=reshape(patch,sz);
 end
 
 % ----------------------------------------------------------------------

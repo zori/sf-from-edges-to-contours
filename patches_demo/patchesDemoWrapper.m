@@ -14,8 +14,18 @@ end
 clear k nTrees treeStr;
 
 % patchesDemo(model,T);
-BW=repmat(eye(260),1,1,3);
+
 % l=zeros(16,16); l(:,8)=1;
 % L=repmat(l,1,1,3); clear l;
-% ucmL=ucmWeighted(L,model,'doubleSize',T);
-ucmBW=ucmWeighted(BW,model,'doubleSize',T);
+% ucmL=ucm_weighted(L,model,'doubleSize',T);
+
+bw=repmat(eye(260),1,1,3);
+bw_ucm=ucm_weighted(bw,model,'doubleSize',T);
+bw_gt=watershed(bw(:,:,1),4); bw_gt(bw_gt==0)=1;
+bw_ucm_oracle=ucm_weighted(bw,model,'doubleSize',T,{bw_gt});
+
+imFile='/BS/kostadinova/work/BSR/BSDS500/data/images/val/101085.jpg';
+gtFile='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/101085.mat';
+I=imread(imFile);
+ucm=ucm_weighted(I,model,'doubleSize',T);
+ucm_oracle=ucm_weighted(I,model,'doubleSize',T,load_segmentations(gtFile));

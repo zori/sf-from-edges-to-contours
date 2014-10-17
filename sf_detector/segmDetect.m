@@ -31,7 +31,7 @@ function [] = segmDetect( model, varargin )
 
 % get default parameters
 dfs={
-  'nThresh',99, 'imDir','REQ', 'resDir','REQ', 'outType','seg',...
+  'nThresh',99, 'imDir','REQ', 'gtDir', [], 'resDir','REQ', 'outType','seg',...
   'stride',[], 'nTreesEval',[], 'multiscale',[], 'pDistr',{{'type','parfor'}}
   };
 p=getPrmDflt(varargin,dfs,1);
@@ -41,6 +41,7 @@ if( ~isempty(p.nTreesEval) ), model.opts.nTreesEval=p.nTreesEval; end
 if( ~isempty(p.multiscale) ), model.opts.multiscale=p.multiscale; end
 
 imDir=p.imDir; assert(exist(imDir,'dir')==7);
+gtDir=p.gtDir; % only for the oracle case
 resDir=p.resDir;
 outType=p.outType;
 
@@ -61,27 +62,29 @@ end
 
 % detect edges (and output a seg or a ucm)
 if ~exist(resDir,'dir'), mkdir(resDir); end; do=false(1,n);
-for i=1:n, do(i)=~existOutput(fullfile(resDir,ids(i).video), ids(i).name); end
+for i=1:n, do(i)=~existOutput(resDir,ids(i)); end
 do=find(do); m=length(do);
 parfor i=1:m, id=ids(do(i));%#ok<PFBNS>
   if ~exist(fullfile(resDir,id.video),'dir'), mkdir(fullfile(resDir,id.video)); end;
   imFile=fullfile(imDir,id.video,[id.name '.jpg']);
   I=imread(imFile);
-  detection=detect(outType,I,model);
+  % function for loading the ground truth segmentations in case of 'oracle'
+  gt_fcn=@() load_segmentations(get_video_filename(gtDir,id,'.mat'));
+  detection=detect(outType,I,model,gt_fcn);
   writeDetection(outType,detection,resDir,id);
 end
 end
 
 % ----------------------------------------------------------------------
-function exists = existOutput(filePath,fileName)
+function exists = existOutput(resDir,id)
 % check the existance of an output file with an extension .mat, .png or .bmp
-exists = exist(fullfile(filePath, [fileName, '.mat']),'file') ||...
-  exist(fullfile(filePath, [fileName, '.png']),'file') ||...
-  exist(fullfile(filePath, [fileName, '.bmp']),'file');
+exists = exist(get_video_filename(resDir,id,'.mat'),'file') ||...
+  exist(get_video_filename(resDir,id,'.png'),'file') ||...
+  exist(get_video_filename(resDir,id,'.bmp'),'file');
 end
 
 % ----------------------------------------------------------------------
-function d = detect(outType,I,model)
+function d = detect(outType,I,model,gt_fcn)
 fmt='doubleSize';
 switch outType
   case 'edge'
@@ -96,7 +99,10 @@ switch outType
     d=structuredEdgeSPb(I,model,fmt);
   case 'voteUcm'
     % assert(model.opts.nms); % TODO DRY! .nms option neglected, since I don't use the edgesDetect
-    d=ucmWeighted(I,model,fmt,[]);
+    d=ucm_weighted(I,model,fmt,[]);
+  case 'oracle'
+    assert(logical(exist('gt_fcn','var')));
+    d=ucm_weighted(I,model,fmt,[],gt_fcn());
   otherwise
     warning('Unexpected output type. No output created.');
 end
@@ -107,9 +113,9 @@ function writeDetection(outType,detection,resDir,id)
 switch outType
   case {'edge','edgeContours'}
     % probability of boundary (pb)
-    imwrite(uint8(detection*255),getFilename(resDir,id,'.png'));
+    imwrite(uint8(detection*255),get_video_filename(resDir,id,'.png'));
   otherwise
-    f=matfile(getFilename(resDir,id,'.mat'),'Writable',true);
+    f=matfile(get_video_filename(resDir,id,'.mat'),'Writable',true);
     switch outType
       case 'seg'
         % watershed - oversegmentation
@@ -143,6 +149,6 @@ ucm2=contours2ucm(gPb_orient,fmt);
 end
 
 % ----------------------------------------------------------------------
-function fn = getFilename(resDir,id,ext)
-fn=fullfile(resDir,id.video,[id.name ext]);
+function fn = get_video_filename(dirA,id,ext)
+fn=fullfile(dirA,id.video,[id.name ext]);
 end

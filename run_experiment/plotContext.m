@@ -23,8 +23,12 @@ plotOpts=struct('path',fullfile(LOG.dsDir,'test'),'dirR','precomputed','superpos
 
 % courtesy jhosang; colors for up to 16 curves
 colorMap = [
+0, 100, 0;
+30, 144, 255;
+75, 0, 130;
+255, 20, 147;
+153, 50, 204;
 238, 130, 238;
-135, 130, 174;
 135,206,235;
 228, 229, 97;
 0, 250, 154;
@@ -46,6 +50,7 @@ colorMap = [
 255, 255, 0;
 223, 200, 51;
 0, 0, 205;
+135, 130, 174;
 ] ./ 256;
 
 % directories, labels and colors for the precomputed results
@@ -63,27 +68,42 @@ dataBest=[...
 dataRSRI=[...
   struct('out','Output_RSRI_segs','legend','segs 256 RSRI','style',{{'Marker','x'}}),... % used to be calles 'CpdSegs', now 256
   struct('out','Output_RSRI_segs_merge','legend','s. merge RSRI','style',{{'Marker','x'}}),... % RSRI segs improved by merging some regions of the superpixelisation
-  struct('out','Output_RSRI_segs_merge_Pb','legend','s. merge RSRI .*pb','style',{{'LineStyle','--','Marker','x'}}),... % RSRI segs merge, value-multiplied with the pb from create_finest_partition by Arbelaez
+  struct('out','Output_RSRI_segs_merge_Pb','legend','s. merge RSRI .*pb','style',{{'LineStyle','--','Marker','x'}}),... % segs merge RSRI, value-multiplied with the pb from create_finest_partition by Arbelaez
   struct('out','Output_RI','legend','RI (32640)','style',{{'LineStyle',':','Marker','x'}}),... % rather than RSRI, increases the nSample to the max, so we have a RI measure; same results, only slower (is it really slower?)
-  struct('out','Output_line_RSRI','legend','l. RSRI','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; RSRI segs
+  struct('out','Output_line_RSRI','legend','l. RSRI','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line
   ];
-dataVPRnormTs=[...
-  struct('out','Output_segs_VPR_normalised_trees','legend','s. VPR norm Ts','style',{{'Marker','x'}}),... % VPR normalised on the side of the trees
-  struct('out','Output_segs_VPR_normalised_trees_pb','legend','s. VPR Ts .*pb','style',{{'LineStyle','--','Marker','x'}}),... % VPR normalised w.r.t. trees, value-multiplied with the pb from create_finest_partition by Arbelaez
-  struct('out','Output_line_VPR_normalised_trees','legend','line VPR norm Ts','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line; segs, VPR normalised on the side of the trees
+dataVPRnormTs=[... % VPR normalised on the side of the trees
+  struct('out','Output_segs_VPR_normalised_trees','legend','s. VPR norm Ts','style',{{'Marker','x'}}),...
+  struct('out','Output_segs_VPR_normalised_trees_pb','legend','s. VPR Ts .*pb','style',{{'LineStyle','--','Marker','x'}}),...
+  struct('out','Output_line_VPR_normalised_trees','legend','line VPR norm Ts','style',{{'Marker','x'}}),...
   struct('out','Output_line_VPR_normalised_trees_pb','legend','l. VPR norm Ts .*pb','style',{{'LineStyle','--','Marker','x'}}),...
   ];
-dataVPRnormWS=[...
+dataVPRnormWS=[... % VPR normalised on the side of the watershed
   struct('out','Output_segs_VPR_normalised_ws','legend','s. VPR norm ws','style',{{'Marker','x'}}),...
   struct('out','Output_segs_VPR_normalised_ws_pb','legend','s. VPR ws .*pb','style',{{'LineStyle','--','Marker','x'}}),...
   struct('out','Output_line_VPR_normalised_ws','legend','l. VPR norm ws','style',{{'Marker','x'}}),...
   struct('out','Output_line_VPR_normalised_ws_pb','legend','l. VPR norm ws .*pb','style',{{'LineStyle','--','Marker','x'}}),...
   ];
+dataOracleSimple=[... % oracle - using the GT patches instead of the leaves of the SF trees
+  struct('out','Output_oracle_segs_merge_RSRI','legend','oracle s. merge RSRI','style',{{'LineStyle','-.','Marker','*'}}),...
+  struct('out','Output_oracle_line_RSRI','legend','o. l. RSRI','style',{{'LineStyle','-.','Marker','*'}}),...
+  struct('out','Output_oracle_segs_VPR_normalised_trees','legend','o. s. VPR norm Ts','style',{{'LineStyle','-.','Marker','*'}}),...
+  struct('out','Output_oracle_segs_VPR_normalised_ws','legend','o. s. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}}),...
+  struct('out','Output_oracle_line_VPR_normalised_ws','legend','o. l. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}}),...
+  ];
+dataOraclePB=[... % oracle result value-multiplied by the probability of boundary
+  struct('out','Output_oracle_line_RSRI_pb','legend','o. l. RSRI pb','style',{{'Marker','o'}}),...
+  struct('out','Output_oracle_segs_VPR_normalised_trees_pb','legend','o. s. VPR norm Ts pb','style',{{'Marker','o'}}),...
+  struct('out','Output_oracle_segs_VPR_normalised_ws_pb','legend','o. s. VPR norm ws pb','style',{{'Marker','o'}}),...
+  struct('out','Output_oracle_line_VPR_normalised_ws_pb','legend','o. l. VPR norm ws pb','style',{{'Marker','o'}}),...
+  ];
+dataOracle=[dataOracleSimple,dataOraclePB];
 dataOurs=[...
   dataRSRI,...
   struct('out','Output_segs_VPR_unnormalised','legend','s. VPR unnorm','style',{{'Marker','x'}}),... % unnormalised VPR
   dataVPRnormTs,...
   dataVPRnormWS,...
+  dataOracle,...
   ];
 
 switch experimentsToPlot
@@ -119,7 +139,7 @@ fsz=length(fhs); % number of figures, BPR, VPR, length statistics and number of 
 l=cell(fsz,length(data)); % metric-specific label
 cnt=0; % number of curves plotted
 for d=1:length(data)
-  plotOpts.plotStyle=[{colorMap(d,:)} data(d).style];
+  plotOpts.plotStyle=[{colorMap(d,:)} data(d).style {'LineWidth',2,'MarkerSize',4}];
   plotOpts.outDirR=data(d).out;
   [output,fhs_curr]=ComputeRP(plotOpts);
   if isempty(fieldnames(output))
@@ -144,6 +164,7 @@ for f=1:fsz
   fileName=strrep(figTitle,' ','_');
   saveas(gcf,fullfile(plotOpts.path,plotOpts.dirR,['_',fileName]),'jpg');
 end
+close all;
 end
 
 % ----------------------------------------------------------------------
