@@ -62,33 +62,29 @@ end
 
 % detect edges (and output a seg or a ucm)
 if ~exist(resDir,'dir'), mkdir(resDir); end; do=false(1,n);
-for i=1:n, do(i)=~existOutput(fullfile(resDir,ids(i).video), ids(i).name); end
+for i=1:n, do(i)=~existOutput(resDir,ids(i)); end
 do=find(do); m=length(do);
 parfor i=1:m, id=ids(do(i));%#ok<PFBNS>
   if ~exist(fullfile(resDir,id.video),'dir'), mkdir(fullfile(resDir,id.video)); end;
   imFile=fullfile(imDir,id.video,[id.name '.jpg']);
   I=imread(imFile);
-  if strcmp(outType,'oracle')
-    gts=load_segmentations(get_video_filename(gtDir,id,'.mat'));
-    detection=ucm_weighted(I,model,fmt,[],gts);  
-  else
-    detection=detect(outType,I,model,gts);
-  end
+  % function for loading the ground truth segmentations in case of 'oracle'
+  gt_fcn=@() load_segmentations(get_video_filename(gtDir,id,'.mat'));
+  detection=detect(outType,I,model,gt_fcn);
   writeDetection(outType,detection,resDir,id);
 end
 end
 
 % ----------------------------------------------------------------------
-function exists = existOutput(filePath,fileName)
-% TODO use the function get_video_filename(dirA,id,ext)
+function exists = existOutput(resDir,id)
 % check the existance of an output file with an extension .mat, .png or .bmp
-exists = exist(fullfile(filePath, [fileName, '.mat']),'file') ||...
-  exist(fullfile(filePath, [fileName, '.png']),'file') ||...
-  exist(fullfile(filePath, [fileName, '.bmp']),'file');
+exists = exist(get_video_filename(resDir,id,'.mat'),'file') ||...
+  exist(get_video_filename(resDir,id,'.png'),'file') ||...
+  exist(get_video_filename(resDir,id,'.bmp'),'file');
 end
 
 % ----------------------------------------------------------------------
-function d = detect(outType,I,model)
+function d = detect(outType,I,model,gt_fcn)
 fmt='doubleSize';
 switch outType
   case 'edge'
@@ -104,6 +100,9 @@ switch outType
   case 'voteUcm'
     % assert(model.opts.nms); % TODO DRY! .nms option neglected, since I don't use the edgesDetect
     d=ucm_weighted(I,model,fmt,[]);
+  case 'oracle'
+    assert(logical(exist('gt_fcn','var')));
+    d=ucm_weighted(I,model,fmt,[],gt_fcn());
   otherwise
     warning('Unexpected output type. No output created.');
 end
