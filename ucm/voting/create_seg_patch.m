@@ -21,6 +21,7 @@ function seg_patch = create_seg_patch(x,y,r,l)
 %  -------> x
 %  |
 %  |
+%  V
 %  y
 ul=[x-r+1 y-r+1]; ur=[x+r y-r+1]; % fst the x coords, then the y
 ll=[x-r+1 y+r];   lr=[x+r y+r];
