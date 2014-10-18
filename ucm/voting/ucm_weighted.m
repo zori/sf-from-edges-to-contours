@@ -159,8 +159,8 @@ function w = patch_score(spx,seg)
 fst=spx;
 snd=seg;
 fst=double(fst); snd=double(snd); % could work with uint8, but not desirable in case some of the segments have labels bigger than 255
-w=VPR(snd, fst); % normalisation on the watershed side
-% w=VPR(fst,snd); % normalisation on the trees side
+w=vpr_s(fst,snd); % normalisation on the watershed side
+% w=vpr_gt(fst,snd); % normalisation on the trees side
 % w=compareSegs(fst,snd);
 end
 

@@ -5,7 +5,7 @@ function test_scoring_fcns()
 sz=16;
 % z=zeros(sz);
 % o=ones(sz);
-% VPR(z,o) % no, labels should start from 1 at least (0 are not counted)
+% vpr(z,o) % no, labels should start from 1 at least (0 are not counted)
 
 b=ones(sz); % background
 v=b; v(:,sz/2+1:end)=2; % vertical
@@ -74,13 +74,10 @@ p_worst={...
   };
 ps={p_eq p_small_difference p_big_diff p_worst}; % the 4 cases
 % to display only one example
-ps={{{beo bEO}}};
+% ps={{{beo bEO}}};
 psz=length(ps); % number of strata (case distinctions)
 
-VPR_unnorm=@(fst,snd) VPR(fst,snd,false);
-VPR_norm_Ts=@(fst,snd) VPR(fst,snd);
-VPR_norm_ws=@(fst,snd) VPR(snd,fst);
-scoring_fcns={@RSRI,@RI,VPR_unnorm,VPR_norm_Ts,VPR_norm_ws};
+scoring_fcns={@RSRI,@RI,@vpr,@vpr_gt,@vpr_s};
 sfsz=length(scoring_fcns);
 res=cell(psz,sfsz);
 for c=1:psz % c - case number
