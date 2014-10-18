@@ -50,9 +50,5 @@ sumP=volumes.sumprect-normvolumes.cntprect; % Zeros labels are counted for the a
 cntR=volumes.cntrect-normvolumes.nofusedgts; % Normalise: the whole frame is used to take -1 into account and exclude gts with 0 areas
 sumR=volumes.sumrect-normvolumes.nofusedgts; % Zeros labels are counted for the areas, -1 labels are not counted at all (regions of frames are ignored)
 
-% Benchmark/Collectevalaluatereg.m line 292
-% Precision recall and F measure for the considered segmentation
-R=cntR./(sumR+(sumR==0));
-P=cntP./(sumP+(sumP==0));
-F=fmeasure(R,P);
+F=calculate_R_P_F(cntR,sumR,cntP,sumP);
 end
