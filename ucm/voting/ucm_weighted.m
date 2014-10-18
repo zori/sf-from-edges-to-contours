@@ -165,31 +165,6 @@ w=vpr_s(fst,snd); % normalisation on the watershed side
 end
 
 % ----------------------------------------------------------------------
-function w = patch_score_deprecated(spx,seg)
-% 2 options for inputs - bdry or seg
-% bdrys01={spx2bdry01(spx) seg2bdry01(seg)}; % type: logical
-% bdrys12={spx2bdry01(spx)+1 seg2bdry01(seg)+1}; % type: double
-segs={spx2seg(spx) seg};
-p=false;
-if p
-  initFig(1); im(spx);
-  initFig(); im(seg);
-  initFig(); im(bdrys01{1}); %montage2(cell2array(segs));
-  initFig(); im(bdrys01{2});
-  initFig(); im(bdrys12{1});
-  initFig(); im(bdrys12{2});
-  initFig(); im(segs{1});
-  initFig(); im(segs{2});
-end
-% 2 options for distance metric - the original "crude" approximation or VPR
-% w=VPR(bdrys01{:}); % 0.3169 % 11s -runtimes on a small example 241x161
-% w=VPR(bdrys12{:}); % 0.8402 % 11 seconds
-% w=VPR(segs{:}); % 17 seconds
-% w=RSRI(bdrys01{:}); % 7 seconds
-w=RSRI(segs{:}); % 11 seconds
-end
-
-% ----------------------------------------------------------------------
 function patch = spx2bdry01(patch)
 % convert the superpixels patch to be a 0-1 boundary location
 % the input has the boundary denoted by 0
