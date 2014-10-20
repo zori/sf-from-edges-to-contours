@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Jul 2014
 % 8.3.0.532 (R2014a)
-function ucm = ucm_weighted(I,model,fmt,T,gts)
+function ucm = ucm_weighted(I,model,fmt,T,px_max_dist,gts)
 % function ucm = ucm_weighted(I,model,fmt,T)
 % creates a ucm of an image, that is weighted based on the patches in the leaves of a
 % decision forest
@@ -50,16 +50,25 @@ else
   coords2forest_location_fcn=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
   get_hs_fcn=@(x,y) get_tree_patches(x,y,coords2forest_location_fcn,model,nTreesEval);
 end
-wsPadded=imPad(double(watershed(E)),p,'symmetric');
-process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,contours2ucm(E),w);
-cfp=@(pb) create_finest_partition_voting(pb,wsPadded,ri,get_hs_fcn,process_location_fcn);
+
+ws2seg_fcn=@(x) (x); % the identity function
+% ws2seg_fcn=@(x) spx2seg(x);  % when not fitting a line
+
+% function for the similarity between the watershed and the segmentation patch
+% score in [0,1]; 0 - no similarity; 1 - maximal similarity
+patch_score_fcn=@(S,G) bpr(seg2bdry(S),seg2bdry(G),px_max_dist); % bpr vpr_s vpr_gt compareSegs
+compute_weights_fcn=@(ws_patch,hs) compute_weights(ws_patch,hs,patch_score_fcn);
+
+ws_padded=imPad(double(watershed(E)),p,'symmetric');
+process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws_padded,contours2ucm(E),w);
+cfp=@(pb) create_finest_partition_voting(pb,ws_padded,ri,get_hs_fcn,process_location_fcn,compute_weights_fcn,ws2seg_fcn);
 ucm=contours2ucm(E,fmt,cfp);
 end
 
 % ----------------------------------------------------------------------
-function sf_wt = create_finest_partition_voting(pb,wsPadded,ri,get_hs_fcn,process_location_fcn)
+function sf_wt = create_finest_partition_voting(pb,ws_padded,ri,get_hs_fcn,process_location_fcn,compute_weights_fcn,ws2seg_fcn)
 ws=watershed(pb);
-% assert(all(all(ws==wsPadded(1+ri:size(pb,1)+ri,1+ri:size(pb,2)+ri))));
+% assert(all(all(ws==ws_padded(1+ri:size(pb,1)+ri,1+ri:size(pb,2)+ri))));
 
 c=fit_contour(double(ws==0));
 % remove empty fields
@@ -68,9 +77,9 @@ nEdges=numel(c.edge_x_coords);
 c.edge_weights=zeros(nEdges,2); % tuples of accumulated weights and number of pixels per edge
 for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
-  if e == 40 || e == 48
-    disp(e);
-  end
+%   if e == 40 || e == 48
+%     disp(e);
+%   end
   v1=c.vertices(c.edges(e,1),:); % fst coord is y - row ind
   v2=c.vertices(c.edges(e,2),:);
   l=fit_line(v1,v2,ri);
@@ -80,15 +89,16 @@ for e=1:nEdges
     % first coord, in [1,h], is y, second coord, in [1,w], is x
     ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
     x=ex+ri; y=ey+ri; r=ri/2; % adjust patch dimensions
-    % wsPatch=cropPatch(wsPadded,x,y,r); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % r=ri/2 == rg
-    wsPatch=create_seg_patch(x,y,r,l);
-    hs=get_hs_fcn(ex,ey);
-    w=compute_weights(wsPatch,hs);
+    % ws_patch=cropPatch(ws_padded,x,y,r); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % r=ri/2 == rg
+    ws_patch=create_seg_patch(x,y,r,l); % create_bdry_patch ?
+    ws_patch=ws2seg_fcn(ws_patch);
+    hs=get_hs_fcn(ex,ey); % a few 16x16 segmentation patches
+    w=compute_weights_fcn(ws_patch,hs);
     f=false;
     if f
       % close all;
-      initFig(1); im(wsPadded); hold on; plot(ex+ri,ey+ri,'rx','MarkerSize',12);
-      initFig(); im(wsPatch);
+      initFig(1); im(ws_padded); hold on; plot(ex+ri,ey+ri,'rx','MarkerSize',12);
+      initFig(); im(ws_patch);
       process_location_fcn(ex,ey,w); % this needs a model with the patches saved
     end
     w=sum(w)/numel(w);
@@ -143,26 +153,13 @@ end
 end
 
 % ----------------------------------------------------------------------
-function w = compute_weights(wsPatch,hs)
+function w = compute_weights(ws_patch,hs,patch_score_fcn)
 hsz=size(hs,3); % number of ground truth patches
 w=zeros(hsz,1);
 for k=1:hsz
-  w(k)=patch_score(wsPatch,hs(:,:,k));
+  w(k)=patch_score_fcn(double(ws_patch),double(hs(:,:,k))); % could work with uint8, but not desirable in case some of the segments have labels bigger than 255
 end
 end % computeWeights
-
-% ----------------------------------------------------------------------
-function w = patch_score(spx,seg)
-% return a score in [0,1] for the similarity of the superpixel and the
-% segmentation patch; 0 - no similarity; 1 - maximal similarity
-% fst=spx2seg(spx); % important when not fitting a line
-fst=spx;
-snd=seg;
-fst=double(fst); snd=double(snd); % could work with uint8, but not desirable in case some of the segments have labels bigger than 255
-w=vpr_s(fst,snd); % normalisation on the watershed side
-% w=vpr_gt(fst,snd); % normalisation on the trees side
-% w=compareSegs(fst,snd);
-end
 
 % ----------------------------------------------------------------------
 function patch = spx2bdry01(patch)
@@ -191,6 +188,7 @@ end
 
 % ----------------------------------------------------------------------
 function patch = seg2bdry01(patch)
+% NOTE: keep that for now, but also note seg2bdry (Arbelaez implementation)
 % convert the seg to be 0-1 boundary location
 patch=gradientMag(single(patch))>.01;
 end
@@ -207,5 +205,6 @@ pb2(1:2:end, 1:2:end) = pb;
 pb2(1:2:end, 2:2:end-2) = H;
 pb2(2:2:end-2, 1:2:end) = V;
 pb2(end,:) = pb2(end-1, :);
+assert(all(pb2(:,end)==0));
 pb2(:,end) = max(pb2(:,end), pb2(:,end-1));
 end
