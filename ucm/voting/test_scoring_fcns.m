@@ -77,7 +77,10 @@ ps={p_eq p_small_difference p_big_diff p_worst}; % the 4 cases
 % ps={{{beo bEO}}};
 psz=length(ps); % number of strata (case distinctions)
 
-scoring_fcns={@RSRI,@RI,@vpr,@vpr_gt,@vpr_s};
+% for k=1:7, scoring_fcns{k}=@(S,G) bpr(seg2bdry(S),seg2bdry(G),k); end
+px_max_dist=3; % that seems to be a good choice
+bpr_segs=@(S,G) bpr(seg2bdry(S),seg2bdry(G),3);
+scoring_fcns={@RSRI,@RI,@vpr,@vpr_gt,@vpr_s,bpr_segs};
 sfsz=length(scoring_fcns);
 res=cell(psz,sfsz);
 for c=1:psz % c - case number
@@ -109,7 +112,7 @@ end
 % disp(res); just displays the sizes of the output (number of examples)
 
 % print results in a table by iterating over the examples
-disp('       RSRI         RI VPR_unnorm VPR_norm_Ts VPR_norm_ws')
+disp('       RSRI         RI VPR_unnorm VPR_norm_Ts VPR_norm_ws       BPR')
 l=repmat('-',1,sfsz*10); % line to be displayed between the strata (the different test cases)
 for k=1:psz
   if k>1, disp(l); end

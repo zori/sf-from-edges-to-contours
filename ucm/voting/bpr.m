@@ -3,8 +3,8 @@
 % 8.3.0.532 (R2014a)
 % from Benchmark/Evaluatesegmbdry.m
 function F = bpr(S,G,px_max_dist)
-% symmetric w.r.t S and G, but output is non-deterministic (uses randomisation
-% inside)
+% ? symmetric w.r.t. S and G
+% also, output is non-deterministic (uses randomisation inside)
 %
 % INPUTS
 %  S            - w x w boundary map of test segmentation patch
