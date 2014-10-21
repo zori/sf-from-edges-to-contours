@@ -87,19 +87,19 @@ for e=1:nEdges
     % NOTE x and y are swapped here (in the output from fit_contour)
     % the correct way is (for an image of dimensions h x w x 3)
     % first coord, in [1,h], is y, second coord, in [1,w], is x
-    ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
-    x=ex+ri; y=ey+ri; r=ri/2; % adjust patch dimensions
-    % ws_patch=cropPatch(ws_padded,x,y,r); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % r=ri/2 == rg
-    ws_patch=create_seg_patch(x,y,r,l); % create_bdry_patch ?
+    y=c.edge_x_coords{e}(p); x=c.edge_y_coords{e}(p);
+    px=x+ri; py=y+ri; r=ri/2; % adjust patch dimensions
+    ws_patch=cropPatch(ws_padded,px,py,r); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % r=ri/2 == rg
+    ws_patch=create_seg_patch(px,py,r,l); % create_bdry_patch and ws2seg_fcn will be bdry2seg() <- TODO write it
     ws_patch=ws2seg_fcn(ws_patch);
-    hs=get_hs_fcn(ex,ey); % a few 16x16 segmentation patches
+    hs=get_hs_fcn(x,y); % a few 16x16 segmentation patches
     w=compute_weights_fcn(ws_patch,hs);
     f=false;
     if f
       % close all;
-      initFig(1); im(ws_padded); hold on; plot(ex+ri,ey+ri,'rx','MarkerSize',12);
+      initFig(1); im(ws_padded); hold on; plot(x+ri,y+ri,'rx','MarkerSize',12);
       initFig(); im(ws_patch);
-      process_location_fcn(ex,ey,w); % this needs a model with the patches saved
+      process_location_fcn(x,y,w); % this needs a model with the patches saved
     end
     w=sum(w)/numel(w);
     c.edge_weights(e,:)=c.edge_weights(e,:)+[w 1];
@@ -112,8 +112,8 @@ for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
   W=c.edge_weights(e,1)/c.edge_weights(e,2); % avg weight on edge e
   for p=1:numel(c.edge_x_coords{e})
-    ey=c.edge_x_coords{e}(p); ex=c.edge_y_coords{e}(p);
-    sf_wt(ey,ex)=W;
+    y=c.edge_x_coords{e}(p); x=c.edge_y_coords{e}(p);
+    sf_wt(y,x)=W;
   end
   v1=c.vertices(c.edges(e,1),:);
   v2=c.vertices(c.edges(e,2),:);
