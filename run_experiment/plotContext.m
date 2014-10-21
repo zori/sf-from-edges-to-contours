@@ -21,7 +21,7 @@ plotOpts=struct('path',fullfile(LOG.dsDir,'test'),'dirR','precomputed','superpos
 
 % TODO add avg human agreement ComputeRP(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'k',false,[],'all',[],'Output_general_human');
 
-% courtesy jhosang; colors for up to 16 curves
+% courtesy jhosang; colors for up to 28 curves
 colorMap = [
 0, 100, 0;
 30, 144, 255;
@@ -53,9 +53,10 @@ colorMap = [
 135, 130, 174;
 ] ./ 256;
 
-% directories, labels and colors for the precomputed results
+% directories, labels and line styles for the precomputed results
 % structure is defined in this manner to allow easy rearrangement of order of
 % curves (in the legend)
+% dataSfUcm is our baseline
 dataSfUcm=struct('out','Output_sf_ucm','legend','SF ucm','style',{{'LineStyle','--'}}); % multiscale, model.opts.nms=1
 dataBest=[...
   struct('out','Output_sf_segs','legend','SF watershed','style',{{}}),...
@@ -97,14 +98,25 @@ dataOraclePB=[... % oracle result value-multiplied by the probability of boundar
   struct('out','Output_oracle_segs_VPR_normalised_ws_pb','legend','o. s. VPR norm ws pb','style',{{'Marker','o'}}),...
   struct('out','Output_oracle_line_VPR_normalised_ws_pb','legend','o. l. VPR norm ws pb','style',{{'Marker','o'}}),...
   ];
+ksz=7;
+k=num2str((1:ksz)');
+out=num2cell([repmat('Output_bpr_',ksz,1) k],2)';
+l=num2cell([repmat('l. BPR',ksz,1) k],2)';
+dataBPR=struct('out',out,'legend',l,'style',{{'Marker','x'}});
+dataOracleBPR=struct('out',{'Output_oracle_bpr_3' 'Output_oracle_bpr_4'},...
+  'legend',{'o. l. BPR3' 'o. l. BPR4'},'style',{{'Marker','x'}});
 dataOracle=[dataOracleSimple,dataOraclePB];
 dataOurs=[...
   dataRSRI,...
   struct('out','Output_segs_VPR_unnormalised','legend','s. VPR unnorm','style',{{'Marker','x'}}),... % unnormalised VPR
   dataVPRnormTs,...
-  dataVPRnormWS,...
-  dataOracle,...
+  dataVPRnormWS,...% dataOracle,...  
+  dataBPR(2:5),... % these are good values; when having to choose, set for 3px
+  dataOracleBPR,...
   ];
+dataOurs=[dataBPR(3:4) dataOracleBPR];
+dataOurs=[dataOracleSimple,dataOracleBPR]; % all oracles
+dataOurs=[dataBPR(3) dataOracleBPR(1)]; % why are we still worse than the baseline?; this motivates the hard-negative mining
 
 switch experimentsToPlot
   case 'best'
