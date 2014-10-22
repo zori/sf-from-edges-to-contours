@@ -1,14 +1,18 @@
 % Zornitsa Kostadinova
 % Jul 2014
 % 8.3.0.532 (R2014a)
-function ucm = ucm_weighted(I,model,fmt,T,px_max_dist,gts)
-% function ucm = ucm_weighted(I,model,fmt,T)
+function ucm = ucm_weighted(I,model,patch_score_fcn,fmt,T,gts)
+% function ucm = ucm_weighted(I,model,patch_score_fcn,fmt,T,gts)
 % creates a ucm of an image, that is weighted based on the patches in the leaves of a
 % decision forest
 %
 % INPUTS
 %  I            - image
 %  model        - structured decision forest (SF)
+%  patch_score_fcn - function for the similarity between the watershed and the
+%                    segmentation patch
+%                    score in [0,1]; 0 - no similarity; 1 - maximal similarity
+%                    function could be: bpr vpr_s vpr_gt RI RSRI compareSegs
 %  fmt          - output format; 'imageSize' (default) or 'doubleSize'
 %  T            - individual trees of the SF (for visualisation only - processLocation)
 %  gts          - (optional) ground truth segmentations; for oracle only; used
@@ -54,19 +58,14 @@ end
 ws2seg_fcn=@(x) (x); % the identity function
 % ws2seg_fcn=@(x) spx2seg(x);  % when not fitting a line
 
-% function for the similarity between the watershed and the segmentation patch
-% score in [0,1]; 0 - no similarity; 1 - maximal similarity
-patch_score_fcn=@(S,G) bpr(seg2bdry(S),seg2bdry(G),px_max_dist); % bpr vpr_s vpr_gt compareSegs
-compute_weights_fcn=@(ws_patch,hs) compute_weights(ws_patch,hs,patch_score_fcn);
-
 ws_padded=imPad(double(watershed(E)),p,'symmetric');
 process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws_padded,contours2ucm(E),w);
-cfp=@(pb) create_finest_partition_voting(pb,ws_padded,ri,get_hs_fcn,process_location_fcn,compute_weights_fcn,ws2seg_fcn);
+cfp=@(pb) create_finest_partition_voting(pb,ws_padded,ri,get_hs_fcn,process_location_fcn,patch_score_fcn,ws2seg_fcn);
 ucm=contours2ucm(E,fmt,cfp);
 end
 
 % ----------------------------------------------------------------------
-function sf_wt = create_finest_partition_voting(pb,ws_padded,ri,get_hs_fcn,process_location_fcn,compute_weights_fcn,ws2seg_fcn)
+function sf_wt = create_finest_partition_voting(pb,ws_padded,ri,get_hs_fcn,process_location_fcn,patch_score_fcn,ws2seg_fcn)
 ws=watershed(pb);
 % assert(all(all(ws==ws_padded(1+ri:size(pb,1)+ri,1+ri:size(pb,2)+ri))));
 
@@ -93,7 +92,7 @@ for e=1:nEdges
     ws_patch=create_seg_patch(px,py,r,l); % create_bdry_patch and ws2seg_fcn will be bdry2seg() <- TODO write it
     ws_patch=ws2seg_fcn(ws_patch);
     hs=get_hs_fcn(x,y); % a few 16x16 segmentation patches
-    w=compute_weights_fcn(ws_patch,hs);
+    w=compute_weights(ws_patch,hs,patch_score_fcn);
     f=false;
     if f
       % close all;
