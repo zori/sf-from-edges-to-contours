@@ -27,7 +27,7 @@ ws=watershed(E);
 % ucm=contours2ucm(E); % the small arcs between the statues are erroneously
 % up-voted
 ucm=structuredEdgeSPb(I,model,'imageSize');
-processLocationFun=@(x,y) processLocation(x,y,model,T,I,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm);
+processLocationFun=@(x,y) processLocation(x,y,model,T,I,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm);
 
 if true
 % interactive demo loop

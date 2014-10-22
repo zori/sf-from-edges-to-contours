@@ -48,7 +48,7 @@ if exist('gts','var')
     % pad similarly the gts
     gts{k}=imPad(double(gts{k}),p,'symmetric'); % ground truths were uint16, which can't be padded
   end
-  get_hs_fcn=@(x,y) get_groundtruth_patches(x+p(3),y+p(1),ri/2,gts); % coords are offset for padded ground truth images
+  get_hs_fcn=@(x,y) get_groundtruth_patches(x+p(3),y+p(1),rg,gts); % coords are offset for padded ground truth images
 else
   % voting on the watershed contour
   coords2forest_location_fcn=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
@@ -59,7 +59,7 @@ ws2seg_fcn=@(x) (x); % the identity function
 % ws2seg_fcn=@(x) spx2seg(x);  % when not fitting a line
 
 ws_padded=imPad(double(watershed(E)),p,'symmetric');
-process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws_padded,contours2ucm(E),w);
+process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws_padded,contours2ucm(E),w);
 cfp=@(pb) create_finest_partition_voting(pb,ws_padded,ri,get_hs_fcn,process_location_fcn,patch_score_fcn,ws2seg_fcn);
 ucm=contours2ucm(E,fmt,cfp);
 end
@@ -72,6 +72,7 @@ ws=watershed(pb);
 c=fit_contour(double(ws==0));
 % remove empty fields
 c=rmfield(c,{'edge_equiv_ids','regions_v_left','regions_v_right','regions_e_left','regions_e_right','regions_c_left','regions_c_right'});
+r=ri/2;
 nEdges=numel(c.edge_x_coords);
 c.edge_weights=zeros(nEdges,2); % tuples of accumulated weights and number of pixels per edge
 for e=1:nEdges
@@ -87,7 +88,7 @@ for e=1:nEdges
     % the correct way is (for an image of dimensions h x w x 3)
     % first coord, in [1,h], is y, second coord, in [1,w], is x
     y=c.edge_x_coords{e}(p); x=c.edge_y_coords{e}(p);
-    px=x+ri; py=y+ri; r=ri/2; % adjust patch dimensions
+    px=x+ri; py=y+ri; % adjust patch dimensions TODO: should be p(3) and p(1)
     ws_patch=cropPatch(ws_padded,px,py,r); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % r=ri/2 == rg
     ws_patch=create_seg_patch(px,py,r,l); % create_bdry_patch and ws2seg_fcn will be bdry2seg() <- TODO write it
     ws_patch=ws2seg_fcn(ws_patch);
@@ -96,7 +97,7 @@ for e=1:nEdges
     f=false;
     if f
       % close all;
-      initFig(1); im(ws_padded); hold on; plot(x+ri,y+ri,'rx','MarkerSize',12);
+      initFig(1); im(ws_padded); hold on; plot(px,py,'rx','MarkerSize',12);
       initFig(); im(ws_patch);
       process_location_fcn(x,y,w); % this needs a model with the patches saved
     end
