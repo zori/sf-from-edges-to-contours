@@ -109,7 +109,8 @@ for c=1:psz % c - case number
   end % ex
 end
 
-% disp(res); just displays the sizes of the output (number of examples)
+% disp(res); % just displays the sizes of the output (number of examples)
+% celldisp(res); % every output is on a new line, and I'd like a table
 
 % print results in a table by iterating over the examples
 disp('       RSRI         RI VPR_unnorm VPR_norm_Ts VPR_norm_ws       BPR')
