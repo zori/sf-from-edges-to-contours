@@ -64,3 +64,52 @@ for k=1:gtsz
   hs(:,:,k)=cropPatch(gts{k},x,y,r);
 end
 end
+
+% TODO review the following and get rid of accordingly
+% ----------------------------------------------------------------------
+function patch = spx2bdry01(patch)
+% convert the superpixels patch to be a 0-1 boundary location
+% the input has the boundary denoted by 0
+% the output has the boundary denoted by 1, non-boundary by 0
+patch=patch==0;
+end
+
+% ----------------------------------------------------------------------
+function patch = spx2seg(patch)
+% convert the superpixels patch to be a segmentation labeling (starting from 1)
+% the input has the boundary denoted by 0
+% see pb2ucm
+sz=size(patch);
+bdry=spx2bdry01(patch);
+% labels2=bwlabel(clean_watersheds(super_contour_4c(bdry))==0,8); % TODO don't
+% clean the watersheds for speed
+labels2=bwlabel(super_contour_4c(bdry)==0,8); % type: double; 0 indicates boundary
+patch=labels2(2:2:end, 2:2:end); % labels should start from 1
+% TODO labels sometimes start from 0; bug due to artifacts from the watershed;
+% workaround:
+[~,~,patch]=unique(patch);
+patch=reshape(patch,sz);
+end
+
+% ----------------------------------------------------------------------
+function patch = seg2bdry01(patch)
+% NOTE: keep that for now, but also note seg2bdry (Arbelaez implementation)
+% convert the seg to be 0-1 boundary location
+patch=gradientMag(single(patch))>.01;
+end
+
+% ----------------------------------------------------------------------
+function [pb2, V, H] = super_contour_4c(pb)
+
+V = min(pb(1:end-1,:), pb(2:end,:));
+H = min(pb(:,1:end-1), pb(:,2:end));
+
+[tx, ty] = size(pb);
+pb2 = zeros(2*tx, 2*ty);
+pb2(1:2:end, 1:2:end) = pb;
+pb2(1:2:end, 2:2:end-2) = H;
+pb2(2:2:end-2, 1:2:end) = V;
+pb2(end,:) = pb2(end-1, :);
+assert(all(pb2(:,end)==0));
+pb2(:,end) = max(pb2(:,end), pb2(:,end-1));
+end
