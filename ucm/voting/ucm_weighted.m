@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Jul 2014
 % 8.3.0.532 (R2014a)
-function ucm = ucm_weighted(I,model,patch_score_fcn,fmt,T,gts)
+function ucm2 = ucm_weighted(I,model,patch_score_fcn,fmt,T,gts)
 % function ucm = ucm_weighted(I,model,patch_score_fcn,fmt,T,gts)
 % creates a ucm of an image, that is weighted based on the patches in the leaves of a
 % decision forest
@@ -60,47 +60,35 @@ ws2seg_fcn=@(x) (x); % the identity function
 
 ws_padded=imPad(double(watershed(E)),p,'symmetric');
 process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws_padded,contours2ucm(E),w);
-cfp=@(pb) create_finest_partition_voting(pb,ws_padded,ri,get_hs_fcn,process_location_fcn,patch_score_fcn,ws2seg_fcn);
-ucm=contours2ucm(E,fmt,cfp);
+cfp_fcn=@(pb) create_finest_partition_voting(pb,ws_padded,rg,get_hs_fcn,process_location_fcn,patch_score_fcn,ws2seg_fcn);
+ucm2=contours2ucm(E,fmt,cfp_fcn);
 end
 
 % ----------------------------------------------------------------------
-function sf_wt = create_finest_partition_voting(pb,ws_padded,ri,get_hs_fcn,process_location_fcn,patch_score_fcn,ws2seg_fcn)
+function [sf_wt,votes] = create_finest_partition_voting(pb,ws_padded,rg,get_hs_fcn,process_location_fcn,patch_score_fcn,ws2seg_fcn)
 ws=watershed(pb);
-% assert(all(all(ws==ws_padded(1+ri:size(pb,1)+ri,1+ri:size(pb,2)+ri))));
 
 c=fit_contour(double(ws==0));
 % remove empty fields
 c=rmfield(c,{'edge_equiv_ids','regions_v_left','regions_v_right','regions_e_left','regions_e_right','regions_c_left','regions_c_right'});
-r=ri/2;
 nEdges=numel(c.edge_x_coords);
 c.edge_weights=zeros(nEdges,2); % tuples of accumulated weights and number of pixels per edge
+votes=cell(size(pb)); % for hard_negatives_mining
 for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
-%   if e == 40 || e == 48
-%     disp(e);
-%   end
+  if e == 40 || e == 48
+    disp(e);
+  end
   v1=c.vertices(c.edges(e,1),:); % fst coord is y - row ind
   v2=c.vertices(c.edges(e,2),:);
-  l=fit_line(v1,v2,ri);
+  l=fit_line(v1,v2,2*rg); % rg==ri/2, but that is not really relevant
   for p=1:numel(c.edge_x_coords{e})
     % NOTE x and y are swapped here (in the output from fit_contour)
     % the correct way is (for an image of dimensions h x w x 3)
     % first coord, in [1,h], is y, second coord, in [1,w], is x
     y=c.edge_x_coords{e}(p); x=c.edge_y_coords{e}(p);
-    px=x+ri; py=y+ri; % adjust patch dimensions TODO: should be p(3) and p(1)
-    ws_patch=cropPatch(ws_padded,px,py,r); % crop from the padded watershed, to make sure a superpixels patch can always be cropped % r=ri/2 == rg
-    ws_patch=create_seg_patch(px,py,r,l); % create_bdry_patch and ws2seg_fcn will be bdry2seg() <- TODO write it
-    ws_patch=ws2seg_fcn(ws_patch);
-    hs=get_hs_fcn(x,y); % a few 16x16 segmentation patches
-    w=compute_weights(ws_patch,hs,patch_score_fcn);
-    f=false;
-    if f
-      % close all;
-      initFig(1); im(ws_padded); hold on; plot(px,py,'rx','MarkerSize',12);
-      initFig(); im(ws_patch);
-      process_location_fcn(x,y,w); % this needs a model with the patches saved
-    end
+    w=vote(x,y,l,rg,ws_padded,ws2seg_fcn,get_hs_fcn,patch_score_fcn,process_location_fcn);
+    votes{y,x}=w;
     w=sum(w)/numel(w);
     c.edge_weights(e,:)=c.edge_weights(e,:)+[w 1];
   end
@@ -124,9 +112,26 @@ end % for e - edge index
 end % create_finest_partition
 
 % ----------------------------------------------------------------------
-function l = fit_line(v1,v2,ri)
+function w = vote(x,y,l,rg,ws_padded,ws2seg_fcn,get_hs_fcn,patch_score_fcn,process_location_fcn)
+px=x+2*rg; py=y+2*rg; % adjust patch dimensions TODO: should be p(3) and p(1)
+ws_patch=cropPatch(ws_padded,px,py,rg); % crop from the padded watershed, to make sure a superpixels patch can always be cropped
+ws_patch=create_seg_patch(px,py,rg,l); % create_bdry_patch and ws2seg_fcn will be bdry2seg() <- TODO write it
+ws_patch=ws2seg_fcn(ws_patch);
+hs=get_hs_fcn(x,y); % a few 16x16 segmentation patches
+w=compute_weights(ws_patch,hs,patch_score_fcn);
+f=false;
+if f
+  % close all;
+  initFig(1); im(ws_padded); hold on; plot(px,py,'rx','MarkerSize',12);
+  initFig(); im(ws_patch);
+  process_location_fcn(x,y,w); % this needs a model with the patches saved
+end
+end
+
+% ----------------------------------------------------------------------
+function l = fit_line(v1,v2,patch_side)
 % adjust indices for the padded superpixelised image
-v1=v1+ri;v2=v2+ri;
+v1=v1+patch_side;v2=v2+patch_side;
 l=createLine([v1(2),v1(1)],[v2(2),v2(1)]);
 end
 
