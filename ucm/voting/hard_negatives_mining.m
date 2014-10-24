@@ -13,13 +13,17 @@ for k=1:dsz, l(k)=length(u{k}); end
 
 d=abs(data(1).ucm2-data(3).ucm2); % diff with oracle
 % d=abs(ucms{1}-ucms{2}); % diff with baseline
-d=d .* ~(isnan(data(1).mean) | isnan(data(1).mean)); % TODO why isnan when we have voted there
+d=d .* ~(isnan(data(1).mean) | isnan(data(1).mean)); % TODO why isnan when we have voted there - fishy...
 sz=size(data(1).ucm2);
 r=16;
 [~,sort_ind]=sort(d(:),'descend'); % TODO instead, do top 5 unique
 maxIndex=sort_ind(1:555);  % linear index of the 5 largest values
 [ys,xs]=ind2sub(sz,maxIndex);
-inds=find(ys+r<=sz(1) & xs+r<=sz(2));
+inds=find(r<=ys & ys+r<=sz(1) & r <= xs & xs+r<=sz(2));
+
+% for k=1:length(gts), initFig(); im(gts{k}); end
+% for k=vi, initFig(); im(data(k).seg); end
+
 for ind=inds(1:10:100)'
   x=xs(ind); y=ys(ind);
   initFig(1); im(data(3).ucm2); hold on; plot(x,y,'x','MarkerSize',20);
@@ -32,11 +36,9 @@ for ind=inds(1:10:100)'
     mcps{k}=cropPatch(data(k).mean,x,y,r);
     initFig(); im(mcps{k}); hold on; plot(r,r,'x');
   end
-  % figure; im(d(1).mean); hold on; plot(x,y,'x','MarkerSize',20)
+  % initFig(); im(data(1).mean); hold on; plot(x,y,'x','MarkerSize',20)
   % processLocation();
-end
+end % TIP: put a breakpoint here
 
-for k=1:length(gts), initFig(); im(gts{k}); end
-for k=1:dsz, initFig(); im(data(k).seg); end
 close all;
 end
