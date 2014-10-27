@@ -64,5 +64,5 @@ for k=vi
   % assert(all(data(k).ucm2(:)==data(k).ucm2_precomputed(:))); % no, because
   % the bpr3 is an approximation, results will be slightly different
 end
-save('hard_negatives_mining');
+save('hard_negatives');
 end

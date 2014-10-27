@@ -2,7 +2,7 @@
 % Oct 2014
 % 8.3.0.532 (R2014a)
 function hard_negatives_mining()
-load('hard_negatives_mining');
+load('hard_negatives');
 for k=vi, data(k).mean=cellfun(@mean,votes{k}); end
 
 for k=1:dsz, u{k}=unique(data(k).ucm2); end
