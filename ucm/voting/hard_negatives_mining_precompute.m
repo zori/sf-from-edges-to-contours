@@ -2,6 +2,10 @@
 % Oct 2014
 % 8.3.0.532 (R2014a)
 function hard_negatives_mining_precompute()
+model_name='modelBSDS500_patches'; %#ok<NASGU>
+load_model_and_trees;
+model.opts.multiscale=0;
+
 imFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/100039.jpg';
 gtFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtruth/100039.mat';
 
@@ -38,9 +42,6 @@ data=struct(...
   );
 dsz=numel(data);
 
-model=load('/BS/kostadinova/work/video_segm/models/forest/modelBSDS500.mat'); model=model.model;
-model.opts.multiscale=0;
-
 I=imread(imFile);
 gts=load_segmentations(gtFile);
 
@@ -53,16 +54,17 @@ end
 vi=[1 3];
 % [ucm2,cfp_fcn]=ucm_weighted_bpr(I,model);
 patch_score_fcn=@(S,G) bpr(seg2bdry(S),seg2bdry(G),3);
-data(1).varargin={[]};
-data(3).varargin={[],gts};
+data(1).varargin={T};
+data(3).varargin={T,gts};
 for k=vi
   [cfp_fcn,E]=get_voting_fcn(I,model,patch_score_fcn,data(k).varargin{:});
-  [~,votes{k}]=cfp_fcn(E); % E == edgesDetect(I,model));
+  [~,votes{k},process_location_fcn{k}]=cfp_fcn(E); %#ok<NASGU> % E == edgesDetect(I,model));
   data(k).ucm2=contours2ucm(E,'imageSize',cfp_fcn);
   data(k).seg=threshold_ucm2(data(k).ucm2,data(k).threshold);
 
   % assert(all(data(k).ucm2(:)==data(k).ucm2_precomputed(:))); % no, because
   % the bpr3 is an approximation, results will be slightly different
 end
-save('hard_negatives');
+% save('hard_negatives_small','data','votes','process_location_fcn','vi','dsz'); % no, because of 'data'
+save('hard_negatives','-v7.3','data','votes','process_location_fcn','vi','dsz');
 end

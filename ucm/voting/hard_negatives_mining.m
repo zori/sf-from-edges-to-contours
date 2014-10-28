@@ -1,7 +1,6 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-function hard_negatives_mining()
 load('hard_negatives');
 for k=vi, data(k).mean=cellfun(@mean,votes{k}); end
 
@@ -35,10 +34,10 @@ for ind=inds(1:10:100)'
     disp(votes{k}{y,x}');
     mcps{k}=cropPatch(data(k).mean,x,y,r);
     initFig(); im(mcps{k}); hold on; plot(r,r,'x');
+    process_location_fcn{k}(x,y,votes{k}{y,x});
   end
   % initFig(); im(data(1).mean); hold on; plot(x,y,'x','MarkerSize',20)
   % processLocation();
 end % TIP: put a breakpoint here
 
 close all;
-end
