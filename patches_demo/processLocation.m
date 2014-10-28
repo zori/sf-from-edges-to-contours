@@ -42,7 +42,10 @@ h=show_patch(E4,'Intermediate decision patch (4 trees voted)',p,px,py,rg+1);
 h=show_patch_fcn(E,'SRF decision patch');
 % Superpixelization (over-segmentation patch)
 % initFig(); im(wsPadded); hold on; plot(px,py,'rx');
-h=show_patch_fcn(wsPadded,'WS patch'); % watershed, superpixels patch
+% h=show_patch_fcn(wsPadded,'WS patch'); % watershed, superpixels patch
+spxPatch=cropPatch(wsPadded,x+ri,y+ri,rg); % ri/2 == rg
+h=initFig(); imagesc(label2rgb(spxPatch,'jet',[1 1 1],'shuffle')); axis('image'); title('Superpixels patch');
+
 % that was a coloured representation of the watershed patch
 % spxPatch=cropPatch(wsPadded,px,py,rg);
 % initFig(); imagesc(label2rgb(spxPatch,'jet',[1 1 1],'shuffle')); axis('image'); title('Superpixels patch');

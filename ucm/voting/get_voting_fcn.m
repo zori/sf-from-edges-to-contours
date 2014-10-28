@@ -18,6 +18,7 @@ IPadded=imPad(I,p,'symmetric');
 t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
 Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg)*t;
 E=convTri(Es_,1);
+ws_padded=imPad(double(watershed(E)),p,'symmetric');
 if exist('T','var') && ~isempty(T)
   process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws_padded,contours2ucm(E),w);
 else
@@ -39,7 +40,6 @@ end
 ws2seg_fcn=@(x) (x); % the identity function
 % ws2seg_fcn=@(x) spx2seg(x);  % when not fitting a line
 
-ws_padded=imPad(double(watershed(E)),p,'symmetric');
 cfp_fcn=@(pb) create_finest_partition_voting(pb,ws_padded,rg,get_hs_fcn,process_location_fcn,patch_score_fcn,ws2seg_fcn);
 end
 
