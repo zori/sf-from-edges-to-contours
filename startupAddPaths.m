@@ -37,3 +37,4 @@ addpath('run_experiment')
 addpath('sf_detector')
 addpath('ucm')
 addpath('ucm/voting')
+dbstop if error
