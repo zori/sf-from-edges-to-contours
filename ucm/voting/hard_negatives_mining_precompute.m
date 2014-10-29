@@ -1,14 +1,15 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-function hard_negatives_mining_precompute()
-model_name='modelBSDS500_patches'; %#ok<NASGU>
+model_name='modelBSDS500_patches';
 load_model_and_trees;
 model.opts.multiscale=0;
 
 imFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/100039.jpg';
 gtFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtruth/100039.mat';
 
+% how the thresholds are chosen - based on the optimal ones when benchmarking
+%
 % bpr
 % Boundary PR global
 %    G-ODS: F( R 0.67, P 0.67 ) = 0.67   [th = 0.46]
@@ -42,8 +43,8 @@ data=struct(...
   );
 dsz=numel(data);
 
-I=imread(imFile);
-gts=load_segmentations(gtFile);
+I=imread(imFile); clear imFile;
+gts=load_segmentations(gtFile); clear gtFile;
 
 for k=1:dsz
   uc=load(data(k).file); data(k).precomputed_ucm2=uc.ucm2(3:2:end, 3:2:end); % make the ucms imageSize
@@ -52,7 +53,6 @@ end
 
 % vote indices - bpr3 and oracle
 vi=[1 3];
-% [ucm2,cfp_fcn]=ucm_weighted_bpr(I,model);
 patch_score_fcn=@(S,G) bpr(seg2bdry(S),seg2bdry(G),3);
 data(1).varargin={T};
 data(3).varargin={T,gts};
@@ -65,6 +65,22 @@ for k=vi
   % assert(all(data(k).ucm2(:)==data(k).ucm2_precomputed(:))); % no, because
   % the bpr3 is an approximation, results will be slightly different
 end
-% save('hard_negatives_small','data','votes','process_location_fcn','vi','dsz'); % no, because of 'data'
-save('hard_negatives','-v7.3','data','votes','process_location_fcn','vi','dsz');
-end
+for k=vi, data(k).mean=cellfun(@mean,votes{k}); end
+
+for k=1:dsz, u{k}=unique(data(k).ucm2); end
+for k=1:dsz, l(k)=length(u{k}); end
+% "see" that values are roughly on the same scale
+% for k=1:sz, disp(u{k}(1:5)); end
+% for k=1:sz, disp(u{k}(end-5:end)); end
+
+d=abs(data(1).ucm2-data(3).ucm2); % diff with oracle
+% TODO diff with baseline
+d=d .* ~(isnan(data(1).mean) | isnan(data(3).mean)); % TODO why isnan when we have voted there - fishy...
+sz=size(data(1).ucm2);
+r=16;
+[~,sort_ind]=sort(d(:),'descend'); % TODO instead, do top 5 unique
+maxIndex=sort_ind(1:555);  % linear index of the 5 largest values
+[ys,xs]=ind2sub(sz,maxIndex);
+inds=find(r<=ys & ys+r<=sz(1) & r<=xs & xs+r<=sz(2));
+
+clear imFile I E uc d sz sort_ind maxIndex;
