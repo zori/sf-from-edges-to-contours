@@ -3,11 +3,14 @@
 % 8.3.0.532 (R2014a)
 model_name='modelBSDS500';
 load_model_and_trees;
-% l=zeros(16,16); l(:,8)=1;
-% L=repmat(l,1,1,3); clear l;
-% ucmL=ucm_weighted(L,model,'doubleSize',T);
-
 fmt='doubleSize';
+
+%% 16x16 vertical line
+l=zeros(16,16); l(:,8)=1;
+L=repmat(l,1,1,3); clear l;
+ucmL=ucm_weighted(L,model,'doubleSize',T);
+
+%% bw diagonal
 bw=repmat(eye(260),1,1,3);
 
 bpr_bw_ucm=ucm_weighted_bpr(bw,model,T);
@@ -19,6 +22,7 @@ rsri_bw_ucm=ucm_weighted(bw,model,patch_score_fcn,fmt,T);
 
 vpr_s_bw_ucm=ucm_weighted(bw,model,@vpr_s,fmt,T);
 
+%% real image
 imFile='/BS/kostadinova/work/BSR/BSDS500/data/images/val/101085.jpg';
 gtFile='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/101085.mat';
 I=imread(imFile);
