@@ -1,13 +1,15 @@
 % Zornitsa Kostadinova
 % Aug 2014
 % 8.3.0.532 (R2014a)
-function processLocation(x,y,model,T,IPadded,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,ucm,w)
+function processLocation(x,y,model,T,IPadded,ri,rg,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,ucm,w)
 % plot(x,y,'rx','MarkerSize',20);
 % display image patch
 px=x+p(3); py=y+p(1); % pad x and y dimensions
 initFig(); imagesc(cropPatch(IPadded,px,py,ri)); axis('image'); title('Selected image patch');
 
 [treeIds,leafIds,x1,y1]=coords2forestLocation(x,y,ind,model.opts,p,length(model.fids));
+nTreesEval=size(treeIds,3);
+assert(nTreesEval==length(w));
 for k=1:nTreesEval
   treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
   assert(~model.child(leafId,treeId)); % TODO add this to assertion (when also saving patches in forest) && ~isempty(model.patches{leafId,treeId}));
@@ -20,7 +22,7 @@ for k=1:nTreesEval
     initFig(); montage2(cell2array(segPs));
     montage2title(['Segmentations; tree ' treeStr]);
     if ~exist('w','var')
-      % if we have the weights, don't show the image patches to reduce clutter
+      % to reduce clutter, only show the image patches if we don't have the weights
       initFig(); montage2(imgPs,struct('hasChn', true));
       montage2title(['Image patches; tree ' treeStr]);
     end

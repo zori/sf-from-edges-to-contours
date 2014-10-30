@@ -30,9 +30,9 @@ if exist('gts','var')
 else
   % voting on the watershed contour
   coords2forest_location_fcn=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
-  get_hs_fcn=@(x,y) get_tree_patches(x,y,coords2forest_location_fcn,model,nTreesEval);
+  get_hs_fcn=@(x,y) get_tree_patches(x,y,coords2forest_location_fcn,model);
   if exist('T','var') && ~isempty(T)  % needs to have the patches saved
-    process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws_padded,contours2ucm(E),w);
+    process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,ri,rg,szOrig,p,chnsReg,chnsSim,ind,E,ws_padded,contours2ucm(E),w);
   else
     process_location_fcn=@(varargin) disp([]); % NO-OP function, in case there is no T input
   end
@@ -45,10 +45,11 @@ cfp_fcn=@(pb) create_finest_partition_voting(pb,ws_padded,rg,get_hs_fcn,process_
 end
 
 % ----------------------------------------------------------------------
-function hs = get_tree_patches(x,y,coords2forest_location_fcn,model,nTreesEval)
+function hs = get_tree_patches(x,y,coords2forest_location_fcn,model)
 % get 4 patches in leaves using ind
 [treeIds,leafIds]=coords2forest_location_fcn(x,y);
 segs=model.seg;
+nTreesEval=size(treeIds,3);
 hs=zeros(size(segs,1),size(segs,2),nTreesEval);
 for k=1:nTreesEval
   treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);

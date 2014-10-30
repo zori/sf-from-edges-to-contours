@@ -10,7 +10,6 @@ I=imread(imFile);
 opts=model.opts;
 ri=opts.imWidth/2; % patch radius 16
 rg=opts.gtWidth/2; % patch radius 8
-nTreesEval=opts.nTreesEval;
 % pad image, making divisible by 4
 szOrig=size(I); p=[ri ri ri ri];
 p([2 4])=p([2 4])+mod(4-mod(szOrig(1:2)+2*ri,4),4);
@@ -27,7 +26,7 @@ ws=watershed(E);
 % ucm=contours2ucm(E); % the small arcs between the statues are erroneously
 % up-voted
 ucm=structuredEdgeSPb(I,model,'imageSize');
-processLocationFun=@(x,y) processLocation(x,y,model,T,I,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm);
+processLocationFun=@(x,y) processLocation(x,y,model,T,I,ri,rg,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm);
 
 if true
 % interactive demo loop
