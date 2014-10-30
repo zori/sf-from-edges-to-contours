@@ -13,14 +13,12 @@ for ind=inds(1:10:100)'
     ucm2crop=cropPatch(data(k).ucm2,x,y,r); initFig(); im(ucm2crop); hold on; plot(r,r,'x');
     mean_crop=cropPatch(data(k).mean,x,y,r); initFig(); im(mean_crop); hold on; plot(r,r,'x');
     if k == 1
+      % bpr3
       process_location_fcn{k}(x,y,votes{k}{y,x});
     else
       % k == 3
       % crop the gts
-      for kk=1:length(gts)
-        gt_crop=cropPatch(gts{kk},x,y,r);
-        initFig(); im(gt_crop); title(['ground truth ' num2str(kk), ' score ' num2str(votes{k}{y,x}(kk))]);
-      end
+      process_location_gt(x,y,votes{k}{y,x},gts,r);
     end
     close all; % TIP: put a breakpoint here
   end

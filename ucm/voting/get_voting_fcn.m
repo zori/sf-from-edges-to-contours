@@ -19,11 +19,6 @@ t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
 Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg)*t;
 E=convTri(Es_,1);
 ws_padded=imPad(double(watershed(E)),p,'symmetric');
-if exist('T','var') && ~isempty(T)
-  process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws_padded,contours2ucm(E),w);
-else
-  process_location_fcn=@(varargin) disp([]); % NO-OP function, in case there is no T input
-end
 if exist('gts','var')
   % oracle, use ground truth segmentations corresponding to I
   for k=1:length(gts)
@@ -31,10 +26,16 @@ if exist('gts','var')
     gts{k}=imPad(double(gts{k}),p,'symmetric'); % ground truths were uint16, which can't be padded
   end
   get_hs_fcn=@(x,y) get_groundtruth_patches(x+p(3),y+p(1),rg,gts); % coords are offset for padded ground truth images
+  process_location_fcn=@(x,y,w) process_location_gt(x,y,w,gts,rg);
 else
   % voting on the watershed contour
   coords2forest_location_fcn=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
   get_hs_fcn=@(x,y) get_tree_patches(x,y,coords2forest_location_fcn,model,nTreesEval);
+  if exist('T','var') && ~isempty(T)  % needs to have the patches saved
+    process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws_padded,contours2ucm(E),w);
+  else
+    process_location_fcn=@(varargin) disp([]); % NO-OP function, in case there is no T input
+  end
 end
 
 ws2seg_fcn=@(x) (x); % the identity function
