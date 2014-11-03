@@ -21,10 +21,10 @@ function ucm2 = ucm_weighted(I,model,patch_score_fcn,fmt,varargin)
 %                 patches
 %
 % OUTPUTS
-%  ucm          - Ultrametric Contour Map
+%  ucm2         - Ultrametric Contour Map
 %
 % See also contours2ucm
 [cfp_fcn,E]=get_voting_fcn(I,model,patch_score_fcn,varargin{:});
-if ~exist('fmt','var'), fmt='imageSize'; end;
+if ~exist('fmt','var'), fmt='imageSize'; end
 ucm2=contours2ucm(E,fmt,cfp_fcn);
 end

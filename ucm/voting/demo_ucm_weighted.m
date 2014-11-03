@@ -8,7 +8,7 @@ fmt='doubleSize';
 %% 16x16 vertical line
 l=zeros(16,16); l(:,8)=1;
 L=repmat(l,1,1,3); clear l;
-ucmL=ucm_weighted(L,model,'doubleSize',T);
+ucmL=ucm_weighted(L,model,@vpr,'doubleSize',T);
 
 %% bw diagonal
 bw=repmat(eye(260),1,1,3);
