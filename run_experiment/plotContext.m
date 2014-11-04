@@ -105,7 +105,9 @@ l=num2cell([repmat('l. BPR',ksz,1) k],2)';
 dataBPR=struct('out',out,'legend',l,'style',{{'Marker','x'}});
 dataOracleBPR=struct('out',{'Output_oracle_bpr_3' 'Output_oracle_bpr_4'},...
   'legend',{'o. l. BPR3' 'o. l. BPR4'},'style',{{'Marker','x'}});
-dataOracle=[dataOracleSimple,dataOraclePB];
+dataContourBpr=struct('out','Output_contour_bpr3','legend','c. BPR3','style',{{}});
+dataOracleContourBpr=struct('out','Output_oracle_contour_bpr3','legend','o. c. BPR3','style',{{}});
+dataOracle=[dataOracleSimple,dataOraclePB,dataOracleBPR,dataOracleContourBpr];
 dataOurs=[...
   dataRSRI,...
   struct('out','Output_segs_VPR_unnormalised','legend','s. VPR unnorm','style',{{'Marker','x'}}),... % unnormalised VPR
@@ -117,6 +119,10 @@ dataOurs=[...
 dataOurs=[dataBPR(3:4) dataOracleBPR];
 dataOurs=[dataOracleSimple,dataOracleBPR]; % all oracles
 dataOurs=[dataBPR(3) dataOracleBPR(1)]; % why are we still worse than the baseline?; this motivates the hard-negative mining
+
+dataOurs=[dataContourBpr dataOracleContourBpr]; % the new contour BPR + its oracle
+dataOurs=[dataBPR(3) dataContourBpr]; % line vs contour BPR
+dataOurs=[dataOracleBPR(1) dataOracleContourBpr]; % same, oracles comparison
 
 switch experimentsToPlot
   case 'best'
