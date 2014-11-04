@@ -25,6 +25,5 @@ function seg_patch = create_seg_patch(x,y,r,l)
 %  y
 bdry_patch=create_bdry_patch(x,y,r,l);
 % the patch is now a boundary, transform to a segmentation
-seg_patch=watershed(bdry_patch,4);
-seg_patch(seg_patch==0)=1; % TODO fix, rather than arbitrarily assign to the one class
+seg_patch=bdry2seg(bdry_patch);
 end
