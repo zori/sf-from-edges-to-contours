@@ -59,7 +59,7 @@ function ucm = finest_partition2ucm(ws_wt,fmt)
 ws_wt2 = double(super_contour_4c(ws_wt));
 cws_wt2 = clean_watersheds(ws_wt2);
 % if any(cws_wt2(:)~=ws_wt2(:))
-%   disp('diff');
+%   keyboard;
 % end
 ws_wt2=cws_wt2;
 % ws_wt2 = clean_watersheds(ws_wt2);
@@ -94,8 +94,7 @@ pb2(1:2:end, 1:2:end) = pb;
 pb2(1:2:end, 2:2:end-2) = H;
 pb2(2:2:end-2, 1:2:end) = V;
 pb2(end,:) = pb2(end-1, :);
-assert(all(pb2(:,end)==0)); % can write simply:
-% pb2(:,end) = pb2(:,end-1);
+pb2(:,end) = pb2(:,end-1);
 pb2(:,end) = max(pb2(:,end), pb2(:,end-1));
 end
 
