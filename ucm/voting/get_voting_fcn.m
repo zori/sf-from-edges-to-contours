@@ -5,11 +5,10 @@ function [cfp_fcn,E] = get_voting_fcn(I,model,patch_score_fcn,T,gts)
 opts=model.opts;
 ri=opts.imWidth/2; % patch radius 16
 rg=opts.gtWidth/2; % patch radius 8
-nTreesEval=opts.nTreesEval;
 % pad image, making divisible by 4
 szOrig=size(I); p=[ri ri ri ri];
 p([2 4])=p([2 4])+mod(4-mod(szOrig(1:2)+2*ri,4),4);
-IPadded=imPad(I,p,'symmetric');
+IPadded=imPadSym(I,p);
 % compute feature channels
 [chnsReg,chnsSim]=edgesChns(IPadded,model.opts);
 % apply forest to image
@@ -18,7 +17,7 @@ IPadded=imPad(I,p,'symmetric');
 t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
 Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg)*t;
 E=convTri(Es_,1);
-ws_padded=imPad(double(watershed(E)),p,'symmetric');
+
 if exist('gts','var')
   % oracle, use ground truth segmentations corresponding to I
   for k=1:length(gts)
@@ -26,22 +25,51 @@ if exist('gts','var')
     gts{k}=imPad(double(gts{k}),p,'symmetric'); % ground truths were uint16, which can't be padded
   end
   get_hs_fcn=@(x,y) get_groundtruth_patches(x+p(3),y+p(1),rg,gts); % coords are offset for padded ground truth images
-  process_location_fcn=@(x,y,w) process_location_gt(x,y,w,gts,rg);
+  process_location_fcn=@(x,y,w) process_location_gt(x,y,w,gts,p,rg);
 else
   % voting on the watershed contour
   coords2forest_location_fcn=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
   get_hs_fcn=@(x,y) get_tree_patches(x,y,coords2forest_location_fcn,model);
   if exist('T','var') && ~isempty(T)  % needs to have the patches saved
-    process_location_fcn=@(x,y,w) processLocation(x,y,model,T,IPadded,ri,rg,szOrig,p,chnsReg,chnsSim,ind,E,ws_padded,contours2ucm(E),w);
+    process_location_fcn=@(x,y,w) processLocation(x,y,model,T,I,rg,p,chnsReg,chnsSim,ind,E,contours2ucm(E),w);
   else
     process_location_fcn=@(varargin) disp([]); % NO-OP function, in case there is no T input
   end
 end
 
-ws2seg_fcn=@(x) (x); % the identity function
-% ws2seg_fcn=@(x) spx2seg(x);  % when not fitting a line
+% % varargin is {c,e,size(pb)}
+get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1},varargin{2});
+% get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+% get_ws_patch_fcn=@(px,py,varargin) create_contour_patch(px,py,rg,varargin{:}); % TODO wish to be able to write create_contour_patch(px,py,rg,c,e,size(pb));
 
-cfp_fcn=@(pb) create_finest_partition_voting(pb,ws_padded,rg,get_hs_fcn,process_location_fcn,patch_score_fcn,ws2seg_fcn);
+% process_ws_patch_fcn=@(x) (x); % the identity function
+process_ws_patch_fcn=@bdry2seg;
+% process_ws_patch_fcn=@(x) spx2seg(x);  % when not fitting a line
+ws_fcn=@(px,py,varargin) process_ws(px,py,varargin,get_ws_patch_fcn,process_ws_patch_fcn);
+
+process_hs_fcn=@(x) (x); % id
+% There are two options to do the seg2bdry imageSize
+% (3:2:end,3:2:end); or
+% (1:2:end-2,1:2:end-2);
+% process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
+hs_fcn=@(x,y) process_hs(x,y,get_hs_fcn,process_hs_fcn);
+
+cfp_fcn=@(pb) create_finest_partition_voting(pb,rg,patch_score_fcn,ws_fcn,hs_fcn,process_location_fcn);
+end
+
+% ----------------------------------------------------------------------
+function ws_patch = process_ws(px,py,get_ws_patch_args,get_ws_patch_fcn,process_ws_patch_fcn)
+ws_patch=get_ws_patch_fcn(px,py,get_ws_patch_args{:});
+ws_patch=process_ws_patch_fcn(ws_patch);
+end
+
+% ----------------------------------------------------------------------
+function hs = process_hs(x,y,get_hs_fcn,process_hs_fcn)
+hs=get_hs_fcn(x,y);
+hsz=size(hs,3);
+for k=1:hsz
+  hs(:,:,k)=process_hs_fcn(hs(:,:,k));
+end
 end
 
 % ----------------------------------------------------------------------
