@@ -1,15 +1,16 @@
 % Zornitsa Kostadinova
 % Aug 2014
 % 8.3.0.532 (R2014a)
-function processLocation(x,y,model,T,IPadded,ri,rg,szOrig,p,chnsReg,chnsSim,ind,E,wsPadded,ucm,w)
+function processLocation(x,y,model,T,I,rg,szOrig,p,chnsReg,chnsSim,ind,E,ucm,w)
 % plot(x,y,'rx','MarkerSize',20);
 % display image patch
-px=x+p(3); py=y+p(1); % pad x and y dimensions
-initFig(); imagesc(cropPatch(IPadded,px,py,ri)); axis('image'); title('Selected image patch');
+[coordsPad_fcn,imPad_fcn]=get_pad_fcns(p);
+[px,py]=coordsPad_fcn(x,y);
+IPadded=imPadSym(I,p);
+initFig(); imagesc(cropPatch(IPadded,px,py,rg)); hold on; plot(rg,rg,'x'); axis('image'); title('Selected image patch');
 
 [treeIds,leafIds,x1,y1]=coords2forestLocation(x,y,ind,model.opts,p,length(model.fids));
 nTreesEval=size(treeIds,3);
-assert(nTreesEval==length(w));
 for k=1:nTreesEval
   treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
   assert(~model.child(leafId,treeId)); % TODO add this to assertion (when also saving patches in forest) && ~isempty(model.patches{leafId,treeId}));
@@ -17,7 +18,7 @@ for k=1:nTreesEval
   imgPs=T{treeId}.imgPs{leafId};
   assert(~xor(isempty(segPs),isempty(imgPs)));
   treeStr=num2str(treeId);
-  if exist('w','var'), treeStr=[treeStr ' - dist ' num2str(w(k))]; end
+  if exist('w','var'), assert(nTreesEval==length(w)); treeStr=[treeStr ' - score ' num2str(w(k))]; end
   if ~isempty(segPs) % only leaves with no more than 40 samples have the patches stored
     initFig(); montage2(cell2array(segPs));
     montage2title(['Segmentations; tree ' treeStr]);
@@ -31,26 +32,23 @@ for k=1:nTreesEval
   end
 end
 
-show_patch_fcn=@(src,src_title) show_patch(src,src_title,p,px,py,rg);
+show_patch_fcn=@(src,src_title) show_patch(src,imPad_fcn,px,py,rg,src_title);
 % Compute the intermediate decision at the given pixel location (of 4 trees)
 Es4=edgesDetectMex(model,chnsReg,chnsSim,x1,y1);
 E4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
 % Q? Why these apparent off-by-ones when cropping the patch; to visualise properly, cropping 1px bigger radius; check rounding errors
 % A. The actual boundary is between two pixels; can't do any better
-h=show_patch(E4,'Intermediate decision patch (4 trees voted)',p,px,py,rg+1);
+h=show_patch(E4,imPad_fcn,px,py,rg+1,'Intermediate decision patch (4 trees voted)');
 
 % patch detected with the decision forest; result based on 16x16x4/4 trees
 % that vote for each pixel
 h=show_patch_fcn(E,'SRF decision patch');
 % Superpixelization (over-segmentation patch)
-% initFig(); im(wsPadded); hold on; plot(px,py,'rx');
-% h=show_patch_fcn(wsPadded,'WS patch'); % watershed, superpixels patch
-spxPatch=cropPatch(wsPadded,x+ri,y+ri,rg); % ri/2 == rg
-h=initFig(); imagesc(label2rgb(spxPatch,'jet',[1 1 1],'shuffle')); axis('image'); title('Superpixels patch');
-
+h=show_patch_fcn(watershed(E),'WS patch'); % watershed, superpixels patch
+title('Superpixels patch');
 % that was a coloured representation of the watershed patch
-% spxPatch=cropPatch(wsPadded,px,py,rg);
-% initFig(); imagesc(label2rgb(spxPatch,'jet',[1 1 1],'shuffle')); axis('image'); title('Superpixels patch');
+% spxPatch=cropPatch(ws_padded,px,py,rg);
+% h=initFig(); imagesc(label2rgb(spxPatch,'jet',[1 1 1],'shuffle')); axis('image');
 
 % Ultrametric Contour Map patch
 h=show_patch_fcn(ucm,'UCM patch');
@@ -67,10 +65,4 @@ function montage2title(mTitle)
 % adds a title to a figure drawn using the montage2 function
 set(gca,'Visible','on'); set(gca,'xtick',[]); set(gca,'ytick',[]);
 title(mTitle);
-end
-
-% ----------------------------------------------------------------------
-function h = show_patch(src,src_title,p,px,py,rg)
-srcPadded=imPad(src,p,'symmetric');
-h=initFig(); im(cropPatch(srcPadded,px,py,rg)); title(src_title);
 end
