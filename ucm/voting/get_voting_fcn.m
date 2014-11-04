@@ -38,7 +38,7 @@ else
 end
 
 % % varargin is {c,e,size(pb)}
-get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1},varargin{2});
+get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
 % get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
 % get_ws_patch_fcn=@(px,py,varargin) create_contour_patch(px,py,rg,varargin{:}); % TODO wish to be able to write create_contour_patch(px,py,rg,c,e,size(pb));
 
@@ -58,17 +58,17 @@ cfp_fcn=@(pb) create_finest_partition_voting(pb,rg,patch_score_fcn,ws_fcn,hs_fcn
 end
 
 % ----------------------------------------------------------------------
-function ws_patch = process_ws(px,py,get_ws_patch_args,get_ws_patch_fcn,process_ws_patch_fcn)
+function [ws_patch_processed,ws_patch] = process_ws(px,py,get_ws_patch_args,get_ws_patch_fcn,process_ws_patch_fcn)
 ws_patch=get_ws_patch_fcn(px,py,get_ws_patch_args{:});
-ws_patch=process_ws_patch_fcn(ws_patch);
+ws_patch_processed=process_ws_patch_fcn(ws_patch);
 end
 
 % ----------------------------------------------------------------------
-function hs = process_hs(x,y,get_hs_fcn,process_hs_fcn)
+function [hs_processed,hs] = process_hs(x,y,get_hs_fcn,process_hs_fcn)
 hs=get_hs_fcn(x,y);
-hsz=size(hs,3);
-for k=1:hsz
-  hs(:,:,k)=process_hs_fcn(hs(:,:,k));
+hs_processed=hs;
+for k=1:size(hs,3)
+  hs_processed(:,:,k)=process_hs_fcn(hs(:,:,k));
 end
 end
 

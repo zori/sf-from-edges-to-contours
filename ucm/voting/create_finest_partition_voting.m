@@ -50,14 +50,17 @@ end % create_finest_partition_voting
 % ----------------------------------------------------------------------
 function w = vote(x,y,rg,ws_fcn,ws_args,hs_fcn,patch_score_fcn,process_location_fcn)
 px=x+2*rg; py=y+2*rg; % adjust patch dimensions TODO: should be p(3) and p(1)
-ws_patch=ws_fcn(px,py,ws_args{:});
-hs=hs_fcn(x,y); % a few 16x16 segmentation patches
+[ws_patch,ws_patch_init]=ws_fcn(px,py,ws_args{:});
+[hs,hs_init]=hs_fcn(x,y); % a few 16x16 segmentation patches
 assert(size(hs,1)==rg*2);
 w=compute_weights(ws_patch,hs,patch_score_fcn);
 f=false;
 if f
-  pshow(ws_patch,1);
-  % for k=1:size(hs,3), pshow(hs(:,:,k)); end
+  pshow(ws_patch_init,1); title('ws patch - initial');
+  pshow(ws_patch); title('ws patch - processed');
+  if ~all(hs(:)==hs_init(:))
+    for k=1:size(hs_init,3), pshow(hs_init(:,:,k)); title('a ''G'' patch - initial'); end
+  end
   process_location_fcn(x,y,w);
   close all; % TIP put a breakpoint here
 end
