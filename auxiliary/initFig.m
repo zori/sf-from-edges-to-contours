@@ -1,18 +1,18 @@
 % Zornitsa Kostadinova
 % Aug 2014
 % 8.3.0.532 (R2014a)
-function h = initFig(figureHandle)
+function h = initFig(figHandle)
 % creates and positions a figure on a 3 x 4 grid layout for convenient viewing
 %
 % INPUTS
-%  figureHandle - (optional) handle/index for the figure
+%  figHandle    - (optional) handle/index for the figure
 %
 % OUTPUTS
 %  h            - figure handle
 %
 persistent cache figCnt;
 if isempty(figCnt), figCnt=1; end
-if nargin, figCnt=figureHandle; end
+if nargin && ~isempty(figHandle), figCnt=figHandle; end
 if (~isempty(cache)), [scrSz,figSz,nFigs]=deal(cache{:}); else
   set(0,'Units','pixels');
   scrSz=get(0,'ScreenSize'); scrSz=scrSz(3:4);
