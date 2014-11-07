@@ -7,6 +7,6 @@ assert(gtsz==length(w));
 [coordsPad_fcn,imPad_fcn]=get_pad_fcns(p);
 [px,py]=coordsPad_fcn(x,y);
 for k=1:length(gts)
-  show_patch(gts{k},imPad_fcn,px,py,r,['ground truth ' num2str(k), ' score ' num2str(w(k))]);
+  pad_show_patch(gts{k},imPad_fcn,px,py,r,['ground truth ' num2str(k), ' score ' num2str(w(k))]);
 end
 end
