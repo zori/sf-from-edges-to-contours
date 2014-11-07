@@ -3,7 +3,7 @@
 function model = edgesTrainWrapper(LOG)
 % Set opts for training (see edgesTrain.m)
 trOpts=edgesTrain();                         % default options (good settings)
-trOpts.modelDir=fullfile(LOG.repoDir,'models/'); % model will be in models/forest
+trOpts.modelDir=fullfile(LOG.evalDir,'models/'); % model will be in models/forest
 trOpts.modelFnm=['model' LOG.modelName];     % model name
 trOpts.nPos=5e5;                             % decrease to speedup training
 trOpts.nNeg=5e5;                             % decrease to speedup training
