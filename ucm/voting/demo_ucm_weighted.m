@@ -1,17 +1,20 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-model_name='modelBSDS500';
+model_name='modelBSDS500_patches';
 load_model_and_trees;
 fmt='doubleSize';
 
 %% 16x16 vertical line
 l=zeros(16,16); l(:,8)=1;
 L=repmat(l,1,1,3); clear l;
-ucmL=ucm_weighted(L,model,@vpr,'doubleSize',T);
+L_ucm=ucm_weighted(L,model,@vpr,fmt,T);
+merge_L_ucm=ucm_weighted(L,model,@compareSegs,fmt,T);
 
 %% bw diagonal
 bw=repmat(eye(260),1,1,3);
+
+merge_bw_ucm=ucm_weighted(bw,model,@compareSegs,fmt,T);
 
 bpr_bw_ucm=ucm_weighted_bpr(bw,model,T);
 bw_gt=watershed(bw(:,:,1),4); bw_gt(bw_gt==0)=1;
