@@ -9,13 +9,16 @@ px=x+2*rg; py=y+2*rg; % adjust patch dimensions TODO: should be p(3) and p(1)
 assert(size(hs,1)==rg*2);
 w=compute_weights(ws_patch,hs,patch_score_fcn);
 if dbg
-  pshow(ws_patch_init,1); title('ws patch - initial');
-  pshow(ws_patch); title('ws patch - processed');
+  rgb_patch_init=label2rgb(ws_patch_init,'jet',[1 1 1],'shuffle');
+  rgb_patch=label2rgb(ws_patch,'jet',[1 1 1],'shuffle');
+  pshow(rgb_patch_init,1); title('ws patch - initial');
+  pshow(rgb_patch); title('ws patch - processed');
   if ~all(hs(:)==hs_init(:))
     for k=1:size(hs_init,3), pshow(hs_init(:,:,k)); title('a ''G'' patch - initial'); end
   end
   process_location_fcn(x,y,w);
-  close all; % TIP put a breakpoint here
+  keyboard; % this is like putting a breakpoint here
+  close all;
 end
 end
 
