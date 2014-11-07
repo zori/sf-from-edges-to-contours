@@ -49,13 +49,9 @@ model=edgesTrainWrapper(LOG);
 segmDetectWrapper(model,LOG);
 
 %% Benchmark
-fhs=benchmarkWrapper(LOG);
-
-% TODO use fhs in plotContext
-% Optionally, plot additionally precomputed results from other algorithms
-% plotContext(LOG);
+benchmarkWrapper(LOG);
 
 %%
-if (~isempty(gcp('nocreate'))), delete(gcp('nocreate')); end
+if ~isempty(gcp('nocreate')), delete(gcp('nocreate')); end
 fprintf(LOG.fid, '\n'); fclose(LOG.fid);
 end
