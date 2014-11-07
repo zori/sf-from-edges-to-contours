@@ -1,6 +1,6 @@
 % Zornitsa Kostadinova
 % Jul 2014
-function plotContext(LOG)
+function plot_results(LOG)
 % Plot precomputed benchmark results (also from other algorithms).
 %
 % INPUT
