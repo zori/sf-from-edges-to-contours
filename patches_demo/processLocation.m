@@ -35,7 +35,7 @@ end
 show_patch_fcn=@(src,src_title) show_patch(src,imPad_fcn,px,py,rg,src_title);
 % Compute the intermediate decision at the given pixel location (of 4 trees)
 Es4=edgesDetectMex(model,chnsReg,chnsSim,x1,y1);
-[szOrig(1),szOrig(2)]=size(I);
+[szOrig(1),szOrig(2)]=size(E);
 E4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
 % Q? Why these apparent off-by-ones when cropping the patch; to visualise properly, cropping 1px bigger radius; check rounding errors
 % A. The actual boundary is between two pixels; can't do any better

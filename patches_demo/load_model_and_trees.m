@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-if ~exist('model_name','var'), model_name='modelBSDS500'; end
+if ~exist('model_name','var'), model_name='modelBSDS500_patches'; end
 model_path='/BS/kostadinova/work/video_segm/models';
 if ~all(ismember({'model','T'},who))
   model=load(fullfile(model_path,'forest',model_name)); % .mat file with model
