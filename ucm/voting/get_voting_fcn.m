@@ -37,14 +37,17 @@ else
   end
 end
 
+% clear functions; % clears the persistent vars AND :( all breakpoints
+clear create_fitted_line_patch create_ws_patch create_contour_patch;
+
 % % varargin is {c,e,size(pb)}
-get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
-% get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+% get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
+get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
 % get_ws_patch_fcn=@(px,py,varargin) create_contour_patch(px,py,rg,varargin{:}); % TODO wish to be able to write create_contour_patch(px,py,rg,c,e,size(pb));
 
 % process_ws_patch_fcn=@(x) (x); % the identity function
-process_ws_patch_fcn=@bdry2seg;
-% process_ws_patch_fcn=@(x) spx2seg(x);  % when not fitting a line
+% process_ws_patch_fcn=@bdry2seg;
+process_ws_patch_fcn=@(x) spx2seg(x);  % when not fitting a line
 ws_fcn=@(px,py,varargin) process_ws(px,py,varargin,get_ws_patch_fcn,process_ws_patch_fcn);
 
 process_hs_fcn=@(x) (x); % id
@@ -53,8 +56,8 @@ process_hs_fcn=@(x) (x); % id
 % (1:2:end-2,1:2:end-2);
 % process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
 hs_fcn=@(x,y) process_hs(x,y,get_hs_fcn,process_hs_fcn);
-
-cfp_fcn=@(pb) create_finest_partition_voting(pb,rg,patch_score_fcn,ws_fcn,hs_fcn,process_location_fcn);
+vote_fcn=@(x,y,ws_args,dbg) vote(x,y,rg,ws_fcn,ws_args,hs_fcn,patch_score_fcn,process_location_fcn,dbg);
+cfp_fcn=@(pb) create_finest_partition_voting(pb,vote_fcn);
 end
 
 % ----------------------------------------------------------------------
@@ -114,7 +117,7 @@ bdry=spx2bdry01(patch);
 % labels2=bwlabel(clean_watersheds(super_contour_4c(bdry))==0,8); % TODO don't
 % clean the watersheds for speed
 labels2=bwlabel(super_contour_4c(bdry)==0,8); % type: double; 0 indicates boundary
-patch=labels2(2:2:end, 2:2:end); % labels should start from 1
+patch=labels2(2:2:end,2:2:end); % labels should start from 1
 % TODO labels sometimes start from 0; bug due to artifacts from the watershed;
 % workaround:
 [~,~,patch]=unique(patch);

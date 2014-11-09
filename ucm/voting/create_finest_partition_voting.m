@@ -1,7 +1,8 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-function [sf_wt,votes,process_location_fcn] = create_finest_partition_voting(pb,rg,patch_score_fcn,ws_fcn,hs_fcn,process_location_fcn)
+function [sf_wt,votes,vote_fcn,c] = create_finest_partition_voting(pb,vote_fcn)
+% the extra output args - votes,vote_fcn,c - are only for hard_negatives_mining
 ws=watershed(pb);
 sz=size(pb);
 
@@ -12,18 +13,22 @@ nEdges=numel(c.edge_x_coords);
 c.edge_weights=zeros(nEdges,2); % tuples of accumulated weights and number of pixels per edge
 votes=cell(sz); % for hard_negatives_mining
 ws_args={c,NaN,sz};
+dbg=false; % a debug flag to allow to inspect intermediate results
 for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
-  if e == 40 || e == 48
-    disp(e);
-  end
+%   if e == 40 || e == 48
+%     dbg=true;
+%     disp(e); % this is a hint to comment out this section when not debugging
+%   end
   ws_args{2}=e;
   for p=1:numel(c.edge_x_coords{e})
     % NOTE x and y are swapped here (in the output from fit_contour)
     % the correct way is (for an image of dimensions h x w x 3)
     % first coord, in [1,h], is y, second coord, in [1,w], is x
     y=c.edge_x_coords{e}(p); x=c.edge_y_coords{e}(p);
-    w=vote(x,y,rg,ws_fcn,ws_args,hs_fcn,patch_score_fcn,process_location_fcn);
+    assert(c.is_e(y,x)==1);
+    c.is_e(y,x)=e; % modify to allow to find the edge number by the coords
+    w=vote_fcn(x,y,ws_args,dbg); dbg=false;
     votes{y,x}=w;
     w=sum(w)/numel(w);
     c.edge_weights(e,:)=c.edge_weights(e,:)+[w 1];
