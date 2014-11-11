@@ -53,15 +53,13 @@ end
 
 % vote indices - bpr3 and oracle
 vi=[1 3];
-patch_score_fcn=@(S,G) bpr(seg2bdry(S),seg2bdry(G),3);
 data(1).varargin={T};
 data(3).varargin={T,gts};
 for k=vi
-  [cfp_fcn,E]=get_voting_fcn(I,model,patch_score_fcn,data(k).varargin{:});
-  [~,votes{k},process_location_fcn{k}]=cfp_fcn(E); %#ok<NASGU> % E == edgesDetect(I,model));
+  [cfp_fcn,E]=get_voting_fcn(I,model,'bpr',data(k).varargin{:});
+  [sf_wt{k},votes{k},vote_fcn{k},c{k}]=cfp_fcn(E); % E == edgesDetect(I,model));
   data(k).ucm2=contours2ucm(E,'imageSize',cfp_fcn);
   data(k).seg=threshold_ucm2(data(k).ucm2,data(k).threshold);
-
   % assert(all(data(k).ucm2(:)==data(k).ucm2_precomputed(:))); % no, because
   % the bpr3 is an approximation, results will be slightly different
 end
@@ -75,12 +73,12 @@ for k=1:dsz, l(k)=length(u{k}); end
 
 d=abs(data(1).ucm2-data(3).ucm2); % diff with oracle
 % TODO diff with baseline
-d=d .* ~(isnan(data(1).mean) | isnan(data(3).mean)); % TODO why isnan when we have voted there - fishy...
-sz=size(data(1).ucm2);
-r=16;
+% d=d .* ~(isnan(data(1).mean) | isnan(data(3).mean)); % TODO why isnan when we have voted there - fishy...
+r=8;
 [~,sort_ind]=sort(d(:),'descend'); % TODO instead, do top 5 unique
 maxIndex=sort_ind(1:555);  % linear index of the 5 largest values
+sz=size(E);
 [ys,xs]=ind2sub(sz,maxIndex);
 inds=find(r<=ys & ys+r<=sz(1) & r<=xs & xs+r<=sz(2));
 
-clear imFile I E uc d sz sort_ind maxIndex;
+clear imFile I E uc d sort_ind maxIndex;

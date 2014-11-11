@@ -8,19 +8,11 @@ for ind=inds(1:10:100)'
   x=xs(ind); y=ys(ind);
   for k=vi
     disp(data(k).ucm2(y,x));
-    disp(votes{k}{y,x}');
+    disp(votes{k}{y,x}'); % this is [] in the first case; investigate why; don't rerun 'precompute' as the method is randomized!!!!
     initFig(1); im(data(k).ucm2); hold on; plot(x,y,'x','MarkerSize',20);
-    ucm2crop=cropPatch(data(k).ucm2,x,y,r); pshow(ucm2crop);
-    mean_crop=cropPatch(data(k).mean,x,y,r); pshow(mean_crop);
-    if k == 1
-      % bpr3
-      process_location_fcn{k}(x,y,votes{k}{y,x});
-    else
-      % k == 3
-      % crop the gts
-      p=[0 0 0 0]; % no padding, kind of hack, since we are only cropping away from the boundary to avoid the problem
-      process_location_gt(x,y,votes{k}{y,x},gts,p,r);
-    end
-    close all; % TIP: put a breakpoint here
+    show_patch(data(k).mean,x,y,r,'crop of the mean of votes');
+    show_patch(sf_wt{k},x,y,r,'crop of the finest partition');
+    show_patch(data(k).ucm2,x,y,r,'crop of the ucm2');
+    vote_fcn{k}(x,y,{c{k},c{k}.is_e(y,x),sz},true); % dbg=true, will pause after displaying the patches
   end
 end
