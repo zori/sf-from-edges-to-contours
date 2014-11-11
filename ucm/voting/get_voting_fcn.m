@@ -43,7 +43,7 @@ clear create_fitted_line_patch create_ws_patch create_contour_patch;
 % patch_score_fcn -  function for the similarity between the watershed and the
 %                    segmentation patch
 %                    score in [0,1]; 0 - no similarity; 1 - maximal similarity
-%                    function could be: bpr vpr_s vpr_gt RI RSRI compareSegs
+%                    function could be: bpr vpr_s vpr_gt RI RSRI greedy_merge
 switch voting
   case 'bpr'
     px_max_dist=3;

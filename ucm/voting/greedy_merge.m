@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Sep 2014
 % 8.3.0.532 (R2014a)
-function w = compareSegs(fst,snd)
+function w = greedy_merge(fst,snd)
 % compare two equaly-sized segmentation patches and return a similarity score
 % in [0,1]
 
