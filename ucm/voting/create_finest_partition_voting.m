@@ -30,8 +30,7 @@ for e=1:nEdges
     c.is_e(y,x)=e; % modify to allow to find the edge number by the coords
     w=vote_fcn(x,y,ws_args,dbg); dbg=false;
     votes{y,x}=w;
-    w=sum(w)/numel(w);
-    c.edge_weights(e,:)=c.edge_weights(e,:)+[w 1];
+    c.edge_weights(e,:)=c.edge_weights(e,:)+[sum(w)/numel(w) 1];
   end
 end % for e - edge index
 

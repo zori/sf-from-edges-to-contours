@@ -4,7 +4,9 @@
 function w = compareSegs(fst,snd)
 % compare two equaly-sized segmentation patches and return a similarity score
 % in [0,1]
-if max(fst(:))<max(snd(:)), tmp=fst; fst=snd; snd=tmp; end
+
+% That seems to be a source of bugs
+% if max(fst(:))<max(snd(:)), tmp=fst; fst=snd; snd=tmp; end
 
 % TODO just for debugging purposes
 fstOrig=fst;
@@ -19,11 +21,20 @@ if s_nsegs==1
   w=double(f_nsegs==1);
 else
   if f_nsegs>s_nsegs
+    % TODO - how to move that to process_ws_patch and process_hs if it depends on both patches
     groundTruth={struct('Segmentation',fst)}; % a cell containing a structure with a field .Segmentation
     confcounts=Getconfcounts(snd,groundTruth,f_nsegs);
     % assert(size(confcounts,1) < size(confcounts,2));
     confcounts=confcounts(2:end,2:end);
     [~,I]=max(confcounts,[],1);
+    u=unique(fst(7:9,7:9));
+    assert(length(u)>1);
+    % TODO do better in case length(u)>2
+    if I(u(1)) == I(u(2))
+      m=max(I);
+      I(u(1))=m+1;
+      I(u(2))=m+2;
+    end
     fst=I(fst);
   end
   p=false; 
