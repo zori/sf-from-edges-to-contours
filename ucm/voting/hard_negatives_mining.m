@@ -13,6 +13,8 @@ for ind=inds(1:10:100)'
     show_patch(data(k).mean,x,y,r,'crop of the mean of votes');
     show_patch(sf_wt{k},x,y,r,'crop of the finest partition');
     show_patch(data(k).ucm2,x,y,r,'crop of the ucm2');
-    vote_fcn{k}(x,y,{c{k},c{k}.is_e(y,x),sz},true); % dbg=true, will pause after displaying the patches
+    dbg=true; % will pause after displaying the patches
+    vote_fcn{k}(x,y,{c{k},c{k}.is_e(y,x),sz},dbg);
+    close all;
   end
 end
