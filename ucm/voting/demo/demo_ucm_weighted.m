@@ -3,29 +3,27 @@
 % 8.3.0.532 (R2014a)
 model_name='modelBSDS500_patches';
 load_model_and_trees;
-fmt='doubleSize';
-dbg=true;
 % strings describing all possible types of vote to weigh the watershed
 votings={'bpr','greedy_merge','line_VPR_normalised_ws'}; % RSRI RI vpr_s vpr_gt
+fmt='doubleSize';
+dbg=false;
 
-%% 16x16 vertical line
-l=zeros(16,16); l(:,8)=1;
-L=repmat(l,1,1,3); clear l;
-L_ucm=ucm_weighted(L,model,'line_VPR_normalised_ws',fmt,true,T); % interactive, pause when computing
-
-merge_L_ucm=ucm_weighted(L,model,'greedy_merge',fmt,false,T); % don't pause, just compute
-
-%% bw diagonal
-bw=repmat(eye(260),1,1,3);
-bw_gt=watershed(bw(:,:,1),4); bw_gt(bw_gt==0)=1;
-for k=1:length(votings)
-  bw_res{k}=ucm_weighted(bw,model,votings{k},fmt,dbg,T);
-  bw_oracle{k}=ucm_weighted(bw,model,votings{k},fmt,T,dbg,{bw_gt});
-end
-
-%% real image
+% data
+li=zeros(16,16); li(:,8)=1; % 16x16 vertical line
+[test_data(1).I,test_data(1).gt]=make_example(li); clear li;
+[test_data(2).I,test_data(2).gt]=make_example(eye(260)); % bw diagonal
+% real image
 imFile='/BS/kostadinova/work/BSR/BSDS500/data/images/val/101085.jpg';
+test_data(3).I=imread(imFile);
 gtFile='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/101085.mat';
-I=imread(imFile);
-% ucm=ucm_weighted(I,model,'RI',fmt,T);
-% ucm_oracle=ucm_weighted(I,model,'greedy_merge',fmt,T,load_segmentations(gtFile));
+test_data(3).gt=load_segmentations(gtFile);
+
+% L_ucm=ucm_weighted(data(1).I,model,'line_VPR_normalised_ws',fmt,true,T); % interactive, pause when computing
+% merge_L_ucm=ucm_weighted(data(1).I,model,'greedy_merge',fmt,false,T); % don't pause, just compute
+
+for k=1:length(votings)
+  for l=1:length(test_data)
+    test_data(l).res{k}=ucm_weighted(test_data(l).I,model,votings{k},fmt,dbg,T);
+    test_data(l).oracle{k}=ucm_weighted(test_data(l).I,model,votings{k},fmt,dbg,T,test_data(l).gt);
+  end
+end
