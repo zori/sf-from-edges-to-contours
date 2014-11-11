@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-function [sf_wt,votes,vote_fcn,c] = create_finest_partition_voting(pb,vote_fcn)
+function [sf_wt,votes,vote_fcn,c] = create_finest_partition_voting(pb,vote_fcn,DBG)
 % the extra output args - votes,vote_fcn,c - are only for hard_negatives_mining
 ws=watershed(pb);
 sz=size(pb);
@@ -16,10 +16,7 @@ ws_args={c,NaN,sz};
 dbg=false; % a debug flag to allow to inspect intermediate results
 for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
-%   if e == 40 || e == 48
-%     dbg=true;
-%     disp(e); % this is a hint to comment out this section when not debugging
-%   end
+  if DBG && (e == 40 || e == 48), dbg=true; end
   ws_args{2}=e;
   for p=1:numel(c.edge_x_coords{e})
     % NOTE x and y are swapped here (in the output from fit_contour)

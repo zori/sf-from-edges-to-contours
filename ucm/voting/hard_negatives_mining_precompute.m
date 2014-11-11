@@ -56,7 +56,7 @@ vi=[1 3];
 data(1).varargin={T};
 data(3).varargin={T,gts};
 for k=vi
-  [cfp_fcn,E]=get_voting_fcn(I,model,'bpr',data(k).varargin{:});
+  [cfp_fcn,E]=get_voting_fcn(I,model,'bpr',false,data(k).varargin{:});
   [sf_wt{k},votes{k},vote_fcn{k},c{k}]=cfp_fcn(E); % E == edgesDetect(I,model));
   data(k).ucm2=contours2ucm(E,'imageSize',cfp_fcn);
   data(k).seg=threshold_ucm2(data(k).ucm2,data(k).threshold);

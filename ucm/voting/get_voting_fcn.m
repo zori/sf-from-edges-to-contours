@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-function [cfp_fcn,E] = get_voting_fcn(I,model,voting,T,gts)
+function [cfp_fcn,E] = get_voting_fcn(I,model,voting,DBG,T,gts)
 opts=model.opts;
 ri=opts.imWidth/2; % patch radius 16
 rg=opts.gtWidth/2; % patch radius 8
@@ -65,7 +65,12 @@ switch voting
   case 'greedy_merge'
     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RI);
     get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
-    process_ws_patch_fcn=@(x) spx2seg(x);
+    process_ws_patch_fcn=@spx2seg;
+    process_hs_fcn=@(x) (x);
+  case 'line_VPR_normalised_ws'
+    patch_score_fcn=@vpr_s;
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@bdry2seg;
     process_hs_fcn=@(x) (x);
 %   case 'vpr'
   otherwise
@@ -75,7 +80,7 @@ end
 ws_fcn=@(px,py,varargin) process_ws(px,py,varargin,get_ws_patch_fcn,process_ws_patch_fcn);
 hs_fcn=@(x,y) process_hs(x,y,get_hs_fcn,process_hs_fcn);
 vote_fcn=@(x,y,ws_args,dbg) vote(x,y,rg,ws_fcn,ws_args,hs_fcn,patch_score_fcn,process_location_fcn,dbg);
-cfp_fcn=@(pb) create_finest_partition_voting(pb,vote_fcn);
+cfp_fcn=@(pb) create_finest_partition_voting(pb,vote_fcn,DBG);
 end
 
 % ----------------------------------------------------------------------
