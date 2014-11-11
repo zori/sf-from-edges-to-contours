@@ -17,7 +17,7 @@ detOpts={
   'imDir',  fullfile(LOG.dsDir,'test',LOG.imDirR),...
   'gtDir',  fullfile(LOG.dsDir,'test',LOG.gtDirR),... % for the oracle
   'resDir', fullfile(LOG.dsDir,'test',LOG.resDirR)...
-  'outType', 'oracle'... % edge, edgeContours, seg, ucm, sPb, voteBpr, oracleBpr, voteUcm, oracle
+  'outType', 'oracle'... % edge, edgeContours, seg, ucm, sPb, voteUcm, oracle
   };
 
 timerDet=tic;
