@@ -14,8 +14,8 @@ if dbg
   rgb_patch=label2rgb(ws_patch,'jet',[1 1 1],'shuffle');
   pshow(rgb_patch_init); title('ws patch - initial');
   pshow(rgb_patch); title('ws patch - processed');
-  if ~all(hs(:)==hs_init(:))
-    for k=1:size(hs_init,3), pshow(hs_init(:,:,k)); title('a ''G'' patch - initial'); end
+  if numel(hs)~=numel(hs_init) || ~all(hs(:)==hs_init(:))
+    for k=1:size(hs,3), pshow(hs(:,:,k)); title('a ''G'' patch - processed'); end
   end
   process_location_fcn(x,y,w);
   keyboard; % this is like putting a breakpoint here
