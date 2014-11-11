@@ -1,4 +1,4 @@
-function ucm = contours2ucm(pb, fmt, cfp_fun)
+function ucm = contours2ucm(pb, fmt, cfp_fcn)
 % Creates Ultrametric Contour Map from oriented contours
 %
 % syntax:
@@ -30,17 +30,17 @@ if ~strcmp(fmt,'imageSize') && ~strcmp(fmt,'doubleSize'),
 end
 
 % determine function to create finest partition
-if ~exist('cfp_fun','var')
+if ~exist('cfp_fcn','var')
   % create finest partition and transfer contour strength
   if ndims(pb) == 3
-    cfp_fun=@(pb) create_finest_partition_oriented(pb);
+    cfp_fcn=@(pb) create_finest_partition_oriented(pb);
   else
-    cfp_fun=@(pb) create_finest_partition_non_oriented(pb);
+    cfp_fcn=@(pb) create_finest_partition_non_oriented(pb);
   end
 end
 
 % timerCfp=tic;
-ws_wt = cfp_fun(pb);
+ws_wt = cfp_fcn(pb);
 % cfpTime=toc(timerCfp);
 
 % timerUcm=tic;
@@ -57,9 +57,15 @@ end % contours2ucm
 function ucm = finest_partition2ucm(ws_wt,fmt)
 % prepare pb for ucm
 ws_wt2 = double(super_contour_4c(ws_wt));
-ws_wt2 = clean_watersheds(ws_wt2);
+cws_wt2 = clean_watersheds(ws_wt2);
+% if any(cws_wt2(:)~=ws_wt2(:))
+%   keyboard;
+% end
+ws_wt2=cws_wt2;
+% ws_wt2 = clean_watersheds(ws_wt2);
 labels2 = bwlabel(ws_wt2 == 0, 8);
 labels = labels2(2:2:end, 2:2:end) - 1; % labels begin at 0 in mex file.
+assert(min(labels(:))>=0);
 ws_wt2(end+1, :) = ws_wt2(end, :);
 ws_wt2(:, end+1) = ws_wt2(:, end);
 
@@ -72,7 +78,7 @@ super_ucm = normalize_output(super_ucm); % ojo
 if strcmp(fmt,'doubleSize'),
   ucm = super_ucm;
 else
-  ucm = super_ucm(3:2:end, 3:2:end);
+  ucm = super_ucm(1:2:end-2,1:2:end-2); % TODO figure out was this really a bug - getting the imageSize by subindexing this way (3:2:end, 3:2:end);
 end
 end
 
@@ -88,6 +94,7 @@ pb2(1:2:end, 1:2:end) = pb;
 pb2(1:2:end, 2:2:end-2) = H;
 pb2(2:2:end-2, 1:2:end) = V;
 pb2(end,:) = pb2(end-1, :);
+pb2(:,end) = pb2(:,end-1);
 pb2(:,end) = max(pb2(:,end), pb2(:,end-1));
 end
 

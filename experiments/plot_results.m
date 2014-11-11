@@ -1,6 +1,6 @@
 % Zornitsa Kostadinova
 % Jul 2014
-function plotContext(LOG)
+function plot_results(LOG)
 % Plot precomputed benchmark results (also from other algorithms).
 %
 % INPUT
@@ -21,7 +21,7 @@ plotOpts=struct('path',fullfile(LOG.dsDir,'test'),'dirR','precomputed','superpos
 
 % TODO add avg human agreement ComputeRP(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'k',false,[],'all',[],'Output_general_human');
 
-% courtesy jhosang; colors for up to 16 curves
+% courtesy jhosang; colors for up to 28 curves
 colorMap = [
 0, 100, 0;
 30, 144, 255;
@@ -53,9 +53,10 @@ colorMap = [
 135, 130, 174;
 ] ./ 256;
 
-% directories, labels and colors for the precomputed results
+% directories, labels and line styles for the precomputed results
 % structure is defined in this manner to allow easy rearrangement of order of
 % curves (in the legend)
+% dataSfUcm is our baseline
 dataSfUcm=struct('out','Output_sf_ucm','legend','SF ucm','style',{{'LineStyle','--'}}); % multiscale, model.opts.nms=1
 dataBest=[...
   struct('out','Output_sf_segs','legend','SF watershed','style',{{}}),...
@@ -68,6 +69,7 @@ dataBest=[...
 dataRSRI=[...
   struct('out','Output_RSRI_segs','legend','segs 256 RSRI','style',{{'Marker','x'}}),... % used to be calles 'CpdSegs', now 256
   struct('out','Output_RSRI_segs_merge','legend','s. merge RSRI','style',{{'Marker','x'}}),... % RSRI segs improved by merging some regions of the superpixelisation
+  struct('out','Output_fair_segs_merge','legend','fair s. merge RSRI','style',{{'Marker','x'}}),...
   struct('out','Output_RSRI_segs_merge_Pb','legend','s. merge RSRI .*pb','style',{{'LineStyle','--','Marker','x'}}),... % segs merge RSRI, value-multiplied with the pb from create_finest_partition by Arbelaez
   struct('out','Output_RI','legend','RI (32640)','style',{{'LineStyle',':','Marker','x'}}),... % rather than RSRI, increases the nSample to the max, so we have a RI measure; same results, only slower (is it really slower?)
   struct('out','Output_line_RSRI','legend','l. RSRI','style',{{'Marker','x'}}),... % the first patch has only two segments - the fitted line
@@ -86,6 +88,7 @@ dataVPRnormWS=[... % VPR normalised on the side of the watershed
   ];
 dataOracleSimple=[... % oracle - using the GT patches instead of the leaves of the SF trees
   struct('out','Output_oracle_segs_merge_RSRI','legend','oracle s. merge RSRI','style',{{'LineStyle','-.','Marker','*'}}),...
+  struct('out','Output_oracle_fair_segs_merge','legend','o. fair s. merge RSRI','style',{{'LineStyle','-.','Marker','*'}}),...
   struct('out','Output_oracle_line_RSRI','legend','o. l. RSRI','style',{{'LineStyle','-.','Marker','*'}}),...
   struct('out','Output_oracle_segs_VPR_normalised_trees','legend','o. s. VPR norm Ts','style',{{'LineStyle','-.','Marker','*'}}),...
   struct('out','Output_oracle_segs_VPR_normalised_ws','legend','o. s. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}}),...
@@ -97,14 +100,31 @@ dataOraclePB=[... % oracle result value-multiplied by the probability of boundar
   struct('out','Output_oracle_segs_VPR_normalised_ws_pb','legend','o. s. VPR norm ws pb','style',{{'Marker','o'}}),...
   struct('out','Output_oracle_line_VPR_normalised_ws_pb','legend','o. l. VPR norm ws pb','style',{{'Marker','o'}}),...
   ];
-dataOracle=[dataOracleSimple,dataOraclePB];
+ksz=7;
+k=num2str((1:ksz)');
+out=num2cell([repmat('Output_bpr_',ksz,1) k],2)';
+l=num2cell([repmat('l. BPR',ksz,1) k],2)';
+dataBPR=struct('out',out,'legend',l,'style',{{'Marker','x'}});
+dataOracleBPR=struct('out',{'Output_oracle_bpr_3' 'Output_oracle_bpr_4'},...
+  'legend',{'o. l. BPR3' 'o. l. BPR4'},'style',{{'Marker','x'}});
+dataContourBpr=struct('out','Output_contour_bpr3','legend','c. BPR3','style',{{}});
+dataOracleContourBpr=struct('out','Output_oracle_contour_bpr3','legend','o. c. BPR3','style',{{}});
+dataOracle=[dataOracleSimple,dataOraclePB,dataOracleBPR,dataOracleContourBpr];
 dataOurs=[...
   dataRSRI,...
   struct('out','Output_segs_VPR_unnormalised','legend','s. VPR unnorm','style',{{'Marker','x'}}),... % unnormalised VPR
   dataVPRnormTs,...
-  dataVPRnormWS,...
-  dataOracle,...
+  dataVPRnormWS,...% dataOracle,...  
+  dataBPR(2:5),... % these are good values; when having to choose, set for 3px
+  dataOracleBPR,...
   ];
+dataOurs=[dataBPR(3:4) dataOracleBPR];
+dataOurs=[dataOracleSimple,dataOracleBPR]; % all oracles
+dataOurs=[dataBPR(3) dataOracleBPR(1)]; % why are we still worse than the baseline?; this motivates the hard-negative mining
+
+dataOurs=[dataContourBpr dataOracleContourBpr]; % the new contour BPR + its oracle
+dataOurs=[dataBPR(3) dataContourBpr]; % line vs contour BPR
+dataOurs=[dataOracleBPR(1) dataOracleContourBpr]; % same, oracles comparison
 
 switch experimentsToPlot
   case 'best'

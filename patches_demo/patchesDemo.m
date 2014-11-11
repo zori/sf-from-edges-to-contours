@@ -10,7 +10,6 @@ I=imread(imFile);
 opts=model.opts;
 ri=opts.imWidth/2; % patch radius 16
 rg=opts.gtWidth/2; % patch radius 8
-nTreesEval=opts.nTreesEval;
 % pad image, making divisible by 4
 szOrig=size(I); p=[ri ri ri ri];
 p([2 4])=p([2 4])+mod(4-mod(szOrig(1:2)+2*ri,4),4);
@@ -22,12 +21,9 @@ IPadded=imPad(I,p,'symmetric');
 % normalize and finalize edge maps
 t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
 Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:)*t; E=convTri(Es_,1);
-% Superpixelization (over-segmentation)
-ws=watershed(E);
-% ucm=contours2ucm(E); % the small arcs between the statues are erroneously
-% up-voted
+% ucm=contours2ucm(E); % the small arcs between the statues are erroneously up-voted
 ucm=structuredEdgeSPb(I,model,'imageSize');
-processLocationFun=@(x,y) processLocation(x,y,model,T,I,opts,ri,rg,nTreesEval,szOrig,p,chnsReg,chnsSim,ind,E,ws,ucm);
+processLocationFun=@(x,y) processLocation(x,y,model,T,I,rg,p,chnsReg,chnsSim,ind,E,ucm);
 
 if true
 % interactive demo loop

@@ -289,9 +289,7 @@ if ( (length(dir(fname))~=1) && (~isempty(S)) )
         sumP = AA(:, 5);
 
         %Precision recall and F measure for the considered segmentation
-        R = cntR ./ (sumR + (sumR==0));
-        P = cntP ./ (sumP + (sumP==0));
-        F = fmeasure(R,P);
+        [F,R,P]=calculate_R_P_F(cntR,sumR,cntP,sumP);
 
         [bestT,bestR,bestP,bestF] = maxF(thresh,R,P); %Best F-measure for the segmentation, and corresponding thr, p, r
         scores(i,:) = [i bestT bestR bestP bestF];
@@ -384,9 +382,7 @@ if ( (length(dir(fname))~=1) && (~isempty(S)) )
 
 
     %Global P and R for each thr
-    R = cntR_total ./ (sumR_total + (sumR_total==0));
-    P = cntP_total ./ (sumP_total + (sumP_total==0));
-    F = fmeasure(R,P);
+    [F,R,P]=calculate_R_P_F(cntR_total,sumR_total,cntP_total,sumP_total);
     [bestT,bestR,bestP,bestF] = maxF(thresh,R,P);
 
     %statistics based on best P

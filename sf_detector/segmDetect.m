@@ -97,12 +97,17 @@ switch outType
     d=detectUcm(I,model,fmt);
   case 'sPb'
     d=structuredEdgeSPb(I,model,fmt);
+  case 'voteBpr'
+    d=ucm_weighted_bpr(I,model,[]);
+  case 'oracleBpr'
+    d=ucm_weighted_bpr(I,model,[],gt_fcn());
   case 'voteUcm'
     % assert(model.opts.nms); % TODO DRY! .nms option neglected, since I don't use the edgesDetect
-    d=ucm_weighted(I,model,fmt,[]);
+    % TODO rather than hardcoding the patch_score_fcn, choose here
+    d=ucm_weighted(I,model,'vpr_s',fmt,[]);
   case 'oracle'
     assert(logical(exist('gt_fcn','var')));
-    d=ucm_weighted(I,model,fmt,[],gt_fcn());
+    d=ucm_weighted(I,model,'vpr_s',fmt,[],gt_fcn());
   otherwise
     warning('Unexpected output type. No output created.');
 end
