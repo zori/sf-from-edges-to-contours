@@ -6,7 +6,8 @@ if ~exist('dbg','var') || isempty(dbg), dbg=false; end
 px=x+2*rg; py=y+2*rg; % adjust patch dimensions TODO: should be p(3) and p(1)
 [ws_patch,ws_patch_init]=ws_fcn(px,py,ws_args{:});
 [hs,hs_init]=hs_fcn(x,y); % a few 16x16 segmentation patches
-assert(size(hs,1)==rg*2);
+assert(size(hs,1)==size(ws_patch,1));
+% assert(size(hs,1)==rg*2);
 w=compute_weights(ws_patch,hs,patch_score_fcn);
 if dbg
   rgb_patch_init=label2rgb(ws_patch_init,'jet',[1 1 1],'shuffle');

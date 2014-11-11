@@ -87,10 +87,11 @@ end
 % ----------------------------------------------------------------------
 function [hs_processed,hs] = process_hs(x,y,get_hs_fcn,process_hs_fcn)
 hs=get_hs_fcn(x,y);
-hs_processed=hs;
+hs_processed=cell(1,size(hs,3));
 for k=1:size(hs,3)
-  hs_processed(:,:,k)=process_hs_fcn(hs(:,:,k));
+  hs_processed{k}=process_hs_fcn(hs(:,:,k));
 end
+hs_processed=cell2array(hs_processed);
 end
 
 % ----------------------------------------------------------------------
