@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-function [cfp_fcn,E] = get_voting_fcn(I,model,patch_score_fcn,T,gts)
+function [cfp_fcn,E] = get_voting_fcn(I,model,voting,T,gts)
 opts=model.opts;
 ri=opts.imWidth/2; % patch radius 16
 rg=opts.gtWidth/2; % patch radius 8
@@ -40,21 +40,35 @@ end
 % clear functions; % clears the persistent vars AND :( all breakpoints
 clear create_fitted_line_patch create_ws_patch create_contour_patch;
 
-% % varargin is {c,e,size(pb)}
-% get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
-get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
-% get_ws_patch_fcn=@(px,py,varargin) create_contour_patch(px,py,rg,varargin{:}); % TODO wish to be able to write create_contour_patch(px,py,rg,c,e,size(pb));
+% patch_score_fcn -  function for the similarity between the watershed and the
+%                    segmentation patch
+%                    score in [0,1]; 0 - no similarity; 1 - maximal similarity
+%                    function could be: bpr vpr_s vpr_gt RI RSRI compareSegs
+switch voting
+  case 'bpr'
+    px_max_dist=3;
+    patch_score_fcn=@(S,G) bpr(S,G,px_max_dist);
+    % % varargin is {c,e,size(pb)}
+    % get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
+    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    % get_ws_patch_fcn=@(px,py,varargin) create_contour_patch(px,py,rg,varargin{:}); % TODO wish to be able to write create_contour_patch(px,py,rg,c,e,size(pb));
+    
+    % process_ws_patch_fcn=@(x) (x); % the identity function
+    % process_ws_patch_fcn=@bdry2seg;
+    % process_ws_patch_fcn=@(x) spx2seg(x);  % when not fitting a line
+    process_ws_patch_fcn=@(x) seg2bdry(spx2seg(x));  % output: doubleSize
+    % process_hs_fcn=@(x) (x); % id
+    % There are two options to do the seg2bdry imageSize
+    % (3:2:end,3:2:end); or (1:2:end-2,1:2:end-2);
+    % process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
+    process_hs_fcn=@(G) seg2bdry(G); % output: doubleSize
+%   case 'greedy_merge'
+%   case 'vpr'
+  otherwise
+    error('not implemented %s',voting);
+end
 
-% process_ws_patch_fcn=@(x) (x); % the identity function
-% process_ws_patch_fcn=@bdry2seg;
-process_ws_patch_fcn=@(x) spx2seg(x);  % when not fitting a line
 ws_fcn=@(px,py,varargin) process_ws(px,py,varargin,get_ws_patch_fcn,process_ws_patch_fcn);
-
-process_hs_fcn=@(x) (x); % id
-% There are two options to do the seg2bdry imageSize
-% (3:2:end,3:2:end); or
-% (1:2:end-2,1:2:end-2);
-% process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
 hs_fcn=@(x,y) process_hs(x,y,get_hs_fcn,process_hs_fcn);
 vote_fcn=@(x,y,ws_args,dbg) vote(x,y,rg,ws_fcn,ws_args,hs_fcn,patch_score_fcn,process_location_fcn,dbg);
 cfp_fcn=@(pb) create_finest_partition_voting(pb,vote_fcn);
