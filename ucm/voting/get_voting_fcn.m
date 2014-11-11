@@ -62,7 +62,11 @@ switch voting
     % (3:2:end,3:2:end); or (1:2:end-2,1:2:end-2);
     % process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
     process_hs_fcn=@(G) seg2bdry(G); % output: doubleSize
-%   case 'greedy_merge'
+  case 'greedy_merge'
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RI);
+    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    process_ws_patch_fcn=@(x) spx2seg(x);
+    process_hs_fcn=@(x) (x);
 %   case 'vpr'
   otherwise
     error('not implemented %s',voting);
