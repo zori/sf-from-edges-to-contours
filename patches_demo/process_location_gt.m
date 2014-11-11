@@ -1,12 +1,10 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-function process_location_gt(x,y,w,gts,p,r)
-gtsz=length(gts);
+function process_location_gt(px,py,w,gts_padded,r)
+gtsz=length(gts_padded);
 assert(gtsz==length(w));
-[coordsPad_fcn,imPad_fcn]=get_pad_fcns(p);
-[px,py]=coordsPad_fcn(x,y);
-for k=1:length(gts)
-  pad_show_patch(gts{k},imPad_fcn,px,py,r,['ground truth ' num2str(k), ' score ' num2str(w(k))]);
+for k=1:length(gts_padded)
+  show_patch(gts_padded{k},px,py,r,['ground truth ' num2str(k), ' score ' num2str(w(k))]);
 end
 end

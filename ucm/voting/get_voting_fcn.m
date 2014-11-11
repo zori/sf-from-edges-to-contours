@@ -25,7 +25,7 @@ if exist('gts','var')
     gts{k}=imPad(double(gts{k}),p,'symmetric'); % ground truths were uint16, which can't be padded
   end
   get_hs_fcn=@(x,y) get_groundtruth_patches(x+p(3),y+p(1),rg,gts); % coords are offset for padded ground truth images
-  process_location_fcn=@(x,y,w) process_location_gt(x,y,w,gts,p,rg);
+  process_location_fcn=@(x,y,w) process_location_gt(x+p(3),y+p(1),w,gts,rg);
 else
   % voting on the watershed contour
   coords2forest_location_fcn=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
