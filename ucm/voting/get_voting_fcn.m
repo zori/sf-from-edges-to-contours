@@ -72,7 +72,11 @@ switch voting
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
     process_ws_patch_fcn=@bdry2seg;
     process_hs_fcn=@(x) (x);
-%   case 'vpr'
+  case 'poly_VPR_normalised_ws'
+    patch_score_fcn=@vpr_s;
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_poly_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@bdry2seg;
+    process_hs_fcn=@(x) (x);
   otherwise
     error('not implemented %s',voting);
 end
