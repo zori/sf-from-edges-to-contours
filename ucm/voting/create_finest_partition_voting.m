@@ -16,7 +16,10 @@ ws_args={c,NaN,sz};
 dbg=false; % a debug flag to allow to inspect intermediate results
 for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
-  if DBG && (e == 40 || e == 48), dbg=true; end
+  % x | 24 | 24 | 44 |    | 46 | 40 |
+  % y | 23 | 24 | 44 |    | 46 | 51 |
+  % e |  8 |  8 | 38 | 40 | 41 | 48 |    % c.is_v(47,46)==1
+  if DBG && any(abs([8 38 40 41 48]-e)<eps), dbg=true; end
   ws_args{2}=e;
   for p=1:numel(c.edge_x_coords{e})
     % NOTE x and y are swapped here (in the output from fit_contour)

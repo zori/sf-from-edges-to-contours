@@ -10,16 +10,31 @@ assert(size(hs,1)==size(ws_patch,1));
 % assert(size(hs,1)==rg*2);
 w=compute_weights(ws_patch,hs,patch_score_fcn);
 if dbg
+  % show contour patch
+  contour_patch=create_contour_patch(px,py,rg,ws_args{:});
+  pshow(contour_patch);
+  % also mark the end vertices
+  hold on; c=ws_args{1}; e=ws_args{2};
+  v1=c.vertices(c.edges(e,1),:); % fst coord is y - row ind
+  v2=c.vertices(c.edges(e,2),:);
+  plot(v1(2)-x+rg,v1(1)-y+rg,'g*'); % fst end point is green
+  plot(v2(2)-x+rg,v2(1)-y+rg,'r*');
+  title('WS patch - contour');
+  % show fitted line patch
+  fitted_line_patch=create_fitted_line_patch(px,py,rg,ws_args{1:2});
+  pshow(fitted_line_patch); title('WS patch - fitted line');
+  % show fitted polynomial patch
   rgb_patch_init=label2rgb(ws_patch_init,'jet',[1 1 1],'shuffle');
   rgb_patch=label2rgb(ws_patch,'jet',[1 1 1],'shuffle');
-  pshow(rgb_patch_init); title('ws patch - initial');
+  pshow(rgb_patch_init); title('WS patch - initial');
   pshow(rgb_patch); title('ws patch - processed');
+  % show processed hs if any difference
   if numel(hs)~=numel(hs_init) || ~all(hs(:)==hs_init(:))
     for k=1:size(hs,3), pshow(hs(:,:,k)); title('a ''G'' patch - processed'); end
   end
   process_location_fcn(x,y,w);
   keyboard; % this is like putting a breakpoint here
-  close all;
+  initFig(1); close all; % reset the counter and close all figures
 end
 end
 
