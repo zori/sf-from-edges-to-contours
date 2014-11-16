@@ -1,17 +1,16 @@
 % Zornitsa Kostadinova
 % Nov 2014
 % 8.3.0.532 (R2014a)
-function patch = create_fitted_poly_patch(px,py,rg,c,e)
+function patch = create_fitted_poly_patch(px,py,n,rg,c,e)
 persistent cache;
 side=2*rg;
 if ~isempty(cache) && cache{1}==e, [~,p]=deal(cache{:}); else
-  p=fit_poly(c,e,side); cache={e,p};
+  p=fit_poly(n,c,e,side); cache={e,p};
 end
 
 x1=px-rg+1:px+rg;
 y1=py-rg+1:py+rg;
 f1=polyval(p,x1);
-% % plot(x1,y1)
 % plot(x1,f1,'*')
 
 thresh=2.1;
@@ -28,10 +27,10 @@ patch=double(patch~=0);
 end
 
 % ----------------------------------------------------------------------
-function p = fit_poly(c,e,patch_side)
-n=numel(c.edge_x_coords{e});
-x=zeros(1,n); y=x;
-for k=1:n
+function p = fit_poly(n,c,e,patch_side)
+esz=numel(c.edge_x_coords{e});
+x=zeros(1,esz); y=x;
+for k=1:esz
   y(k)=c.edge_x_coords{e}(k)+patch_side; % adjust indices for the padded superpixelised image (+patch_side)
   x(k)=c.edge_y_coords{e}(k)+patch_side;
 end
@@ -52,8 +51,8 @@ for k=1:length(ix)-1
   times(ix(k):ix(k+1)-1)=0:(ix(k+1)-ix(k))-1;
 end
 x=x+d.*ep.*times;
-poly_degree=2;
-p=polyfit(x,y,poly_degree); % TODO why warnings sometimes?
+p=polyfit(x,y,n); % TODO why warnings sometimes when degree==2
+% p=rand(1,2); % how to do rand line
 assert(all(~isnan(p)) && all(~isinf(p)));
 % plot(x,y,'o')
 % hold on

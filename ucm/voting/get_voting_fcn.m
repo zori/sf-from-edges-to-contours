@@ -63,7 +63,7 @@ switch voting
     % process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
     process_hs_fcn=@(G) seg2bdry(G); % output: doubleSize
   case 'greedy_merge'
-    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RI);
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_s);
     get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
     process_ws_patch_fcn=@spx2seg;
     process_hs_fcn=@(x) (x);
@@ -72,9 +72,11 @@ switch voting
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
     process_ws_patch_fcn=@bdry2seg;
     process_hs_fcn=@(x) (x);
-  case 'poly_VPR_normalised_ws'
+  case {'poly_VPR_normalised_ws_1' 'poly_VPR_normalised_ws_2'}
     patch_score_fcn=@vpr_s;
-    get_ws_patch_fcn=@(px,py,varargin) create_fitted_poly_patch(px,py,rg,varargin{1:2});
+    n=str2double(voting(end)); % degree of polynomial to fit to data
+    assert(n==1||n==2);
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_poly_patch(px,py,n,rg,varargin{1:2});
     process_ws_patch_fcn=@bdry2seg;
     process_hs_fcn=@(x) (x);
   otherwise
