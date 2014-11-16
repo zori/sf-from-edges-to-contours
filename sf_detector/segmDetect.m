@@ -100,10 +100,10 @@ switch outType
   case 'voteUcm'
     % assert(model.opts.nms); % TODO DRY! .nms option neglected, since I don't use the edgesDetect
     % TODO rather than hardcoding the patch_score_fcn, choose here
-    d=ucm_weighted(I,model,'poly_VPR_normalised_ws',fmt,false,[]);
+    d=ucm_weighted(I,model,'greedy_merge',fmt,false,[]);
   case 'oracle'
     assert(logical(exist('gt_fcn','var')));
-    d=ucm_weighted(I,model,'poly_VPR_normalised_ws',fmt,[],false,gt_fcn());
+    d=ucm_weighted(I,model,'greedy_merge',fmt,[],false,gt_fcn());
   otherwise
     warning('Unexpected output type. No output created.');
 end

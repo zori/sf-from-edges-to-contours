@@ -26,7 +26,7 @@ mkdir(LOG.timestampDir);
 
 % for detection and benchmark; relative directories name
 LOG.imDirR='Images'; % input test images
-LOG.resDirR='Ucm2'; % result of the detector; output type can be .png, .mat
+LOG.resDirR='Ucm2_fair_segs_VPR_normalised_ws'; % result of the detector; output type can be .png, .mat
 LOG.gtDirR='Groundtruth'; % ground truths for the test images
 
 % example log files:
