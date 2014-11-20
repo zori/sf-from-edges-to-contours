@@ -13,9 +13,13 @@ for ind=inds(1:10:100)'
     show_patch(data(k).mean,x,y,r,'crop of the mean of votes');
     show_patch(data(k).sf_wt,x,y,r,'crop of the finest partition');
     show_patch(data(k).ucm2,x,y,r,'crop of the ucm2');
-    dbg=true; % will pause after displaying the patches
-    c=data(k).c;
-    data(k).vote_fcn(x,y,{c,c.is_e(y,x),sz},dbg);
+    dbg=true;
+    if c.is_e(y,x)
+      data(k).vote_fcn(x,y,{c,c.is_e(y,x),sz},dbg); % will pause after displaying the patches
+    else
+      warning('location (%d,%d) is a vertex (no voting there)',num2str(x),num2str(y));
+      keyboard; % will pause here
+    end
     close all;
   end
 end
