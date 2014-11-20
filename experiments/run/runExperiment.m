@@ -20,9 +20,10 @@ LOG.experimentName='fair_segs_VPR_normalised_ws';
 % log directories
 LOG.dsDir=fullfile(LOG.evalDir, LOG.ds.name);
 LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');
-if (~exist(LOG.recordingsDir, 'dir')), mkdir(LOG.recordingsDir), end
+if ~exist(LOG.recordingsDir, 'dir'), mkdir(LOG.recordingsDir), end
 LOG.timestamp=datestr(clock,'yyyy-mm-dd_HH-MM-SS'); disp(LOG.timestamp);
-LOG.timestampDir=fullfile(LOG.recordingsDir, [LOG.timestamp '_Output_' LOG.experimentName]);
+LOG.experimentDirR=[LOG.timestamp '_Output_' LOG.experimentName];
+LOG.timestampDir=fullfile(LOG.recordingsDir, LOG.experimentDirR);
 mkdir(LOG.timestampDir);
 
 % for detection and benchmark; relative directories name
