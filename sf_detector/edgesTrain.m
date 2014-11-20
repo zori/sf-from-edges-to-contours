@@ -46,7 +46,7 @@ function model = edgesTrain( varargin )
 %   .nCells     - [5] number of self similarity cells, i.e. grid cells
 %   (4) detection parameters (can be altered after training):
 %   TODO Detection parameters are not used here; figure out how to
-%       incorporate these options in VSB100 benchmark and remove them from here.
+%       incorporate these options in detection instead and remove them from here.
 %   .stride     - [2] stride at which to compute edges
 %   .multiscale - [1] if true run multiscale edge detector
 %   .nTreesEval - [4] number of trees to evaluate per location, i.e. nTrees/2
@@ -154,9 +154,9 @@ for i=1:nTrees, tree=trees(i); nNodes1=size(tree.fids,1);
   % store compact representation of sparse binary edge patches
   for j=1:nNodes
     if(j>nNodes1 || tree.child(j)), E=0; else
-      E=segToEdges(tree.hs(:,:,j),nEdgeBins); end % nEdgeBins=1
+      E=seg2bdry_edge_bins(tree.hs(:,:,j),nEdgeBins); end % nEdgeBins=1
     eBins=uint32(find(E)-1); k1=k+length(eBins);
-    model.eBins(k+1:k1)=eBins; k=k1; model.eBnds(j,i)=k;
+    model.eBins(k+1:k1)=eBins; k=k1; model.eBnds(j,i)=k; % (nodeNumber,treeIndex)=eBinsIndex of beginning of boundary
   end
 end
 if(0), model.segMax=squeeze(max(max(model.seg))); end
@@ -168,7 +168,7 @@ save([forestFn '.mat'], 'model', '-v7.3');
 end % edgesTrain
 
 % ----------------------------------------------------------------------
-function E = segToEdges( S, nEdgeBins )
+function E = seg2bdry_edge_bins( S, nEdgeBins )
 % Convert segmentation to binary edge map (optionally quantized by angle).
 E=gradientMag(single(S))>.01; if(nEdgeBins==1), return; end
 % if (# orientation bins) > 1, quantize by angle
