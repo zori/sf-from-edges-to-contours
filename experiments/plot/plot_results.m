@@ -89,8 +89,9 @@ close all;
 end
 
 % ----------------------------------------------------------------------
-function str=fscoreStr(ODS,OSS)
-str=sprintf('[ODS %1.2f, OSS %1.2f]',ODS,OSS);
+function str=fscoreStr(ODS,~)
+% for brevity, ignore the OSS
+str=sprintf('[ODS %1.2f]',ODS);
 end
 
 % ----------------------------------------------------------------------
