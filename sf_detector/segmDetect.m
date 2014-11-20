@@ -130,7 +130,6 @@ end
 
 % ----------------------------------------------------------------------
 function ws = detectSeg(I,model)
-% TODO why non-maximum suppression breaks the watershed?
 E=edgesDetect(I,model);
 % run vanilla watershed, which is an (over-)seg
 ws=watershed(E);

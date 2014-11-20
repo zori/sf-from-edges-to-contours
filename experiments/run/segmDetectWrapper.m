@@ -17,9 +17,17 @@ detOpts={
   'imDir',  fullfile(LOG.dsDir,'test',LOG.imDirR),...
   'gtDir',  fullfile(LOG.dsDir,'test',LOG.gtDirR),... % for the oracle
   'resDir', fullfile(LOG.dsDir,'test',LOG.resDirR)...
-  'outType', 'voteUcm'... % edge, edgeContours, seg, ucm, sPb, voteUcm, oracle
+  'outType', 'ucm'... % edge, edgeContours, seg, ucm, sPb, voteUcm, oracle
   };
 
+if any(strcmp(detOpts.outType,{'seg','ucm'}))
+  % TODO why non-maximum suppression breaks the watershed?
+  if model.opts.nms
+    warning('non-maximum suppression ''breaks'' the watershed; unsetting');
+    model.opts.nms=false;
+  end
+end
+  
 timerDet=tic;
 segmDetect(model,detOpts);
 detectionTime=toc(timerDet);
