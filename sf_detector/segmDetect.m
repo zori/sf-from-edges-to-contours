@@ -103,7 +103,7 @@ switch outType
     d=ucm_weighted(I,model,'greedy_merge',fmt,false,[]);
   case 'oracle'
     assert(logical(exist('gt_fcn','var')));
-    d=ucm_weighted(I,model,'greedy_merge',fmt,[],false,gt_fcn());
+    d=ucm_weighted(I,model,'greedy_merge',fmt,false,[],gt_fcn());
   otherwise
     warning('Unexpected output type. No output created.');
 end
