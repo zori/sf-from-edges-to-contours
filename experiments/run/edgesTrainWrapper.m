@@ -1,6 +1,7 @@
 % Zornitsa Kostadinova
 % Jul 2014
 function model = edgesTrainWrapper(LOG)
+LOG.modelName=[LOG.ds.name ''];
 % Set opts for training (see edgesTrain.m)
 trOpts=edgesTrain();                         % default options (good settings)
 trOpts.modelDir=fullfile(LOG.evalDir,'models/'); % model will be in models/forest
