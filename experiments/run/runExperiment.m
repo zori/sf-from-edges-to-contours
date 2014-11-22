@@ -15,7 +15,7 @@ dsName='BSDS500';
 LOG.ds=dss(strcmp({dss.name},dsName));
 % TODO remove this when we add temporal features
 LOG.ds.isVideo=false;
-LOG.experimentName='ucm_bdry_sz_1_ul_4x4';
+LOG.experimentName='foo';
 % log directories
 LOG.dsDir=fullfile(LOG.evalDir, LOG.ds.name);
 LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');

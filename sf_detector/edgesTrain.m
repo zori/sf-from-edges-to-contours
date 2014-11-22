@@ -154,7 +154,7 @@ for i=1:nTrees, tree=trees(i); nNodes1=size(tree.fids,1);
   % store compact representation of sparse binary edge patches
   for j=1:nNodes
     if(j>nNodes1 || tree.child(j)), E=0; else
-      E=seg2bdry_edge_bins(tree.hs(:,:,j),nEdgeBins); E=E(1:4,1:4); end % nEdgeBins=1 % change here: only store if the upper left corner is a bdry
+      E=seg2bdry_edge_bins(tree.hs(:,:,j),nEdgeBins); end % nEdgeBins=1
     eBins=uint32(find(E)-1); k1=k+length(eBins);
     model.eBins(k+1:k1)=eBins; k=k1; model.eBnds(j,i)=k; % (nodeNumber,treeIndex)=eBinsIndex of beginning of boundary
   end
