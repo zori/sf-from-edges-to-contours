@@ -38,7 +38,7 @@ else
 end
 
 % clear functions; % clears the persistent vars AND :( all breakpoints
-clear create_fitted_line_patch create_ws_patch create_contour_patch;
+clear create_contour_patch create_ws_patch create_fitted_line_patch create_fitted_poly_patch;
 
 % patch_score_fcn -  function for the similarity between the watershed and the
 %                    segmentation patch
