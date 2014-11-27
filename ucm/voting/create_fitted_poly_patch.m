@@ -4,8 +4,8 @@
 function patch = create_fitted_poly_patch(px,py,n,rg,c,e)
 persistent cache;
 side=2*rg;
-if ~isempty(cache) && cache{1}==e, [~,p]=deal(cache{:}); else
-  p=fit_poly(n,c,e,side); cache={e,p};
+if ~isempty(cache) && cache{1}==e && cache{2}==n, [~,~,p]=deal(cache{:}); else
+  p=fit_poly(n,c,e,side); cache={e,n,p};
 end
 
 x1=px-rg+1:px+rg;
