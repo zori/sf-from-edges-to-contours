@@ -30,8 +30,8 @@ if dbg
   pshow(fitted_poly2_patch); title('WS patch - fitted poly n=2');
   % TODO visualise a patch from the greedy merge
   % show processed patch by current algorithm
-  rgb_patch_init=label2rgb(ws_patch_init,'jet',[1 1 1],'shuffle');
-  rgb_patch=label2rgb(ws_patch,'jet',[1 1 1],'shuffle');
+  rgb_patch_init=imcc(ws_patch_init);
+  rgb_patch=imcc(ws_patch);
   pshow(rgb_patch_init); title('WS patch - initial');
   pshow(rgb_patch); title('ws patch - processed');
   % show processed hs if any difference
