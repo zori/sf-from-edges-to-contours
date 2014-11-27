@@ -92,9 +92,9 @@ switch outType
   case 'edgeContours'
     d=edgesDetectOnContours(I,model);
   case 'seg'
-    d=detectSeg(I,model);
+    d=SE_ws(I,model);
   case 'ucm'
-    d=detectUcm(I,model,fmt);
+    d=SE_ucm(I,model,fmt);
   case 'sPb'
     d=structuredEdgeSPb(I,model,fmt);
   case 'voteUcm'
@@ -126,26 +126,6 @@ switch outType
         f.ucm2=detection;
     end
 end
-end
-
-% ----------------------------------------------------------------------
-function ws = detectSeg(I,model)
-E=edgesDetect(I,model);
-% run vanilla watershed, which is an (over-)seg
-ws=watershed(E);
-end
-
-% ----------------------------------------------------------------------
-function ucm2 = detectUcm(I,model,fmt)
-E=edgesDetect(I,model);
-ucm2=contours2ucm(E,fmt);
-end
-
-% ----------------------------------------------------------------------
-function ucm2 = gPbOwtUcm(I,fmt)
-% the original algorithm that uses oriented gradient (in 8 angular directions)
-gPb_orient=globalPb(I);
-ucm2=contours2ucm(gPb_orient,fmt);
 end
 
 % ----------------------------------------------------------------------
