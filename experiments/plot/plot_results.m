@@ -80,7 +80,13 @@ for f=1:fsz
   figure(fhs(f));
   l1=l(f,:);
   if exist('fhSf','var') && exist('legendSf','var') && isequal(f,fhSf), l1=[l(f,:) {legendSf}]; end
-  legend(l1,'Location','NorthEastOutside');
+  if f==4 % ncluster precision
+    legend_location='southeast';
+  else
+    legend_location='southwest';
+  end
+  legend(l1,'Location',legend_location);
+  legend('boxoff'); % remove the legend border
   figTitle=get(get(gca,'Title'),'String');
   fileName=strrep(figTitle,' ','_');
   saveas(gcf,fullfile(plotOpts.path,plotOpts.dirR,['_',fileName]),'jpg');
