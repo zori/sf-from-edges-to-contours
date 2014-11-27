@@ -24,6 +24,12 @@ if dbg
   fitted_line_patch=create_fitted_line_patch(px,py,rg,ws_args{1:2});
   pshow(fitted_line_patch); title('WS patch - fitted line');
   % show fitted polynomial patch
+  fitted_poly1_patch=create_fitted_poly_patch(px,py,1,rg,ws_args{1:2});
+  pshow(fitted_poly1_patch); title('WS patch - fitted poly n=1');
+  fitted_poly2_patch=create_fitted_poly_patch(px,py,2,rg,ws_args{1:2});
+  pshow(fitted_poly2_patch); title('WS patch - fitted poly n=2');
+  % TODO visualise a patch from the greedy merge
+  % show processed patch by current algorithm
   rgb_patch_init=label2rgb(ws_patch_init,'jet',[1 1 1],'shuffle');
   rgb_patch=label2rgb(ws_patch,'jet',[1 1 1],'shuffle');
   pshow(rgb_patch_init); title('WS patch - initial');
