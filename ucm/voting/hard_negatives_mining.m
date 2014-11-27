@@ -10,9 +10,10 @@ for ind=inds(1:10:100)'
     disp(data(k).ucm2(y,x));
     disp(data(k).votes{y,x}');
     initFig(1); im(data(k).ucm2); hold on; plot(x,y,'x','MarkerSize',20);
-    show_patch(data(k).mean,x,y,r,'crop of the mean of votes');
-    show_patch(data(k).sf_wt,x,y,r,'crop of the finest partition');
-    show_patch(data(k).ucm2,x,y,r,'crop of the ucm2');
+    show_patch_fcn=@(src,src_title) show_patch(src,imPad_fcn,x,y,r,src_title);
+    show_patch_fcn(data(k).mean,'crop of the mean of votes');
+    show_patch_fcn(data(k).sf_wt,'crop of the finest partition');
+    show_patch_fcn(data(k).ucm2,'crop of the ucm2');
     dbg=true;
     if c.is_e(y,x)
       data(k).vote_fcn(x,y,{c,c.is_e(y,x),sz},dbg); % will pause after displaying the patches
