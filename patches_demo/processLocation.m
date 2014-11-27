@@ -11,8 +11,10 @@ initFig(); imagesc(cropPatch(IPadded,px,py,rg)); hold on; plot(rg,rg,'x'); axis(
 
 [treeIds,leafIds,x1,y1]=coords2forestLocation(x,y,ind,model.opts,p,length(model.fids));
 nTreesEval=size(treeIds,3);
+hs=cell(nTreesEval,1);
 for k=1:nTreesEval
   treeId=treeIds(:,:,k); leafId=leafIds(:,:,k);
+  hs{k}=T{treeId}.hs(:,:,leafId);
   assert(~model.child(leafId,treeId)); % TODO add this to assertion (when also saving patches in forest) && ~isempty(model.patches{leafId,treeId}));
   segPs=T{treeId}.segPs{leafId}; % model.patches{leafId,treeId}
   imgPs=T{treeId}.imgPs{leafId};
@@ -28,9 +30,12 @@ for k=1:nTreesEval
       montage2title(['Image patches; tree ' treeStr]);
     end
   else
-    initFig(); im(T{treeId}.hs(:,:,leafId)); title(['Best segmentation; tree ' treeStr]);
+    initFig(); im(hs{k}); title(['Best segmentation; tree ' treeStr]);
   end
 end
+
+% alternatively, just 'montage' the nTreesEval medoid patches together (no scores)
+initFig(); montage2(cell2array(hs)); montage2title('the medoid patches');
 
 show_patch_fcn=@(src,src_title) pad_show_patch(src,imPad_fcn,px,py,rg,src_title);
 % Compute the intermediate decision at the given pixel location (of 4 trees)
@@ -60,10 +65,3 @@ figHandles=findobj('Type','figure');
 oldFigures=figHandles(figHandles>h); % h is the last handle used
 close(oldFigures);
 end % processLocation
-
-% ----------------------------------------------------------------------
-function montage2title(mTitle)
-% adds a title to a figure drawn using the montage2 function
-set(gca,'Visible','on'); set(gca,'xtick',[]); set(gca,'ytick',[]);
-title(mTitle);
-end
