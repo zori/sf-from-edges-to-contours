@@ -2,7 +2,9 @@
 % Nov 2014
 % 8.3.0.532 (R2014a)
 function rescale_ucm2(indir_experiment_name)
+% rescales the ucm2 output, so that the values are roughly in [0,1]
 % indir_experiment_name='ucm_bdry_sz_1_ul_1x1'
+assert(~isempty(indir_experiment_name));
 % input
 path_to_dir='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test';
 indir.r=['Ucm2_' indir_experiment_name]; % relative directory name
