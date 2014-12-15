@@ -1,4 +1,6 @@
 function ucm = contours2ucm(pb, fmt, cfp_fcn)
+% NOTE: 'contours' in the name is a misnomer, as input is not a contour map,
+% but a probability of boundary (edge map, no closed contours)
 % Creates Ultrametric Contour Map from oriented contours
 %
 % syntax:
@@ -23,7 +25,7 @@ function ucm = contours2ucm(pb, fmt, cfp_fcn)
 % modified by Zornitsa Kostadinova
 % Jul 2014
 
-if nargin<2, fmt = 'imageSize'; end;
+if nargin<2, fmt = 'imageSize'; end
 
 if ~strcmp(fmt,'imageSize') && ~strcmp(fmt,'doubleSize'),
   error('possible values for fmt are: imageSize and doubleSize');
