@@ -5,6 +5,7 @@ model_name='modelBSDS500_patches';
 load_model_and_trees;
 model.opts.multiscale=0;
 
+% bear img
 imFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/100039.jpg';
 gtFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtruth/100039.mat';
 
@@ -33,13 +34,23 @@ gtFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtruth/1000
 %    Area_PR = 0.91
 % Volume PR global
 %    G-ODS: F( R 0.82, P 0.79 ) = 0.81   [th = 0.60]
+% data=struct(...
+%   'file',...
+%   {'/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/ucm2_precomputed/Ucm2_bpr_3/100039.mat',...
+%   '/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/ucm2_precomputed/Ucm2_sf_ucm/100039.mat',...
+%   '/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/ucm2_precomputed/Ucm2_oracle_bpr_3/100039.mat'},...
+%   'threshold',{0.46, 0.27, 0.68}...
+%   );
+
+voting='line_VPR_normalised_ws'; % used to be 'bpr', i.e. 'bpr_3' for the foldernames
+path_precomp='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/ucm2_precomputed/';
 
 data=struct(...
   'file',...
-  {'/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/ucm2_precomputed/Ucm2_bpr_3/100039.mat',...
-  '/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/ucm2_precomputed/Ucm2_sf_ucm/100039.mat',...
-  '/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/ucm2_precomputed/Ucm2_oracle_bpr_3/100039.mat'},...
-  'threshold',{0.46, 0.27, 0.68}...
+  {sprintf('%sUcm2_%s/100039.mat',path_precomp,voting),...
+  [path_precomp 'Ucm2_sf_ucm/100039.mat'],...
+  sprintf('%sUcm2_oracle_%s/100039.mat',path_precomp,voting)},...
+  'threshold',{0.37, 0.27, 0.54}...
   );
 dsz=numel(data);
 
@@ -56,14 +67,14 @@ vi=[1 3];
 data(1).varargin={T};
 data(3).varargin={T,gts};
 for k=vi
-  [cfp_fcn,E]=get_voting_fcn(I,model,'bpr',data(k).varargin{:});
-  [sf_wt{k},votes{k},vote_fcn{k},c{k}]=cfp_fcn(E); % E == edgesDetect(I,model));
+  [cfp_fcn,E]=get_voting_fcn(I,model,voting,false,data(k).varargin{:});
+  [data(k).sf_wt,data(k).votes,data(k).vote_fcn,c]=cfp_fcn(E); % E == edgesDetect(I,model));
   data(k).ucm2=contours2ucm(E,'imageSize',cfp_fcn);
   data(k).seg=threshold_ucm2(data(k).ucm2,data(k).threshold);
   % assert(all(data(k).ucm2(:)==data(k).ucm2_precomputed(:))); % no, because
   % the bpr3 is an approximation, results will be slightly different
 end
-for k=vi, data(k).mean=cellfun(@mean,votes{k}); end
+for k=vi, data(k).mean=cellfun(@mean,data(k).votes); end
 
 for k=1:dsz, u{k}=unique(data(k).ucm2); end
 for k=1:dsz, l(k)=length(u{k}); end

@@ -120,7 +120,7 @@ firstpass=true; %labels extracted from ucm2 are supposed to be independent at ea
 for ff=1:numel(inFile)
     %Load machine segmentation
     [p,n,e]=fileparts(inFile{ff});
-    if (~exist(inFile{ff},'file')) && (~exist( fullfile(p,[n,'.bmp']) ,'file')) %It is not necessary to repeat this check in the following iterations
+    if ~exist(inFile{ff},'file') && ~exist( fullfile(p,[n,'.bmp']) ,'file') %It is not necessary to repeat this check in the following iterations
         error('Output file %s could not be found',n);
     end
     

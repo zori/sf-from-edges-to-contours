@@ -4,7 +4,9 @@ function patchesDemo(model,T)
 assert(~isempty(model) && ~isempty(T));
 
 % an image from BSDS500 validation subset
-imFile='/BS/kostadinova/work/BSR/BSDS500/data/images/val/101085.jpg';
+imFile='/BS/kostadinova/work/BSR/BSDS500/data/images/val/101085.jpg'; % tikis
+imFile='/home/kostadinova/downloads/video_segm_extras_keep/imgs/test_16068_zebras.jpg'; % zebra
+imFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/100039.jpg'; % bear
 % imFile='/BS/kostadinova/work/BSR/grouping/data/101087_small.jpg';
 I=imread(imFile);
 opts=model.opts;
@@ -35,6 +37,7 @@ while (true)
   [x,y]=ginput;
   % if no or more than one location is clicked, stop the interactive demo
   if (length(x)~= 1), close all; return; end
+  x=floor(x); y=floor(y);
   [x,y]=fixInput(x,y,ri,szOrig(1:2));
   imagesc(I); axis('image'); title('Choose a patch to crop');
   hold on;

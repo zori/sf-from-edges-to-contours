@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-function [sf_wt,votes,vote_fcn,c] = create_finest_partition_voting(pb,vote_fcn)
+function [sf_wt,votes,vote_fcn,c] = create_finest_partition_voting(pb,vote_fcn,DBG)
 % the extra output args - votes,vote_fcn,c - are only for hard_negatives_mining
 ws=watershed(pb);
 sz=size(pb);
@@ -16,10 +16,10 @@ ws_args={c,NaN,sz};
 dbg=false; % a debug flag to allow to inspect intermediate results
 for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
-%   if e == 40 || e == 48
-%     dbg=true;
-%     disp(e); % this is a hint to comment out this section when not debugging
-%   end
+  % x | 24 | 24 | 44 |    | 46 | 40 |
+  % y | 23 | 24 | 44 |    | 46 | 51 |
+  % e |  8 |  8 | 38 | 40 | 41 | 48 |    % c.is_v(47,46)==1
+  if DBG && any(abs([8 38 40 41 48]-e)<eps), dbg=true; end
   ws_args{2}=e;
   for p=1:numel(c.edge_x_coords{e})
     % NOTE x and y are swapped here (in the output from fit_contour)
@@ -33,6 +33,10 @@ for e=1:nEdges
     c.edge_weights(e,:)=c.edge_weights(e,:)+[sum(w)/numel(w) 1];
   end
 end % for e - edge index
+
+% % optionally, display colour-coded watershed arcs
+% initFig; imagesc(label2rgb(c.is_e,'jet',[0.5 0.5 0.5],'shuffle'));
+% axis('image'); title('Colour-coded watershed arcs');
 
 % apply weights to ucm
 sf_wt=zeros(sz);
@@ -48,5 +52,10 @@ for e=1:nEdges
   sf_wt(v1(1),v1(2))=max(W,sf_wt(v1(1),v1(2)));
   sf_wt(v2(1),v2(2))=max(W,sf_wt(v2(1),v2(2)));
 end % for e - edge index
+
+% imwrite(uint8((~c.is_e)*255),'/home/kostadinova/downloads/tikis-watershed-arcs-locations.png')
+% imwrite(uint8((1-sf_wt)*255),'/home/kostadinova/downloads/tiki-finest-partition.png')
 % sf_wt=sf_wt.*create_finest_partition_non_oriented(pb); % VPR .* pb
+% rgb_loc=cat(3,~~c.is_e,zeros(size(sf_wt)),~~sf_wt);
+% initFig; im(rgb_loc); % reg - watershed arcs that received no votes; blue - vertices of watershed arcs; magenta - watershed arcs that did receive some != 0 votes
 end % create_finest_partition_voting

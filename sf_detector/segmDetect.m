@@ -92,22 +92,18 @@ switch outType
   case 'edgeContours'
     d=edgesDetectOnContours(I,model);
   case 'seg'
-    d=detectSeg(I,model);
+    d=SE_ws(I,model);
   case 'ucm'
-    d=detectUcm(I,model,fmt);
+    d=SE_ucm(I,model,fmt);
   case 'sPb'
     d=structuredEdgeSPb(I,model,fmt);
-  case 'voteBpr'
-    d=ucm_weighted_bpr(I,model,[]);
-  case 'oracleBpr'
-    d=ucm_weighted_bpr(I,model,[],gt_fcn());
   case 'voteUcm'
     % assert(model.opts.nms); % TODO DRY! .nms option neglected, since I don't use the edgesDetect
     % TODO rather than hardcoding the patch_score_fcn, choose here
-    d=ucm_weighted(I,model,'vpr_s',fmt,[]);
+    d=ucm_weighted(I,model,'greedy_merge',fmt,false,[]);
   case 'oracle'
     assert(logical(exist('gt_fcn','var')));
-    d=ucm_weighted(I,model,'vpr_s',fmt,[],gt_fcn());
+    d=ucm_weighted(I,model,'greedy_merge',fmt,false,[],gt_fcn());
   otherwise
     warning('Unexpected output type. No output created.');
 end
@@ -130,27 +126,6 @@ switch outType
         f.ucm2=detection;
     end
 end
-end
-
-% ----------------------------------------------------------------------
-function ws = detectSeg(I,model)
-% TODO why non-maximum suppression breaks the watershed?
-E=edgesDetect(I,model);
-% run vanilla watershed, which is an (over-)seg
-ws=watershed(E);
-end
-
-% ----------------------------------------------------------------------
-function ucm2 = detectUcm(I,model,fmt)
-E=edgesDetect(I,model);
-ucm2=contours2ucm(E,fmt);
-end
-
-% ----------------------------------------------------------------------
-function ucm2 = gPbOwtUcm(I,fmt)
-% the original algorithm that uses oriented gradient (in 8 angular directions)
-gPb_orient=globalPb(I);
-ucm2=contours2ucm(gPb_orient,fmt);
 end
 
 % ----------------------------------------------------------------------

@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-function [cfp_fcn,E] = get_voting_fcn(I,model,voting,T,gts)
+function [cfp_fcn,E] = get_voting_fcn(I,model,voting,DBG,T,gts)
 opts=model.opts;
 ri=opts.imWidth/2; % patch radius 16
 rg=opts.gtWidth/2; % patch radius 8
@@ -25,7 +25,7 @@ if exist('gts','var')
     gts{k}=imPad(double(gts{k}),p,'symmetric'); % ground truths were uint16, which can't be padded
   end
   get_hs_fcn=@(x,y) get_groundtruth_patches(x+p(3),y+p(1),rg,gts); % coords are offset for padded ground truth images
-  process_location_fcn=@(x,y,w) process_location_gt(x,y,w,gts,p,rg);
+  process_location_fcn=@(x,y,w) process_location_gt(x+p(3),y+p(1),w,gts,rg);
 else
   % voting on the watershed contour
   coords2forest_location_fcn=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
@@ -38,7 +38,7 @@ else
 end
 
 % clear functions; % clears the persistent vars AND :( all breakpoints
-clear create_fitted_line_patch create_ws_patch create_contour_patch;
+clear create_contour_patch create_ws_patch create_fitted_line_patch create_fitted_poly_patch;
 
 % patch_score_fcn -  function for the similarity between the watershed and the
 %                    segmentation patch
@@ -63,11 +63,22 @@ switch voting
     % process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
     process_hs_fcn=@(G) seg2bdry(G); % output: doubleSize
   case 'greedy_merge'
-    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RI);
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_s);
     get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
-    process_ws_patch_fcn=@(x) spx2seg(x);
+    process_ws_patch_fcn=@spx2seg;
     process_hs_fcn=@(x) (x);
-%   case 'vpr'
+  case 'line_VPR_normalised_ws'
+    patch_score_fcn=@vpr_s;
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@bdry2seg;
+    process_hs_fcn=@(x) (x);
+  case {'poly_VPR_normalised_ws_1' 'poly_VPR_normalised_ws_2'}
+    patch_score_fcn=@vpr_s;
+    n=str2double(voting(end)); % degree of polynomial to fit to data
+    assert(n==1||n==2);
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_poly_patch(px,py,n,rg,varargin{1:2});
+    process_ws_patch_fcn=@bdry2seg;
+    process_hs_fcn=@(x) (x);
   otherwise
     error('not implemented %s',voting);
 end
@@ -75,7 +86,7 @@ end
 ws_fcn=@(px,py,varargin) process_ws(px,py,varargin,get_ws_patch_fcn,process_ws_patch_fcn);
 hs_fcn=@(x,y) process_hs(x,y,get_hs_fcn,process_hs_fcn);
 vote_fcn=@(x,y,ws_args,dbg) vote(x,y,rg,ws_fcn,ws_args,hs_fcn,patch_score_fcn,process_location_fcn,dbg);
-cfp_fcn=@(pb) create_finest_partition_voting(pb,vote_fcn);
+cfp_fcn=@(pb) create_finest_partition_voting(pb,vote_fcn,DBG);
 end
 
 % ----------------------------------------------------------------------
@@ -87,10 +98,11 @@ end
 % ----------------------------------------------------------------------
 function [hs_processed,hs] = process_hs(x,y,get_hs_fcn,process_hs_fcn)
 hs=get_hs_fcn(x,y);
-hs_processed=hs;
+hs_processed=cell(1,size(hs,3));
 for k=1:size(hs,3)
-  hs_processed(:,:,k)=process_hs_fcn(hs(:,:,k));
+  hs_processed{k}=process_hs_fcn(hs(:,:,k));
 end
+hs_processed=cell2array(hs_processed);
 end
 
 % ----------------------------------------------------------------------

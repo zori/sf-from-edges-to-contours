@@ -15,18 +15,19 @@ dsName='BSDS500';
 LOG.ds=dss(strcmp({dss.name},dsName));
 % TODO remove this when we add temporal features
 LOG.ds.isVideo=false;
-LOG.modelName=[LOG.ds.name ''];
+LOG.experimentName='foo';
 % log directories
 LOG.dsDir=fullfile(LOG.evalDir, LOG.ds.name);
 LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');
-if (~exist(LOG.recordingsDir, 'dir')), mkdir(LOG.recordingsDir), end
+if ~exist(LOG.recordingsDir, 'dir'), mkdir(LOG.recordingsDir), end
 LOG.timestamp=datestr(clock,'yyyy-mm-dd_HH-MM-SS'); disp(LOG.timestamp);
-LOG.timestampDir=fullfile(LOG.recordingsDir, LOG.timestamp);
+LOG.experimentDirR=[LOG.timestamp '_Output_' LOG.experimentName];
+LOG.timestampDir=fullfile(LOG.recordingsDir, LOG.experimentDirR);
 mkdir(LOG.timestampDir);
 
 % for detection and benchmark; relative directories name
 LOG.imDirR='Images'; % input test images
-LOG.resDirR='Ucm2'; % result of the detector; output type can be .png, .mat
+LOG.resDirR=['Ucm2_' LOG.experimentName]; % result of the detector; output type can be .png, .mat
 LOG.gtDirR='Groundtruth'; % ground truths for the test images
 
 % example log files:

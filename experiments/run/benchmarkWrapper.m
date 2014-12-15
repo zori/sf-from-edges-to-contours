@@ -3,7 +3,7 @@
 function fhs=benchmarkWrapper(LOG)
 bmOpts.path=LOG.dsDir;
 bmOpts.dirR='test';
-bmOpts.outDirR=fullfile('recordings', LOG.timestamp);
+bmOpts.outDirR=fullfile('recordings', LOG.experimentDirR);
 bmOpts.tempConsistency=LOG.ds.isVideo;
 bmOpts.nthresh=51;
 bmOpts.useParfor=true;

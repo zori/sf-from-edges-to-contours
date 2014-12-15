@@ -13,13 +13,19 @@ addAttachedFiles(gcp(),...
    fullfile('ucm','ucm_mean_pb.mexa64')});
 
 % run edge/segment detector
-detOpts={
-  'imDir',  fullfile(LOG.dsDir,'test',LOG.imDirR),...
-  'gtDir',  fullfile(LOG.dsDir,'test',LOG.gtDirR),... % for the oracle
-  'resDir', fullfile(LOG.dsDir,'test',LOG.resDirR)...
-  'outType', 'oracle'... % edge, edgeContours, seg, ucm, sPb, voteBpr, oracleBpr, voteUcm, oracle
-  };
+detOpts.imDir=fullfile(LOG.dsDir,'test',LOG.imDirR);
+detOpts.gtDir=fullfile(LOG.dsDir,'test',LOG.gtDirR); % for the oracle
+detOpts.resDir=fullfile(LOG.dsDir,'test',LOG.resDirR);
+detOpts.outType='ucm'; % edge, edgeContours, seg, ucm, sPb, voteUcm, oracle
 
+if any(strcmp(detOpts.outType,{'seg','ucm'}))
+  % TODO why non-maximum suppression breaks the watershed?
+  if model.opts.nms
+    warning('non-maximum suppression ''breaks'' the watershed; unsetting');
+    model.opts.nms=false;
+  end
+end
+  
 timerDet=tic;
 segmDetect(model,detOpts);
 detectionTime=toc(timerDet);
