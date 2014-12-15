@@ -82,6 +82,8 @@ if (exist(fullfile(outDirA,'eval_bdry_globalthr.txt'),'file'))
     output.B_G_ODS=evalRes(4); output.B_G_OSS=evalRes(7); output.B_G_area=evalRes(8);
 end
 
+% TODO implement a more elegant mechanism for controlling which plots are outputted
+if true
 %Volume metrics: precision recall
 if (exist(fullfile(outDirA,'eval_regpr_globalthr.txt'),'file'))
     
@@ -202,6 +204,7 @@ if ( (exist(fullfile(outDirA,'eval_regpr_avgthr.txt'),'file')) && (exist(fullfil
         output.Ncl_G_ODS=nclustervals(idx(1),2);
 
     end
+end
 end
 
 %Include into output also the R and P at ODS
