@@ -8,8 +8,8 @@ function plot_results(LOG)
 
 % flag to indicate whether we are plotting the best curves or our experiments -
 % the weighted (voted) ucms
-experiments={'best','ours','all'};
-experimentsToPlot=experiments{1};
+experiments={'best','ours','all','mid-masters'};
+experiments_to_plot=experiments{end};
 
 if nargin==0
   LOG.evalDir='/BS/kostadinova/work/video_segm_evaluation';
@@ -19,11 +19,18 @@ LOG.dsDir=fullfile(LOG.evalDir, LOG.ds.name);
 
 plotOpts=struct('path',fullfile(LOG.dsDir,'test'),'dirR','precomputed','superposePlot',true);
 
-% TODO add avg human agreement ComputeRP(plotOpts.path,nthresh,benchmarkdir,requestdelconf,0,'k',false,[],'all',[],'Output_general_human');
+colours=get_colour_map(experiments_to_plot);
 
-colours=get_color_map();
+data=get_plot_data(experiments_to_plot);
 
-data=get_plot_data(experimentsToPlot);
+% avg human agreement (on BPR)
+% R=0.7 P=0.9 Human [F = 0.79]
+plot_human=true;
+if plot_human
+  Init_figure_no(1), Plotisofigregpr(); hold on;
+  colour_green_house=[0 129 0]./256;
+  plot(0.7,0.9,'o','MarkerFaceColor',colour_green_house,'MarkerSize',12);
+end
 
 fhs=[1 6 9 11];
 fsz=length(fhs); % number of figures, BPR, VPR, length statistics and number of clusters
@@ -44,22 +51,23 @@ for d=1:length(data)
 end
 l=l(:,1:cnt);
 
-if ~strcmp(experimentsToPlot,'ours'), [fhSf,legendSf]=plot_BPR_for_SE(plotOpts); end
+% if ~strcmp(experiments_to_plot,'ours'), [fhSf,legendSf]=plot_BPR_for_SE(plotOpts); end
 
 for f=1:fsz
   figure(fhs(f));
   l1=l(f,:);
-  if exist('fhSf','var') && exist('legendSf','var') && isequal(f,fhSf), l1=[l(f,:) {legendSf}]; end
+  if f==1 && plot_human, l1=[{'human [F=0.79]'} l1]; end
+  if exist('fhSf','var') && exist('legendSf','var') && isequal(f,fhSf), l1=[l1 {legendSf}]; end
   if f==4 % ncluster precision
     legend_location='southeast';
   else
     legend_location='southwest';
   end
-  legend(l1,'Location',legend_location);
-  legend('boxoff'); % remove the legend border
+  legend(cell(l1),'Location',legend_location); % 'FontSize',20,'FontWeight','bold'); % for presentations and papers
+  % legend('boxoff'); % remove the legend border % not good when the background is the isocurves
   figTitle=get(get(gca,'Title'),'String');
   fileName=strrep(figTitle,' ','_');
-  saveas(gcf,fullfile(plotOpts.path,plotOpts.dirR,['_',fileName]),'jpg');
+  saveas(gcf,fullfile(plotOpts.path,plotOpts.dirR,['_',fileName]),'png');
 end
 close all;
 end

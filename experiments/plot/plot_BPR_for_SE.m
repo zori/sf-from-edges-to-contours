@@ -7,5 +7,5 @@ plotOpts.outDirR='Output_sf_edges';
 plotOpts.metrics='bdry';
 plotOpts.plotStyle={'k'};
 [output,fhSf]=ComputeRP(plotOpts);
-legendSf=['SE' fscore_str(output.B_G_ODS, output.B_G_OSS)];
+legendSf=['SE ' fscore_str(output.B_G_ODS, output.B_G_OSS)];
 end
