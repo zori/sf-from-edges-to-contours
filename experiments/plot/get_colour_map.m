@@ -8,19 +8,19 @@ switch experiments
     colours = [
       177,89,40; % baseline - brown
       46, 19, 221; % fst
-      46, 19, 221; % oracle 1
       254, 40, 162; % snd
-      254, 40, 162; % oracle 2
       19, 221, 221; % third
-      19, 221, 221; % oracle 3
+%       46, 19, 221; % oracle 1
+%       254, 40, 162; % oracle 2
+%       19, 221, 221; % oracle 3
       30, 144, 255;
-      0, 0, 0; % SE - black
-      255,0,0; % MCG
-      238, 130, 238; % N4 Fields - pink
-      68, 187, 217; % nice contrast blue
-      54, 157, 101; % nice green
+      0, 0, 0; % black
+      255,0,0; % red
       198, 101, 68; % orange, not so great
+      54, 157, 101; % nice green
+      238, 130, 238; % pink
       163, 163, 163; % grey
+      68, 187, 217; % nice contrast blue
       225, 119, 174;
       5, 255, 42;
       145, 92, 146;
