@@ -4,9 +4,9 @@
 model_name='modelBSDS500_patches';
 load_model_and_trees;
 % strings describing all possible types of vote to weigh the watershed
-votings={'bpr','greedy_merge','line_VPR_normalised_ws'}; % RSRI RI vpr_s vpr_gt
-votings={'line_VPR_normalised_ws','poly_VPR_normalised_ws_1','poly_VPR_normalised_ws_2'};
-votings={'greedy_merge'};
+% e.g. RSRI RI vpr_s vpr_gt
+votings={'bpr','greedy_merge','line_VPR_normalised_ws','poly_VPR_normalised_ws_1','poly_VPR_normalised_ws_2'};
+votings={'line_VPR_normalised_ws'};
 fmt='doubleSize';
 dbg=false;
 
@@ -14,11 +14,16 @@ dbg=false;
 li=zeros(16,16); li(:,8)=1; % 16x16 vertical line
 [test_data(1).I,test_data(1).gt]=make_example(li); clear li;
 [test_data(2).I,test_data(2).gt]=make_example(eye(260)); % bw diagonal
-% real image
+
+% real image - tikis
 imFile='/BS/kostadinova/work/BSR/BSDS500/data/images/val/101085.jpg';
 test_data(3).I=imread(imFile);
 gtFile='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/101085.mat';
 test_data(3).gt=load_segmentations(gtFile);
+
+% real image - hawaiian guy with a stick
+test_data(4).I=imread('/BS/kostadinova/work/BSR/BSDS500/data/images/val/101087.jpg');
+test_data(4).gt=load_segmentations('/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/101087.mat');
 
 % L_ucm=ucm_weighted(data(1).I,model,'line_VPR_normalised_ws',fmt,true,T); % interactive, pause when computing
 % merge_L_ucm=ucm_weighted(data(1).I,model,'greedy_merge',fmt,false,T); % don't pause, just compute
