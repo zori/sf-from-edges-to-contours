@@ -34,6 +34,10 @@ for e=1:nEdges
   end
 end % for e - edge index
 
+% % optionally, display colour-coded watershed arcs
+% initFig; imagesc(label2rgb(c.is_e,'jet',[0.5 0.5 0.5],'shuffle'));
+% axis('image'); title('Colour-coded watershed arcs');
+
 % apply weights to ucm
 sf_wt=zeros(sz);
 for e=1:nEdges
@@ -48,5 +52,10 @@ for e=1:nEdges
   sf_wt(v1(1),v1(2))=max(W,sf_wt(v1(1),v1(2)));
   sf_wt(v2(1),v2(2))=max(W,sf_wt(v2(1),v2(2)));
 end % for e - edge index
+
+% imwrite(uint8((~c.is_e)*255),'/home/kostadinova/downloads/tikis-watershed-arcs-locations.png')
+% imwrite(uint8((1-sf_wt)*255),'/home/kostadinova/downloads/tiki-finest-partition.png')
 % sf_wt=sf_wt.*create_finest_partition_non_oriented(pb); % VPR .* pb
+% rgb_loc=cat(3,~~c.is_e,zeros(size(sf_wt)),~~sf_wt);
+% initFig; im(rgb_loc); % reg - watershed arcs that received no votes; blue - vertices of watershed arcs; magenta - watershed arcs that did receive some != 0 votes
 end % create_finest_partition_voting
