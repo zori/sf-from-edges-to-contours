@@ -5,6 +5,7 @@ model_name='modelBSDS500_patches';
 load_model_and_trees;
 model.opts.multiscale=0;
 
+% bear img
 imFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/100039.jpg';
 gtFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtruth/100039.mat';
 
