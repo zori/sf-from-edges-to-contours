@@ -6,7 +6,8 @@ function [sf_wt,votes,vote_fcn,c] = create_finest_partition_voting(pb,vote_fcn,D
 ws=watershed(pb);
 sz=size(pb);
 
-c=fit_contour(double(ws==0));
+% c_subdivided=fit_contour(double(ws==0));
+c=fit_contour(double(ws==0),false); % not subdivided, get region boundaries
 % remove empty fields
 c=rmfield(c,{'edge_equiv_ids','regions_v_left','regions_v_right','regions_e_left','regions_e_right','regions_c_left','regions_c_right'});
 nEdges=numel(c.edge_x_coords);
@@ -14,12 +15,9 @@ c.edge_weights=zeros(nEdges,2); % tuples of accumulated weights and number of pi
 votes=cell(sz); % for hard_negatives_mining
 ws_args={c,NaN,sz};
 dbg=false; % a debug flag to allow to inspect intermediate results
+dbg_cnt=0; dbg_limit=10;
 for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
-  % x | 24 | 24 | 44 |    | 46 | 40 |
-  % y | 23 | 24 | 44 |    | 46 | 51 |
-  % e |  8 |  8 | 38 | 40 | 41 | 48 |    % c.is_v(47,46)==1
-  if DBG && any(abs([8 38 40 41 48]-e)<eps), dbg=true; end
   ws_args{2}=e;
   for p=1:numel(c.edge_x_coords{e})
     % NOTE x and y are swapped here (in the output from fit_contour)
@@ -28,15 +26,23 @@ for e=1:nEdges
     y=c.edge_x_coords{e}(p); x=c.edge_y_coords{e}(p);
     assert(c.is_e(y,x)==1);
     c.is_e(y,x)=e; % modify to allow to find the edge number by the coords
+    % x | 24 | 24 | 44 |    | 46 | 40 |
+    % y | 23 | 24 | 44 |    | 46 | 51 |
+    % e |  8 |  8 | 38 | 40 | 41 | 48 |    % c.is_v(47,46)==1
+    % if DBG && any(abs([8 38 40 41 48]-e)<eps), dbg=true; end
+    if DBG && dbg_cnt<dbg_limit && ~coords_on_bdry(x,y,sz), dbg=true; dbg_cnt=dbg_cnt+1; end
     w=vote_fcn(x,y,ws_args,dbg); dbg=false;
     votes{y,x}=w;
     c.edge_weights(e,:)=c.edge_weights(e,:)+[sum(w)/numel(w) 1];
   end
 end % for e - edge index
 
-% % optionally, display colour-coded watershed arcs
-% initFig; imagesc(label2rgb(c.is_e,'jet',[0.5 0.5 0.5],'shuffle'));
+% % optionally, display colour-coded watershed locations
+% initFig; imagesc(label2rgb(c_subdivided.is_e,'jet',[0.5 0.5 0.5],'shuffle'));
 % axis('image'); title('Colour-coded watershed arcs');
+
+% initFig; imagesc(label2rgb(c.is_e,'jet',[0.5 0.5 0.5],'shuffle'));
+% axis('image'); title('Colour-coded region boundary');
 
 % apply weights to ucm
 sf_wt=zeros(sz);
