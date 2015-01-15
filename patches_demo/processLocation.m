@@ -2,7 +2,7 @@
 % Aug 2014
 % 8.3.0.532 (R2014a)
 function processLocation(x,y,model,T,I,show_I,rg,p,chnsReg,chnsSim,ind,E,ucm,w)
-if show_I, initFig(1); im(I); hold on; plot(x,y,'rx','MarkerSize',20); end
+if show_I, show_I_location(I,x,y); end
 % display image patch
 [coordsPad_fcn,imPad_fcn]=get_pad_fcns(p);
 [px,py]=coordsPad_fcn(x,y);
