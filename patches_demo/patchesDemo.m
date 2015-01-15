@@ -2,11 +2,8 @@
 % Jun 2014
 assert(~isempty(model) && ~isempty(T));
 
-% an image from BSDS500
-imFile='/BS/kostadinova/work/BSR/BSDS500/data/images/val/101085.jpg'; % tikis
-imFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/100039.jpg'; % bear
-imFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/16068.jpg'; % zebra
-I=imread(imFile);
+names=im_gt_filenames; % load real images filenames
+I=imread(names.zebra.im);
 opts=model.opts;
 ri=opts.imWidth/2; % patch radius 16
 rg=opts.gtWidth/2; % patch radius 8

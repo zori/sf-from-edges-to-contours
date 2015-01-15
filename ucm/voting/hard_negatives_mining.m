@@ -11,7 +11,8 @@ for ind=inds(1:100)'
   for k=vi
     disp(data(k).ucm2(y,x));
     disp(data(k).votes{y,x}');
-    initFig(1); im(data(k).ucm2); hold on; plot(x,y,'x','MarkerSize',20);
+    show_I_location(I,x,y);
+    initFig; im(data(k).ucm2); hold on; plot(x,y,'x','MarkerSize',20);
     show_patch_fcn=@(src,src_title) show_patch(src,x,y,r,src_title);
 %     show_patch_fcn(data(k).mean,'crop of the mean of votes');
 %     show_patch_fcn(data(k).sf_wt,'crop of the finest partition');

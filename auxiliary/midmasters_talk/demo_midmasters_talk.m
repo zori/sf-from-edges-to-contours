@@ -1,10 +1,9 @@
 function demo_midmasters_talk(model)
 imF='/home/kostadinova/downloads/video_segm_extras_keep/imgs/zebra_classic_bw.png';
 imF='/home/kostadinova/downloads/video_segm_extras_keep/imgs/dalmatians.jpg';
-imF='/home/kostadinova/downloads/video_segm_extras_keep/imgs/test_16068_zebras.jpg';
-gtF='/home/kostadinova/downloads/video_segm_extras_keep/imgs/test_16068_zebras.mat';
-I=imread(imF);
-gt=load(gtF);
+names=im_gt_filenames; % load real images filenames
+I=imread(names.zebra.im);
+gt=load(names.zebra.gt);
 gt=gt.groundTruth;
 gtsz=length(gt);
 

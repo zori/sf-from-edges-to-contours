@@ -5,9 +5,7 @@ model_name='modelBSDS500_patches';
 load_model_and_trees;
 model.opts.multiscale=0;
 
-% bear img
-imFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/100039.jpg';
-gtFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtruth/100039.mat';
+names=im_gt_filenames; % load real images filenames
 
 % how the thresholds are chosen - based on the optimal ones when benchmarking
 %
@@ -42,20 +40,24 @@ gtFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtruth/1000
 %   'threshold',{0.46, 0.27, 0.68}...
 %   );
 
-voting='line_VPR_normalised_ws'; % used to be 'bpr', i.e. 'bpr_3' for the foldernames
+% TODO debug line fitting
+% voting='line_VPR_normalised_ws'; % used to be 'bpr', i.e. 'bpr_3' for the foldernames
+voting='greedy_merge';
+voting_full='region_bdry_fair_segs_VPR_normalised_ws';
 path_precomp='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/ucm2_precomputed/';
 
 data=struct(...
   'file',...
-  {sprintf('%sUcm2_%s/100039.mat',path_precomp,voting),...
+  {sprintf('%sUcm2_%s/100039.mat',path_precomp,voting_full),...
   [path_precomp 'Ucm2_sf_ucm/100039.mat'],...
-  sprintf('%sUcm2_oracle_%s/100039.mat',path_precomp,voting)},...
+  sprintf('%sUcm2_oracle_%s/100039.mat',path_precomp,voting_full)},...
   'threshold',{0.37, 0.27, 0.54}...
   );
 dsz=numel(data);
 
-I=imread(imFile); clear imFile;
-gts=load_segmentations(gtFile); clear gtFile;
+I=imread(names.bear.im);
+gts=load_segmentations(names.bear.gt);
+clear names;
 
 for k=1:dsz
   uc=load(data(k).file); data(k).precomputed_ucm2=uc.ucm2(3:2:end, 3:2:end); % make the ucms imageSize
@@ -92,4 +94,4 @@ sz=size(E);
 [ys,xs]=ind2sub(sz,maxIndex);
 inds=find(r<=ys & ys+r<=sz(1) & r<=xs & xs+r<=sz(2));
 
-clear imFile I E uc d sort_ind maxIndex;
+clear E uc d sort_ind maxIndex;

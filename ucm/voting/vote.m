@@ -20,7 +20,7 @@ if dbg
   v2=c.vertices(c.edges(e,2),:);
   plot(v1(2)-x+rg,v1(1)-y+rg,'g*'); % fst end point is green
   plot(v2(2)-x+rg,v2(1)-y+rg,'r*');
-  title('WS patch - contour');
+  title('WS patch - contour'); % or region boundary
   % show fitted line patch
   fitted_line_patch=create_fitted_line_patch(px,py,rg,ws_args{1:2});
   pshow(fitted_line_patch); title('WS patch - fitted line');
