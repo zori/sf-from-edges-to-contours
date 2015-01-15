@@ -2,4 +2,4 @@
 % and decision trees
 model_name='modelBSDS500_patches';
 load_model_and_trees;
-patchesDemo(model,T);
+patchesDemo
