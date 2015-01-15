@@ -5,6 +5,8 @@ function ws_patch = greedy_merge(ws_patch,hs)
 % That seems to be a source of bugs
 % if max(ws_patch(:))<max(hs(:)), tmp=ws_patch; ws_patch=hs; hs=tmp; end
 
+% initFig;im(ws_patch);
+% initFig;im(hs);
 ws_nsegs=max(ws_patch(:));
 hs_nsegs=max(hs(:));
 assert(min(ws_patch(:))==1);

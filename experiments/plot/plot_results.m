@@ -9,7 +9,7 @@ function plot_results(LOG)
 % flag to indicate whether we are plotting the best curves or our experiments -
 % the weighted (voted) ucms
 experiments={'best','ours','all','mid-masters'};
-experiments_to_plot=experiments{end};
+experiments_to_plot=experiments{2};
 
 if nargin==0
   LOG.evalDir='/BS/kostadinova/work/video_segm_evaluation';
