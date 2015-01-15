@@ -2,11 +2,10 @@
 % Jun 2014
 assert(~isempty(model) && ~isempty(T));
 
-% an image from BSDS500 validation subset
+% an image from BSDS500
 imFile='/BS/kostadinova/work/BSR/BSDS500/data/images/val/101085.jpg'; % tikis
-imFile='/home/kostadinova/downloads/video_segm_extras_keep/imgs/test_16068_zebras.jpg'; % zebra
 imFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/100039.jpg'; % bear
-% imFile='/BS/kostadinova/work/BSR/grouping/data/101087_small.jpg';
+imFile='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/16068.jpg'; % zebra
 I=imread(imFile);
 opts=model.opts;
 ri=opts.imWidth/2; % patch radius 16
@@ -30,15 +29,14 @@ processLocationFun=@(x,y) processLocation(x,y,model,T,I,false,rg,p,chnsReg,chnsS
 while (true)
   % get user input
   initFig(1); im(I); title('Choose a patch to crop');
-  if exist('x','var') && length(x)==1, hold on; plot(x,y,'rx','MarkerSize',20); end
   [x,y]=ginput; % here is where the program pauses, waiting for user input
-  % if no, or more than one location is clicked, stop the interactive demo
-  if (length(x)~= 1), close all; return; end
   x=floor(x); y=floor(y);
   [x,y]=bounce_input_to_image_interior(x,y,ri,szOrig(1:2));
-  % figure(1); hold on; plot(x,y,'rx','MarkerSize',20);
-  % imagesc(I); axis('image'); title('Choose a patch to crop');
-  % hold on;
-  % close(1);
+  if length(x)== 1
+    hold on; plot(x,y,'rx','MarkerSize',20);
+  else
+    % if no, or more than one location is clicked, stop the interactive demo
+    close all; return;
+  end
   processLocationFun(x,y);
 end % while(true)

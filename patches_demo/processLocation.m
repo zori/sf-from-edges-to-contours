@@ -7,7 +7,7 @@ if show_I, initFig(1); im(I); hold on; plot(x,y,'rx','MarkerSize',20); end
 [coordsPad_fcn,imPad_fcn]=get_pad_fcns(p);
 [px,py]=coordsPad_fcn(x,y);
 IPadded=imPadSym(I,p);
-initFig(); imagesc(cropPatch(IPadded,px,py,rg)); hold on; plot(rg,rg,'x'); axis('image'); title('Selected image patch');
+initFig; imagesc(cropPatch(IPadded,px,py,rg)); hold on; plot(rg,rg,'x'); axis('image'); title('Selected image patch');
 
 [treeIds,leafIds,x1,y1]=coords2forestLocation(x,y,ind,model.opts,p,length(model.fids));
 nTreesEval=size(treeIds,3);
@@ -22,20 +22,20 @@ for k=1:nTreesEval
   treeStr=num2str(treeId);
   if exist('w','var'), assert(nTreesEval==length(w)); treeStr=[treeStr ' - score ' num2str(w(k))]; end
   if ~isempty(segPs) % only leaves with no more than 40 samples have the patches stored
-    initFig(); montage2(cell2array(segPs));
+    initFig; montage2(cell2array(segPs));
     montage2title(['Segmentations; tree ' treeStr]);
     if ~exist('w','var')
       % to reduce clutter, only show the image patches if we don't have the weights
-      initFig(); montage2(imgPs,struct('hasChn', true));
+      initFig; montage2(imgPs,struct('hasChn', true));
       montage2title(['Image patches; tree ' treeStr]);
     end
   else
-    initFig(); im(hs{k}); title(['Best segmentation; tree ' treeStr]);
+    initFig; im(hs{k}); title(['Best segmentation; tree ' treeStr]);
   end
 end
 
 % % alternatively, just 'montage' the nTreesEval medoid patches together (no scores)
-% initFig(); montage2(cell2array(hs)); montage2title('the medoid patches');
+% initFig; montage2(cell2array(hs)); montage2title('the medoid patches');
 
 show_patch_fcn=@(src,src_title) pad_show_patch(src,imPad_fcn,px,py,rg,src_title);
 % Compute the intermediate decision at the given pixel location (of 4 trees)
@@ -53,7 +53,7 @@ E4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
 h=show_patch_fcn(watershed(E),'WS patch'); % watershed, superpixels patch
 % % that was a coloured representation of the watershed patch
 % spxPatch=cropPatch(ws_padded,px,py,rg);
-% h=initFig(); imcc(spxPatch); title('Superpixels patch');
+% h=initFig; imcc(spxPatch); title('Superpixels patch');
 
 % Ultrametric Contour Map patch
 h=show_patch_fcn(ucm,'UCM patch');

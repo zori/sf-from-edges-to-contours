@@ -13,5 +13,5 @@ for k=1:length(gts_padded)
   title(['ground truth ' num2str(k), ' score ' num2str(w(k))]);
 end
 % alternatively, just 'montage' the five gt patches together (no scores)
-initFig(); montage2(cell2array(gt_patches)); montage2title('the 5 ground truths');
+initFig; montage2(cell2array(gt_patches)); montage2title('the 5 ground truths');
 end
