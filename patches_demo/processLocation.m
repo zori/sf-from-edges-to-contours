@@ -1,8 +1,8 @@
 % Zornitsa Kostadinova
 % Aug 2014
 % 8.3.0.532 (R2014a)
-function processLocation(x,y,model,T,I,rg,p,chnsReg,chnsSim,ind,E,ucm,w)
-% plot(x,y,'rx','MarkerSize',20);
+function processLocation(x,y,model,T,I,show_I,rg,p,chnsReg,chnsSim,ind,E,ucm,w)
+if show_I, initFig(1); im(I); hold on; plot(x,y,'rx','MarkerSize',20); end
 % display image patch
 [coordsPad_fcn,imPad_fcn]=get_pad_fcns(p);
 [px,py]=coordsPad_fcn(x,y);
@@ -64,11 +64,11 @@ ucm_bw=(ucm~=0);
 % what is going on here in patchesDemo (when input is the zebra image) - no
 % overlap, messy red, green; might explain why the WS patch is wrong, i.e. BUG in patchesDemo?
 rgb_loc=cat(3,ws_bw,ucm_bw,zeros(size(ws_bw)));
-initFig; im(rgb_loc);
+h=initFig; im(rgb_loc);
 
 % TODO use a global var 'h' and a function cleanUpFigs to close old figs
 % remove all figures that were not created on this iteration
 figHandles=findobj('Type','figure');
 oldFigures=figHandles(figHandles>h); % h is the last handle used
 close(oldFigures);
-end % processLocation
+end

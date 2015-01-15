@@ -31,7 +31,7 @@ else
   coords2forest_location_fcn=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
   get_hs_fcn=@(x,y) get_tree_patches(x,y,coords2forest_location_fcn,model);
   if exist('T','var') && ~isempty(T)  % needs to have the patches saved
-    process_location_fcn=@(x,y,w) processLocation(x,y,model,T,I,rg,p,chnsReg,chnsSim,ind,E,contours2ucm(E),w);
+    process_location_fcn=@(x,y,w) processLocation(x,y,model,T,I,true,rg,p,chnsReg,chnsSim,ind,E,contours2ucm(E),w);
   else
     process_location_fcn=@(varargin) disp([]); % NO-OP function, in case there is no T input
   end

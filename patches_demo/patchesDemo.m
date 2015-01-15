@@ -25,12 +25,12 @@ t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval;
 Es_=Es(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:)*t; E=convTri(Es_,1);
 % ucm=contours2ucm(E); % the small arcs between the statues are erroneously up-voted
 ucm=structuredEdgeSPb(I,model,'imageSize');
-processLocationFun=@(x,y) processLocation(x,y,model,T,I,rg,p,chnsReg,chnsSim,ind,E,ucm);
+processLocationFun=@(x,y) processLocation(x,y,model,T,I,false,rg,p,chnsReg,chnsSim,ind,E,ucm);
 
 if true
 % interactive demo loop
 while (true)
-  clear functions; % clear the persistent vars in getFigPos
+  % clear functions; % clear the persistent vars in initFig
   % get user input
   initFig(1); imagesc(I); axis('image'); title('Choose a patch to crop');
   if exist('x','var'), hold on; plot(x,y,'rx','MarkerSize',20); end
