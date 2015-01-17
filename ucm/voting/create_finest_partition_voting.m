@@ -16,6 +16,7 @@ votes=cell(sz); % for hard_negatives_mining
 ws_args={c,NaN,sz};
 dbg=false; % a debug flag to allow to inspect intermediate results
 dbg_cnt=0; dbg_limit=10;
+edge_chunk=floor(nEdges/dbg_limit/2);
 for e=1:nEdges
   if c.is_completion(e), continue; end % TODO why?
   ws_args{2}=e;
@@ -30,7 +31,7 @@ for e=1:nEdges
     % y | 23 | 24 | 44 |    | 46 | 51 |
     % e |  8 |  8 | 38 | 40 | 41 | 48 |    % c.is_v(47,46)==1
     % if DBG && any(abs([8 38 40 41 48]-e)<eps), dbg=true; end
-    if DBG && dbg_cnt<dbg_limit && ~coords_on_bdry(x,y,sz), dbg=true; dbg_cnt=dbg_cnt+1; end
+    if DBG && dbg_cnt<dbg_limit && e>dbg_cnt*edge_chunk && ~coords_on_bdry(x,y,sz), dbg=true; dbg_cnt=dbg_cnt+1; end
     w=vote_fcn(x,y,ws_args,dbg); dbg=false;
     votes{y,x}=w;
     c.edge_weights(e,:)=c.edge_weights(e,:)+[sum(w)/numel(w) 1];
