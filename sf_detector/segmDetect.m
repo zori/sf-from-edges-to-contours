@@ -31,7 +31,7 @@ function [] = segmDetect( model, varargin )
 
 % get default parameters
 dfs={
-  'nThresh',99, 'imDir','REQ', 'gtDir', [], 'resDir','REQ', 'outType','seg',...
+  'nThresh',99, 'imDir','REQ', 'gtDir', [], 'resDir','REQ', 'outType','seg','is_voting','REQ',...
   'stride',[], 'nTreesEval',[], 'multiscale',[], 'pDistr',{{'type','parfor'}}
   };
 p=getPrmDflt(varargin,dfs,1);
@@ -43,7 +43,11 @@ if( ~isempty(p.multiscale) ), model.opts.multiscale=p.multiscale; end
 imDir=p.imDir; assert(exist(imDir,'dir')==7);
 gtDir=p.gtDir; % only for the oracle case
 resDir=p.resDir;
+is_voting=p.is_voting;
 outType=p.outType;
+if is_voting
+  assert(any(strcmp(outType,{'voteUcm','oracle'})));
+end
 
 % get input image ids
 ids_=Listacrossfolders(imDir,'jpg',1); ids_={ids_.name}; n=length(ids_);
@@ -70,7 +74,7 @@ parfor i=1:m, id=ids(do(i));%#ok<PFBNS>
   I=imread(imFile);
   % function for loading the ground truth segmentations in case of 'oracle'
   gt_fcn=@() load_segmentations(get_video_filename(gtDir,id,'.mat'));
-  detection=detect(outType,I,model,gt_fcn);
+  detection=detect(outType,is_voting,I,model,gt_fcn);
   writeDetection(outType,detection,resDir,id);
 end
 end
@@ -84,28 +88,36 @@ exists = exist(get_video_filename(resDir,id,'.mat'),'file') ||...
 end
 
 % ----------------------------------------------------------------------
-function d = detect(outType,I,model,gt_fcn)
+function d = detect(outType,is_voting,I,model,gt_fcn)
 fmt='doubleSize';
-switch outType
-  case 'edge'
-    d=edgesDetect(I,model);
-  case 'edgeContours'
-    d=edgesDetectOnContours(I,model);
-  case 'seg'
-    d=SE_ws(I,model);
-  case 'ucm'
-    d=SE_ucm(I,model,fmt);
-  case 'sPb'
-    d=structuredEdgeSPb(I,model,fmt);
-  case 'voteUcm'
-    % assert(model.opts.nms); % TODO DRY! .nms option neglected, since I don't use the edgesDetect
-    % TODO rather than hardcoding the patch_score_fcn, choose here
-    d=ucm_weighted(I,model,'greedy_merge',fmt,false,[]);
-  case 'oracle'
-    assert(logical(exist('gt_fcn','var')));
-    d=ucm_weighted(I,model,'greedy_merge',fmt,false,[],gt_fcn());
-  otherwise
-    warning('Unexpected output type. No output created.');
+if is_voting
+  % TODO rather than hardcoding the patch_score_fcn, choose here
+  voting='fairer_merge_VPR_normalised_ws';
+  switch outType
+    case 'voteUcm'
+      % assert(model.opts.nms); % TODO DRY! .nms option neglected, since I don't use the edgesDetect
+      d=ucm_weighted(I,model,voting,fmt,false,[]);
+    case 'oracle'
+      assert(logical(exist('gt_fcn','var')));
+      d=ucm_weighted(I,model,voting,fmt,false,[],gt_fcn());
+    otherwise
+      warning('Unexpected output type. No output created.');
+  end
+else
+  switch outType
+    case 'edge'
+      d=edgesDetect(I,model);
+    case 'edgeContours'
+      d=edgesDetectOnContours(I,model);
+    case 'seg'
+      d=SE_ws(I,model);
+    case 'ucm'
+      d=SE_ucm(I,model,fmt);
+    case 'sPb'
+      d=structuredEdgeSPb(I,model,fmt);
+    otherwise
+      warning('Unexpected output type. No output created.');
+  end
 end
 end
 

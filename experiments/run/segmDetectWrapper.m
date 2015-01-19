@@ -16,6 +16,7 @@ addAttachedFiles(gcp(),...
 detOpts.imDir=fullfile(LOG.dsDir,'test',LOG.imDirR);
 detOpts.gtDir=fullfile(LOG.dsDir,'test',LOG.gtDirR); % for the oracle
 detOpts.resDir=fullfile(LOG.dsDir,'test',LOG.resDirR);
+detOpts.is_voting=true;
 detOpts.outType='oracle'; % edge, edgeContours, seg, ucm, sPb, voteUcm, oracle
 
 if any(strcmp(detOpts.outType,{'seg','ucm'}))
