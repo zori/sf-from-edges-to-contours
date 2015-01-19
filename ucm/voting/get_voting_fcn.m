@@ -62,7 +62,7 @@ switch voting
     % (3:2:end,3:2:end); or (1:2:end-2,1:2:end-2);
     % process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
     process_hs_fcn=@(G) seg2bdry(G); % output: doubleSize
-  case 'greedy_merge'
+  case 'greedy_merge' % a.k.a. "fair segments merge"
     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_s);
     get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
     process_ws_patch_fcn=@spx2seg;
@@ -149,20 +149,23 @@ patch=patch==0;
 end
 
 % ----------------------------------------------------------------------
-function patch = spx2seg(patch)
+function patch = spx2seg(spx_patch)
 % convert the superpixels patch to be a segmentation labeling (starting from 1)
 % the input has the boundary denoted by 0
 % see pb2ucm
-sz=size(patch);
-bdry=spx2bdry01(patch);
+bdry=spx2bdry01(spx_patch);
 % labels2=bwlabel(clean_watersheds(super_contour_4c(bdry))==0,8); % TODO don't
 % clean the watersheds for speed
 labels2=bwlabel(super_contour_4c(bdry)==0,8); % type: double; 0 indicates boundary
 patch=labels2(2:2:end,2:2:end); % labels should start from 1
-% TODO labels sometimes start from 0; bug due to artifacts from the watershed;
-% workaround:
-[~,~,patch]=unique(patch);
-patch=reshape(patch,sz);
+% labels sometimes start from 0; this artifacts is due to the fact that a crop
+% from the watershed is not a natural image (and can have 0 label - boundary,
+% at the patch border, without the corresponding segment being in the patch
+%
+% as a workaround, relabel the remaining isolated boundary pixels (based on
+% connected component):
+isolated_bdry=bwlabel(patch==0);
+patch=(isolated_bdry~=0)*max(patch(:))+isolated_bdry+patch;
 end
 
 % ----------------------------------------------------------------------
@@ -175,8 +178,8 @@ end
 % ----------------------------------------------------------------------
 function [pb2, V, H] = super_contour_4c(pb)
 
-V = min(pb(1:end-1,:), pb(2:end,:));
-H = min(pb(:,1:end-1), pb(:,2:end));
+V = min(pb(1:end-1,:), pb(2:end,:)); % overlap pb vertically (shift=1px)
+H = min(pb(:,1:end-1), pb(:,2:end)); % overlap pb horizontally (shift=1px)
 
 [tx, ty] = size(pb);
 pb2 = zeros(2*tx, 2*ty);
