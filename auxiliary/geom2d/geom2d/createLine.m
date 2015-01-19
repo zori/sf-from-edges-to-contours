@@ -113,7 +113,7 @@ elseif length(varargin)==3
   
 elseif length(varargin)==4
   % 4 input parameters :
-  % they are x0, y0 (point belongng to line) and dx, dy (direction vector
+  % they are x0, y0 (point belonging to line) and dx, dy (direction vector
   % of the line).
   % All parameters should have the same size.
   line = [varargin{1} varargin{2} varargin{3} varargin{4}];
