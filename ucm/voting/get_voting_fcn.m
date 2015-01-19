@@ -67,6 +67,26 @@ switch voting
     get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
     process_ws_patch_fcn=@spx2seg;
     process_hs_fcn=@(x) (x);
+  case 'fairer_merge_VPR_normalised_ws'
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_s);
+    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    process_ws_patch_fcn=@spx2seg;
+    process_hs_fcn=@(x) (x);
+  case 'fairer_merge_VPR_normalised_trees'
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_gt);
+    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    process_ws_patch_fcn=@spx2seg;
+    process_hs_fcn=@(x) (x);
+  case 'fairer_merge_RI'
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RI);
+    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    process_ws_patch_fcn=@spx2seg;
+    process_hs_fcn=@(x) (x);
+  case 'fairer_merge_RIMC' % Rand Index Monte Carlo
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RSRI);
+    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    process_ws_patch_fcn=@spx2seg;
+    process_hs_fcn=@(x) (x);
   case 'line_VPR_normalised_ws'
     patch_score_fcn=@vpr_s;
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
