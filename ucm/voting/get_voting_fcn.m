@@ -72,6 +72,11 @@ switch voting
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
     process_ws_patch_fcn=@bdry2seg;
     process_hs_fcn=@(x) (x);
+  case 'line_centre_VPR_normalised_ws' % line fitting for proper region boundaries
+    patch_score_fcn=@vpr_s;
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_centre_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@bdry2seg;
+    process_hs_fcn=@(x) (x);
   case {'poly_VPR_normalised_ws_1' 'poly_VPR_normalised_ws_2'}
     patch_score_fcn=@vpr_s;
     n=str2double(voting(end)); % degree of polynomial to fit to data

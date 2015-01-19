@@ -4,11 +4,11 @@
 function w = vote(x,y,rg,ws_fcn,ws_args,hs_fcn,patch_score_fcn,process_location_fcn,dbg)
 if ~exist('dbg','var') || isempty(dbg), dbg=false; end
 px=x+2*rg; py=y+2*rg; % adjust patch dimensions TODO: should be p(3) and p(1)
-[ws_patch,ws_patch_init]=ws_fcn(px,py,ws_args{:});
+[ws_patch_processed,ws_patch_init]=ws_fcn(px,py,ws_args{:});
 [hs,hs_init]=hs_fcn(x,y); % a few 16x16 segmentation patches
-assert(size(hs,1)==size(ws_patch,1));
+assert(size(hs,1)==size(ws_patch_processed,1));
 % assert(size(hs,1)==rg*2);
-w=compute_weights(ws_patch,hs,patch_score_fcn);
+w=compute_weights(ws_patch_processed,hs,patch_score_fcn);
 if dbg
   process_location_fcn(x,y,w);
   % show contour patch
@@ -22,8 +22,10 @@ if dbg
   plot(v2(2)-x+rg,v2(1)-y+rg,'r*');
   title('WS patch - contour'); % or region boundary
   % show fitted line patch
-  fitted_line_patch=create_fitted_line_patch(px,py,rg,ws_args{1:2});
-  pshow(fitted_line_patch); title('WS patch - fitted line');
+%   fitted_line_patch=create_fitted_line_patch(px,py,rg,ws_args{1:2});
+%   pshow(fitted_line_patch); title('WS patch - fitted line');
+  fitted_line_centre_patch=create_fitted_line_centre_patch(px,py,rg,ws_args{1:2});
+  pshow(fitted_line_centre_patch); title('WS patch - fitted line centre');
 %   % show fitted polynomial patch
 %   fitted_poly1_patch=create_fitted_poly_patch(px,py,1,rg,ws_args{1:2});
 %   pshow(fitted_poly1_patch); title('WS patch - fitted poly n=1');
@@ -31,8 +33,8 @@ if dbg
 %   pshow(fitted_poly2_patch); title('WS patch - fitted poly n=2');
   % TODO visualise a patch from the greedy merge
   % show processed patch by current algorithm
-  imcc(ws_patch_init); title('WS patch - initial');
-  imcc(ws_patch); title('WS patch - processed');
+  initFig; imcc(ws_patch_init); title('WS patch - initial');
+  initFig; imcc(ws_patch_processed); title('WS patch - processed');
   % show processed hs if any difference
   if numel(hs)~=numel(hs_init) || ~all(hs(:)==hs_init(:))
     for k=1:size(hs,3), pshow(hs(:,:,k)); title('a ''G'' patch - processed'); end

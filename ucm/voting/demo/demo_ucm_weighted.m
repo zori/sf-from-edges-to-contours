@@ -6,7 +6,7 @@ load_model_and_trees;
 % strings describing all possible types of vote to weigh the watershed
 % e.g. RSRI RI vpr_s vpr_gt
 votings={'bpr','greedy_merge','line_VPR_normalised_ws','poly_VPR_normalised_ws_1','poly_VPR_normalised_ws_2'};
-votings={'line_VPR_normalised_ws'}; % TODO debug line fitting for proper region boundaries
+votings={'line_VPR_normalised_ws','line_centre_VPR_normalised_ws'};
 votings={'greedy_merge'};
 fmt='doubleSize';
 dbg=false; % if true, will pause during computation for a few locations
