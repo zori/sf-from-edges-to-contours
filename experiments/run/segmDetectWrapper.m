@@ -1,6 +1,6 @@
 % Zornitsa Kostadinova
 % Jul 2014
-function model = segmDetectWrapper(model,LOG)
+function model = segmDetectWrapper(model,LOG,out_type)
 % set detection parameters (can set after training)
 model.opts.multiscale=false;      % for top accuracy set multiscale=true
 model.opts.nTreesEval=4;          % for top speed set nTreesEval=1
@@ -17,7 +17,7 @@ detOpts.imDir=fullfile(LOG.dsDir,'test',LOG.imDirR);
 detOpts.gtDir=fullfile(LOG.dsDir,'test',LOG.gtDirR); % for the oracle
 detOpts.resDir=fullfile(LOG.dsDir,'test',LOG.resDirR);
 detOpts.is_voting=true;
-detOpts.outType='oracle'; % edge, edgeContours, seg, ucm, sPb, voteUcm, oracle
+detOpts.outType=out_type; % edge, edgeContours, seg, ucm, sPb, voteUcm, oracle
 
 if any(strcmp(detOpts.outType,{'seg','ucm'}))
   % TODO why non-maximum suppression breaks the watershed?

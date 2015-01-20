@@ -1,7 +1,8 @@
 % Zornitsa Kostadinova
 % Jun 2014
-function runExperiment()
+function runExperiment(experiment_name,det_out_type)
 % SRF training and evaluation (using the VSB100 benchmark)
+assert(~strcmp(experiment_name,'foo'));
 LOG.repoDir='/BS/kostadinova/work/video_segm';
 LOG.evalDir='/BS/kostadinova/work/video_segm_evaluation';
 dss=[...
@@ -15,7 +16,7 @@ dsName='BSDS500';
 LOG.ds=dss(strcmp({dss.name},dsName));
 % TODO remove this when we add temporal features
 LOG.ds.isVideo=false;
-LOG.experimentName='foo';
+LOG.experimentName=experiment_name;
 % log directories
 LOG.dsDir=fullfile(LOG.evalDir, LOG.ds.name);
 LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');
@@ -47,7 +48,7 @@ if (status), warning('no git repository in %s', pwd); else
 model=edgesTrainWrapper(LOG);
 
 %% Detection
-segmDetectWrapper(model,LOG);
+segmDetectWrapper(model,LOG,det_out_type);
 
 %% Benchmark
 benchmarkWrapper(LOG);
