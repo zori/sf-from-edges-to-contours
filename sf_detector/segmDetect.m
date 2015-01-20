@@ -92,7 +92,7 @@ function d = detect(outType,is_voting,I,model,gt_fcn)
 fmt='doubleSize';
 if is_voting
   % TODO rather than hardcoding the patch_score_fcn, choose here
-  voting='fairer_merge_VPR_normalised_ws';
+  voting='foo';
   switch outType
     case 'voteUcm'
       % assert(model.opts.nms); % TODO DRY! .nms option neglected, since I don't use the edgesDetect
