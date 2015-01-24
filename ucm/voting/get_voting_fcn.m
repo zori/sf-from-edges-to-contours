@@ -45,6 +45,7 @@ clear create_contour_patch create_ws_patch create_fitted_line_patch create_fitte
 %                    score in [0,1]; 0 - no similarity; 1 - maximal similarity
 %                    function could be: bpr vpr_s vpr_gt RI RSRI greedy_merge
 switch voting
+  % % bpr
   case 'bpr'
     px_max_dist=3;
     patch_score_fcn=@(S,G) bpr(S,G,px_max_dist);
@@ -62,11 +63,32 @@ switch voting
     % (3:2:end,3:2:end); or (1:2:end-2,1:2:end-2);
     % process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
     process_hs_fcn=@(G) seg2bdry(G); % output: doubleSize
-  case 'greedy_merge' % a.k.a. "fair segments merge"
-    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_s);
-    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
-    process_ws_patch_fcn=@spx2seg;
-    process_hs_fcn=@(x) (x);
+  case {'line_bpr_3' 'line_bpr_4'}
+    px_max_dist=str2double(voting(end)); % maximal pixel distance for BPR matching
+    assert(px_max_dist==3||px_max_dist==4);
+    patch_score_fcn=@(S,G) bpr(S,G,px_max_dist);
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@(x) (x); % the identity function
+    % There are two options to do the seg2bdry imageSize
+    % (3:2:end,3:2:end); or (1:2:end-2,1:2:end-2);
+    process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
+  case {'line_centre_bpr_3' 'line_centre_bpr_4'}
+    px_max_dist=str2double(voting(end)); % maximal pixel distance for BPR matching
+    assert(px_max_dist==3||px_max_dist==4);
+    patch_score_fcn=@(S,G) bpr(S,G,px_max_dist);
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_centre_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@(x) (x); % the identity function
+    % There are two options to do the seg2bdry imageSize
+    % (3:2:end,3:2:end); or (1:2:end-2,1:2:end-2);
+    process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
+  % % vpr
+    % % the 'greedy merge' voting option is deprecated - same settings, more
+    % descriptive name: 'fairer_merge_VPR_normalised_ws'
+    %   case 'greedy_merge' % a.k.a. "fair segments merge"
+    %     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_s);
+    %     get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    %     process_ws_patch_fcn=@spx2seg;
+    %     process_hs_fcn=@(x) (x);
   case 'fairer_merge_VPR_normalised_ws'
     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_s);
     get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
@@ -74,16 +96,6 @@ switch voting
     process_hs_fcn=@(x) (x);
   case 'fairer_merge_VPR_normalised_trees'
     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_gt);
-    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
-    process_ws_patch_fcn=@spx2seg;
-    process_hs_fcn=@(x) (x);
-  case 'fairer_merge_RI'
-    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RI);
-    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
-    process_ws_patch_fcn=@spx2seg;
-    process_hs_fcn=@(x) (x);
-  case 'fairer_merge_RIMC' % Rand Index Monte Carlo
-    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RSRI);
     get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
     process_ws_patch_fcn=@spx2seg;
     process_hs_fcn=@(x) (x);
@@ -97,12 +109,34 @@ switch voting
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_centre_patch(px,py,rg,varargin{1:2});
     process_ws_patch_fcn=@bdry2seg;
     process_hs_fcn=@(x) (x);
+  % TODO debug
   case {'poly_VPR_normalised_ws_1' 'poly_VPR_normalised_ws_2'}
     patch_score_fcn=@vpr_s;
     n=str2double(voting(end)); % degree of polynomial to fit to data
     assert(n==1||n==2);
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_poly_patch(px,py,n,rg,varargin{1:2});
     process_ws_patch_fcn=@bdry2seg;
+    process_hs_fcn=@(x) (x);
+  % % ri
+  case 'line_RI'
+    patch_score_fcn=@RI;
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@bdry2seg;
+    process_hs_fcn=@(x) (x);
+  case 'line_centre_RI'
+    patch_score_fcn=@RI;
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_centre_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@bdry2seg;
+    process_hs_fcn=@(x) (x);
+  case 'fairer_merge_RI'
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RI);
+    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    process_ws_patch_fcn=@spx2seg;
+    process_hs_fcn=@(x) (x);
+  case 'fairer_merge_RIMC' % Rand Index Monte Carlo
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RSRI);
+    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    process_ws_patch_fcn=@spx2seg;
     process_hs_fcn=@(x) (x);
   otherwise
     error('not implemented %s',voting);
