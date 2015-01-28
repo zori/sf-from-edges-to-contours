@@ -38,7 +38,7 @@ else
 end
 
 % clear functions; % clears the persistent vars AND :( all breakpoints
-clear create_contour_patch create_ws_patch create_fitted_line_patch create_fitted_poly_patch;
+clear create_contour_patch create_ws_patch create_fitted_line_patch create_fitted_poly_patch create_fitted_conic_patch;
 
 % for debugging purposes
 crop_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
@@ -110,6 +110,11 @@ switch voting
   case 'line_centre_VPR_normalised_ws' % line fitting for proper region boundaries
     patch_score_fcn=@vpr_s;
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_centre_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@bdry2seg;
+    process_hs_fcn=@(x) (x);
+  case 'conic_VPR_normalised_ws'
+    patch_score_fcn=@vpr_s;
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_conic_patch(px,py,rg,varargin{1:2});
     process_ws_patch_fcn=@bdry2seg;
     process_hs_fcn=@(x) (x);
   % TODO debug
