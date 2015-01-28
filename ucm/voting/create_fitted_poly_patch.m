@@ -3,9 +3,9 @@
 % 8.3.0.532 (R2014a)
 function patch = create_fitted_poly_patch(px,py,n,rg,c,e)
 persistent cache;
-side=2*rg;
+patch_side=2*rg;
 if ~isempty(cache) && cache{1}==e && cache{2}==n, [~,~,p]=deal(cache{:}); else
-  p=fit_poly(n,c,e,side); cache={e,n,p};
+  p=fit_poly(n,c,e,patch_side); cache={e,n,p};
 end
 
 x1=px-rg+1:px+rg;
@@ -14,7 +14,7 @@ f1=polyval(p,x1);
 % plot(x1,f1,'*')
 
 thresh=2.1;
-A=abs(repmat(y1',1,side)-repmat(f1,side,1));
+A=abs(repmat(y1',1,patch_side)-repmat(f1,patch_side,1));
 mask=A<thresh;
 A=-A+max(A(:));
 A=(mask).*A;
@@ -28,18 +28,9 @@ end
 
 % ----------------------------------------------------------------------
 function p = fit_poly(n,c,e,patch_side)
-esz=numel(c.edge_x_coords{e});
-x=zeros(1,esz); y=x;
-for k=1:esz
-  y(k)=c.edge_x_coords{e}(k)+patch_side; % adjust indices for the padded superpixelised image (+patch_side)
-  x(k)=c.edge_y_coords{e}(k)+patch_side;
-end
+[x,y]=edge_coords_in_patch_space(c,e,patch_side);
+x=x'; y=y'; % TODO is it necessary to transpose the vectors to vector-rows?
 
-% also consider the end vertices
-v1=c.vertices(c.edges(e,1),:)+patch_side; % fst coord is y - row ind
-v2=c.vertices(c.edges(e,2),:)+patch_side;
-x=[v1(2) x v2(2)];
-y=[v1(1) y v2(1)];
 % assert(x(1)~=x(end)); % if all x's are the same, will end up reducing them
 % from first to last (i.e. d==-1)
 d=(x(1)<x(end))*2-1;
