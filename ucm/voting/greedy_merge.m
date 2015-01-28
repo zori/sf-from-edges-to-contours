@@ -1,10 +1,12 @@
 % Zornitsa Kostadinova
 % Sep 2014
 % 8.3.0.532 (R2014a)
-function merged_ws_patch = greedy_merge(spx_ws_patch,hs)
+function merged_ws_patch = greedy_merge(spx_ws_patch,hs,dbg,k)
 % Don't switch over the watershed and the hs (tree or oracle patch)!
 % Distinction is important.
 % if max(ws_patch(:))<max(hs(:)), tmp=ws_patch; ws_patch=hs; hs=tmp; end
+
+if ~exist('dbg','var'), dbg=false; end
 
 ws_nsegs=max(spx_ws_patch(:));
 hs_nsegs=max(hs(:));
@@ -41,7 +43,10 @@ if hs_nsegs~=1 && ws_nsegs>hs_nsegs % hs_nsegs>=2; ws_nsegs>=3
 else
   merged_ws_patch=spx_ws_patch;
 end
-% initFig;imcc(spx_ws_patch);
-% initFig;imcc(hs);
-% initFig;imcc(merged_ws_patch);
+if dbg % for debug output, plot the greedily merged patches
+  assert(~~exist('k','var'));
+  % initFig;imcc(spx_ws_patch);
+  initFig; im(hs); title(['hs ' num2str(k)]);
+  initFig; imcc(merged_ws_patch); title(['WS patch - greedy merge with hs ' num2str(k)]);
+end
 end

@@ -40,6 +40,9 @@ end
 % clear functions; % clears the persistent vars AND :( all breakpoints
 clear create_contour_patch create_ws_patch create_fitted_line_patch create_fitted_poly_patch;
 
+% for debugging purposes
+crop_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+
 % patch_score_fcn -  function for the similarity between the watershed and the
 %                    segmentation patch
 %                    score in [0,1]; 0 - no similarity; 1 - maximal similarity
@@ -51,7 +54,7 @@ switch voting
     patch_score_fcn=@(S,G) bpr(S,G,px_max_dist);
     % % varargin is {c,e,size(pb)}
     % get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
-    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    get_ws_patch_fcn=crop_ws_patch_fcn;
     % get_ws_patch_fcn=@(px,py,varargin) create_contour_patch(px,py,rg,varargin{:}); % TODO wish to be able to write create_contour_patch(px,py,rg,c,e,size(pb));
     
     % process_ws_patch_fcn=@(x) (x); % the identity function
@@ -86,17 +89,17 @@ switch voting
     % descriptive name: 'fairer_merge_VPR_normalised_ws'
     %   case 'greedy_merge' % a.k.a. "fair segments merge"
     %     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_s);
-    %     get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    %     get_ws_patch_fcn=crop_ws_patch_fcn;
     %     process_ws_patch_fcn=@spx2seg;
     %     process_hs_fcn=@(x) (x);
   case 'fairer_merge_VPR_normalised_ws'
     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_s);
-    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    get_ws_patch_fcn=crop_ws_patch_fcn;
     process_ws_patch_fcn=@spx2seg;
     process_hs_fcn=@(x) (x);
   case 'fairer_merge_VPR_normalised_trees'
     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_gt);
-    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    get_ws_patch_fcn=crop_ws_patch_fcn;
     process_ws_patch_fcn=@spx2seg;
     process_hs_fcn=@(x) (x);
   case 'line_VPR_normalised_ws'
@@ -130,12 +133,12 @@ switch voting
     process_hs_fcn=@(x) (x);
   case 'fairer_merge_RI'
     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RI);
-    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    get_ws_patch_fcn=crop_ws_patch_fcn;
     process_ws_patch_fcn=@spx2seg;
     process_hs_fcn=@(x) (x);
   case 'fairer_merge_RIMC' % Rand Index Monte Carlo
     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RSRI);
-    get_ws_patch_fcn=@(px,py,varargin) create_ws_patch(px,py,rg,E,p);
+    get_ws_patch_fcn=crop_ws_patch_fcn;
     process_ws_patch_fcn=@spx2seg;
     process_hs_fcn=@(x) (x);
   otherwise
@@ -144,7 +147,7 @@ end
 
 ws_fcn=@(px,py,varargin) process_ws(px,py,varargin,get_ws_patch_fcn,process_ws_patch_fcn);
 hs_fcn=@(x,y) process_hs(x,y,get_hs_fcn,process_hs_fcn);
-vote_fcn=@(x,y,ws_args,dbg) vote(x,y,rg,ws_fcn,ws_args,hs_fcn,patch_score_fcn,process_location_fcn,dbg);
+vote_fcn=@(x,y,ws_args,dbg) vote(x,y,rg,ws_fcn,ws_args,hs_fcn,patch_score_fcn,process_location_fcn,crop_ws_patch_fcn,dbg);
 cfp_fcn=@(pb) create_finest_partition_voting(pb,vote_fcn,DBG);
 end
 
@@ -191,56 +194,4 @@ end
 function process_location_gt_helper(I,x,y,p,w,gts,rg)
 show_I_location(I,x,y);
 process_location_gt(x+p(3),y+p(1),w,gts,rg);
-end
-
-% TODO review the following and get rid of accordingly
-% ----------------------------------------------------------------------
-function patch = spx2bdry01(patch)
-% convert the superpixels patch to be a 0-1 boundary location
-% the input has the boundary denoted by 0
-% the output has the boundary denoted by 1, non-boundary by 0
-patch=patch==0;
-end
-
-% ----------------------------------------------------------------------
-function patch = spx2seg(spx_patch)
-% convert the superpixels patch to be a segmentation labeling (starting from 1)
-% the input has the boundary denoted by 0
-% see pb2ucm
-bdry=spx2bdry01(spx_patch);
-% labels2=bwlabel(clean_watersheds(super_contour_4c(bdry))==0,8); % TODO don't
-% clean the watersheds for speed
-labels2=bwlabel(super_contour_4c(bdry)==0,8); % type: double; 0 indicates boundary
-patch=labels2(2:2:end,2:2:end); % labels should start from 1
-% labels sometimes start from 0; this artifacts is due to the fact that a crop
-% from the watershed is not a natural image (and can have 0 label - boundary,
-% at the patch border, without the corresponding segment being in the patch
-%
-% as a workaround, relabel the remaining isolated boundary pixels (based on
-% connected component):
-isolated_bdry=bwlabel(patch==0);
-patch=(isolated_bdry~=0)*max(patch(:))+isolated_bdry+patch;
-end
-
-% ----------------------------------------------------------------------
-function patch = seg2bdry01(patch)
-% NOTE: keep that for now, but also note seg2bdry (Arbelaez implementation)
-% convert the seg to be 0-1 boundary location
-patch=gradientMag(single(patch))>.01;
-end
-
-% ----------------------------------------------------------------------
-function [pb2, V, H] = super_contour_4c(pb)
-
-V = min(pb(1:end-1,:), pb(2:end,:)); % overlap pb vertically (shift=1px)
-H = min(pb(:,1:end-1), pb(:,2:end)); % overlap pb horizontally (shift=1px)
-
-[tx, ty] = size(pb);
-pb2 = zeros(2*tx, 2*ty);
-pb2(1:2:end, 1:2:end) = pb;
-pb2(1:2:end, 2:2:end-2) = H;
-pb2(2:2:end-2, 1:2:end) = V;
-pb2(end,:) = pb2(end-1, :);
-assert(all(pb2(:,end)==0));
-pb2(:,end) = max(pb2(:,end), pb2(:,end-1));
 end
