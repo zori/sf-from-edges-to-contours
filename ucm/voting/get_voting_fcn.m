@@ -58,7 +58,7 @@ switch voting
     % get_ws_patch_fcn=@(px,py,varargin) create_contour_patch(px,py,rg,varargin{:}); % TODO wish to be able to write create_contour_patch(px,py,rg,c,e,size(pb));
     
     % process_ws_patch_fcn=@(x) (x); % the identity function
-    % process_ws_patch_fcn=@bdry2seg;
+    % process_ws_patch_fcn=@thin_bdry2seg;
     % process_ws_patch_fcn=@(x) spx2seg(x);  % when not fitting a line
     process_ws_patch_fcn=@(x) seg2bdry(spx2seg(x));  % output: doubleSize
     % process_hs_fcn=@(x) (x); % id
@@ -105,17 +105,17 @@ switch voting
   case 'line_VPR_normalised_ws'
     patch_score_fcn=@vpr_s;
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
-    process_ws_patch_fcn=@bdry2seg;
+    process_ws_patch_fcn=@thin_bdry2seg;
     process_hs_fcn=@(x) (x);
   case 'line_centre_VPR_normalised_ws' % line fitting for proper region boundaries
     patch_score_fcn=@vpr_s;
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_centre_patch(px,py,rg,varargin{1:2});
-    process_ws_patch_fcn=@bdry2seg;
+    process_ws_patch_fcn=@thin_bdry2seg;
     process_hs_fcn=@(x) (x);
   case 'conic_VPR_normalised_ws'
     patch_score_fcn=@vpr_s;
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_conic_patch(px,py,rg,varargin{1:2});
-    process_ws_patch_fcn=@bdry2seg;
+    process_ws_patch_fcn=@thin_bdry2seg;
     process_hs_fcn=@(x) (x);
   % TODO debug
   case {'poly_VPR_normalised_ws_1' 'poly_VPR_normalised_ws_2'}
@@ -123,18 +123,18 @@ switch voting
     n=str2double(voting(end)); % degree of polynomial to fit to data
     assert(n==1||n==2);
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_poly_patch(px,py,n,rg,varargin{1:2});
-    process_ws_patch_fcn=@bdry2seg;
+    process_ws_patch_fcn=@thin_bdry2seg;
     process_hs_fcn=@(x) (x);
   % % ri
   case 'line_RI'
     patch_score_fcn=@RI;
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
-    process_ws_patch_fcn=@bdry2seg;
+    process_ws_patch_fcn=@thin_bdry2seg;
     process_hs_fcn=@(x) (x);
   case 'line_centre_RI'
     patch_score_fcn=@RI;
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_centre_patch(px,py,rg,varargin{1:2});
-    process_ws_patch_fcn=@bdry2seg;
+    process_ws_patch_fcn=@thin_bdry2seg;
     process_hs_fcn=@(x) (x);
   case 'fairer_merge_RI'
     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RI);

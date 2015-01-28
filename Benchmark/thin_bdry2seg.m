@@ -1,8 +1,7 @@
 % Zornitsa Kostadinova
 % Nov 2014
 % 8.3.0.532 (R2014a)
-function seg_patch = bdry2seg(bdry_patch)
-% TODO rename to thin_bdry2seg
+function seg_patch = thin_bdry2seg(bdry_patch)
 % transforms a thin, crisp bdry patch to a segmentation patch
 % such boundary is considered a boundary even when the connection between two
 % pixels is only diagonal, i.e. neighbouring pixels are allowed in the

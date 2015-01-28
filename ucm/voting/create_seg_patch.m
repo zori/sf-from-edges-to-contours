@@ -25,5 +25,5 @@ function seg_patch = create_seg_patch(x,y,r,l)
 %  y
 bdry_patch=create_bdry_patch(x,y,r,l);
 % the patch is now a boundary, transform to a segmentation
-seg_patch=bdry2seg(bdry_patch);
+seg_patch=thin_bdry2seg(bdry_patch);
 end
