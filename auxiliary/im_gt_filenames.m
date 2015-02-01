@@ -18,5 +18,17 @@ names.bear.gt='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtru
 
 % zebra
 names.zebra.im='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/16068.jpg';
-names.zebra.gt='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtruth/16068.jpg';
+names.zebra.gt='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtruth/16068.mat';
+
+% other zebras
+names.zebras2.im='/BS/kostadinova/work/BSR/BSDS500/data/images/val/253027.jpg';
+names.zebras2.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/253027.mat';
+
+% starfish
+names.starfish.im='/BS/kostadinova/work/BSR/BSDS500/data/images/train/12003.jpg';
+names.starfish.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/train/12003.mat';
+
+% elephants
+names.elephants.im='/BS/kostadinova/work/BSR/BSDS500/data/images/val/296059.jpg';
+names.elephants.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/296059.mat';
 end

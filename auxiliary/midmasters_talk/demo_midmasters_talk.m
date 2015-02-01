@@ -2,8 +2,9 @@ function demo_midmasters_talk(model)
 imF='/home/kostadinova/downloads/video_segm_extras_keep/imgs/zebra_classic_bw.png';
 imF='/home/kostadinova/downloads/video_segm_extras_keep/imgs/dalmatians.jpg';
 names=im_gt_filenames; % load real images filenames
-I=imread(names.zebra.im);
-gt=load(names.zebra.gt);
+demo_subject=names.starfish;
+I=imread(demo_subject.im);
+gt=load(demo_subject.gt);
 gt=gt.groundTruth;
 gtsz=length(gt);
 
@@ -60,8 +61,13 @@ set(0,'DefaulttextInterpreter','none'); % display '_' in title normally
 
 initFig(1);im(I)
 initFig;im(Ec)
-for k=1:gtsz, initFig;im(gt{k}.Boundaries); end
-for k=1:gtsz, initFig;im(gt{k}.Segmentation); end
+% for k=1:gtsz, initFig;im(gt{k}.Boundaries); end
+% for ease of viewing, show the negative of the boundaries
+for k=1:gtsz, initFig;im(~gt{k}.Boundaries); end
+% for k=1:gtsz, initFig;im(gt{k}.Segmentation); end
+% show colour-coded segmentation with the colour of each segment being the mean
+% colour of its pixels
+for k=1:gtsz, initFig;im(mean_colour_segmentation(I,gt{k}.Segmentation)); end
 initFig;im(E)
 % % this is poor visualisation, since the ws segments are labeled in increasing
 % % order, so the contrast between neighbouring segments is low
@@ -78,9 +84,20 @@ initFig;im(z_SE_ucm)
 initFig;im(z_gPb_owt_ucm)
 initFig;imagesc(z_gPb_owt_ucm) % heatmap
 
-initFig;imcc(z_SE_ucm_seg.low)
-initFig;imcc(z_SE_ucm_seg.high)
+% initFig;imcc(z_SE_ucm_seg.low)
+% initFig;imcc(z_SE_ucm_seg.high)
+% 
+% initFig;imcc(z_gPb_owt_ucm_seg.low)
+% initFig;imcc(z_gPb_owt_ucm_seg.high)
+% better with the segmentation colour-coded according to mean colour of segment
+initFig;im(mean_colour_segmentation(I,z_SE_ucm_seg.low))
+initFig;im(mean_colour_segmentation(I,z_SE_ucm_seg.high))
 
-initFig;imcc(z_gPb_owt_ucm_seg.low)
-initFig;imcc(z_gPb_owt_ucm_seg.high)
+initFig;im(mean_colour_segmentation(I,z_gPb_owt_ucm_seg.low))
+initFig;im(mean_colour_segmentation(I,z_gPb_owt_ucm_seg.high))
+
+% to save as png (the better format for importing images into latex)
+% saveas(gcf,'/home/kostadinova/downloads/foo.png');
+% imwrite(~gt{3}.Boundaries,'/home/kostadinova/downloads/starfish_bdry_detail.png');
+% imwrite(mean_colour_segmentation(I,gt{3}.Segmentation),'/home/kostadinova/downloads/starfish_segm_detail.png');
 end
