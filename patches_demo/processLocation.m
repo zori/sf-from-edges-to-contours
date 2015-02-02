@@ -50,7 +50,9 @@ E4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
 % that vote for each pixel
 % h=show_patch_fcn(E,'SRF decision patch');
 % Superpixelization (over-segmentation patch)
-h=show_patch_fcn(watershed(E),'WS patch'); % watershed, superpixels patch
+ws=watershed(E);
+ws_bw=(ws==0);
+h=show_patch_fcn(ws_bw,'WS patch'); % watershed, superpixels patch
 % % that was a coloured representation of the watershed patch
 % spxPatch=cropPatch(ws_padded,px,py,rg);
 % h=initFig; imcc(spxPatch); title('Superpixels patch');
@@ -58,7 +60,6 @@ h=show_patch_fcn(watershed(E),'WS patch'); % watershed, superpixels patch
 % Ultrametric Contour Map patch
 h=show_patch_fcn(ucm,'UCM patch');
 
-ws_bw=(watershed(E)==0);
 ucm_bw=(ucm~=0);
 % TODO in hard_negative_demo all the following is yellow (overlap) on the bear img
 % what is going on here in patchesDemo (when input is the zebra image) - no
