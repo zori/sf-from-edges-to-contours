@@ -50,7 +50,7 @@ else
   
   % compute features and apply forest to image
   [chnsReg,chnsSim]=edgesChns( I, opts );
-  Es=edgesDetectMex(model,chnsReg,chnsSim); % TODO [Ed,inds] and pass inds as output % assert(nargsout<=2)
+  Es=edgesDetectMex(model,chnsReg,chnsSim); % TODO [Es,inds] and pass inds as output % assert(nargsout<=2)
   
   % normalize and finalize edge maps
   t=2*opts.stride^2/opts.gtWidth^2/opts.nTreesEval; r=opts.gtWidth/2;

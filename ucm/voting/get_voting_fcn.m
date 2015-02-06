@@ -84,6 +84,15 @@ switch voting
     % There are two options to do the seg2bdry imageSize
     % (3:2:end,3:2:end); or (1:2:end-2,1:2:end-2);
     process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
+  case 'contour_bpr_3'
+    px_max_dist=3;
+    patch_score_fcn=@(S,G) bpr(S,G,px_max_dist);
+    get_ws_patch_fcn=@(px,py,varargin) create_contour_patch(px,py,rg,varargin{:});
+    process_ws_patch_fcn=@(x) (x); % the identity function
+    % There are two options to do the seg2bdry imageSize
+    % (3:2:end,3:2:end); or (1:2:end-2,1:2:end-2);
+    process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
+
   % % vpr
     % % the 'greedy merge' voting option is deprecated - same settings, more
     % descriptive name: 'fairer_merge_VPR_normalised_ws'

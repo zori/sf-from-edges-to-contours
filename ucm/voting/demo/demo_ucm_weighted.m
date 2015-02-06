@@ -5,14 +5,17 @@ model_name='modelBSDS500_patches';
 load_model_and_trees;
 % strings describing all possible types of vote to weigh the watershed
 % e.g. RSRI RI vpr_s vpr_gt
-bpr_votings={'bpr' 'line_bpr_3' 'line_bpr_4' 'line_centre_bpr_3' 'line_centre_bpr_4'};
+bpr_votings={'bpr' 'line_bpr_3' 'line_bpr_4' 'line_centre_bpr_3' 'line_centre_bpr_4' 'contour_bpr_3'};
 vpr_votings={'line_VPR_normalised_ws' 'line_centre_VPR_normalised_ws' 'fairer_merge_VPR_normalised_ws' 'fairer_merge_VPR_normalised_trees' 'conic_VPR_normalised_ws'};
 TODO_vpr_votings_={'poly_VPR_normalised_ws_1' 'poly_VPR_normalised_ws_2'};
 ri_votings={'line_RI' 'line_centre_RI' 'fairer_merge_RI' 'fairer_merge_RIMC'};
 % % deprecated
 % other_votings={'greedy_merge'};
 votings=[bpr_votings vpr_votings ri_votings];
+%
 votings={'conic_VPR_normalised_ws'};
+votings={'line_centre_VPR_normalised_ws'};
+votings={'contour_bpr_3'};
 fmt='doubleSize';
 dbg=false; % if true, will pause during computation for a few locations
 
