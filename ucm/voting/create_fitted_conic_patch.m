@@ -62,6 +62,8 @@ if D>0
   end
   % initFig;im(edge_patch);
   % initFig;im(patch);
+else
+  ; % not a hyperbola
 end
 if all(patch(:)==0)
   % warning('no conic intersection; fitting a line');
@@ -74,6 +76,7 @@ function X = patch_coords_to_conic(x,y)
 n_observations=length(x);
 assert(size(x,2)==1 && size(y,2)==1 && size(x,1)==size(y,1) && size(x,1)==n_observations);
 X = [x.*x x.*y y.*y x y ones(n_observations,1)];
+% X = [x.*y x y ones(n_observations,1)]; % this was an attempt to lower the degree of the model that we fit; could quite possibly also be done in 'fit_conic' function below, see comment about "fix the learnt parameters to sum to 1"
 end
 
 % ----------------------------------------------------------------------
@@ -88,6 +91,9 @@ A=patch_coords_to_conic(x,y);
 b=zeros(length(x),1);
 % fix the learnt parameters to sum to 1 (last value of b)
 A(end+1,:)=ones(1,size(A,2));
+% % try sth different
+% A(end+1,:)=zeros(1,size(A,2));
+% A(end,1:3)=1;
 b(end+1)=1;
 
 % p_opt1=A\b; % fewer non-zero components
