@@ -31,7 +31,7 @@ if D>0
   [x,y]=edge_coords_in_patch_space(c,e,patch_side);
   % go back to 1-16 coords:
   x=x-(px-rg); y=y-(py-rg);
-  % get only those edges that are withinthe patch
+  % get only those edges that are within the patch
   ind=0<x & x<=patch_side & 0<y & y<=patch_side;
   x=x(ind); y=y(ind);
   edge_patch=zeros(patch_side);
