@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-function [sf_wt,votes,vote_fcn,c] = create_finest_partition_voting_per_pixel_vote(pb,vote_fcn,DBG)
+function [sf_wt,votes,vote_fcn,c] = create_finest_partition_per_pixel_voting(pb,vote_fcn,DBG)
 % the extra output args - votes,vote_fcn,c - are only for hard_negatives_mining
 ws=watershed(pb);
 sz=size(pb);
