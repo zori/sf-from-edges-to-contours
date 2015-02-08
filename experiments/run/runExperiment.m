@@ -17,6 +17,7 @@ LOG.ds=dss(strcmp({dss.name},dsName));
 % TODO remove this when we add temporal features
 LOG.ds.isVideo=false;
 LOG.experimentName=experiment_name;
+LOG.detOutputType=det_out_type;
 % log directories
 LOG.dsDir=fullfile(LOG.evalDir, LOG.ds.name);
 LOG.recordingsDir=fullfile(LOG.dsDir, 'test', 'recordings');
@@ -44,13 +45,19 @@ gitCmd=sprintf('git --git-dir=%s/.git --work-tree=%s --no-pager log --format="%%
 if (status), warning('no git repository in %s', pwd); else
   fprintf(LOG.fid, 'Last git commit %s \n', gitCommitId); end
 
-%% Training
+% Training
 model=edgesTrainWrapper(LOG);
 
-%% Detection
-segmDetectWrapper(model,LOG,det_out_type);
+% Detection
+segmDetectWrapper(model,LOG);
 
-%% Benchmark
+% Rescale the detected ucm2's so that the nonzero values are in [0.01,0.99] -
+% for the benefit of the benchmark
+%
+% the original values are kept in a folder Ucm2_xx_orig
+rescale_ucm2(LOG.experimentName);
+
+% Benchmark
 benchmarkWrapper(LOG);
 
 %%
