@@ -28,8 +28,7 @@ for e=1:nEdges
     assert(c.is_e(y,x)==1);
     if c_subdivided.is_e(y,x)==1
       % edge
-      e_subdivided=c.assign(y,x);
-      % TODO determine the corresponding edge number in c_subdivided
+      e_subdivided=c_subdivided.assign(y,x);
       ws_args{2}=e_subdivided;
       
       c_subdivided.is_e(y,x)=e_subdivided;
