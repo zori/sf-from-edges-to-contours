@@ -168,7 +168,7 @@ end
 ws_fcn=@(px,py,varargin) process_ws(px,py,varargin,get_ws_patch_fcn,process_ws_patch_fcn);
 hs_fcn=@(x,y) process_hs(x,y,get_hs_fcn,process_hs_fcn);
 vote_fcn=@(x,y,ws_args,dbg) vote(x,y,rg,ws_fcn,ws_args,hs_fcn,patch_score_fcn,process_location_fcn,crop_ws_patch_fcn,dbg);
-cfp_fcn=@(pb) create_finest_partition_voting(pb,vote_fcn,DBG);
+cfp_fcn=@(pb) create_finest_partition_mixed_voting_scope(pb,vote_fcn,DBG);
 end
 
 % ----------------------------------------------------------------------
