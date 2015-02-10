@@ -80,7 +80,7 @@ super_ucm = normalize_output(super_ucm); % ojo
 if strcmp(fmt,'doubleSize'),
   ucm = super_ucm;
 else
-  ucm = super_ucm(1:2:end-2,1:2:end-2); % TODO figure out was this really a bug - getting the imageSize by subindexing this way (3:2:end, 3:2:end);
+  ucm = ucm2_doubleSize_to_imageSize(super_ucm);
 end
 end
 
