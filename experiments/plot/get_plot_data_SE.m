@@ -2,12 +2,18 @@
 % Feb 2015
 % 8.3.0.532 (R2014a)
 
+
 % edge detection results, i.e., just BPR plot, no VPR, or any region-based metrics
 data_SE_nms_single_scale=struct('out','Output_SE_nms_single_scale','legend','SE thinned SS','style',{{}});
 data_SE_no_nms_single_scale=struct('out','Output_SE_no_nms_single_scale','legend','SE not-thinned SS','style',{{}});
 
 data_SE_nms_multiscale=struct('out','Output_SE_nms_multiscale','legend','SE thinned MS','style',{{}});
 data_SE_no_nms_multiscale=struct('out','Output_SE_no_nms_multiscale','legend','SE not-thinned MS','style',{{}});
+
+
+% just a dot on the PR curve - single segmentation - oversegmentation
+data_SE_watershed=struct('out','Output_sf_segs','legend','SE watershed','style',{{}});
+
 
 % segmentations
 % data_SE_ucm_irreproducible_baseline is our baseline
@@ -25,6 +31,12 @@ data_rescaled_comparison=[ % this shows that rescaling doesn't change the shape 
   data_SE_ucm_no_nms_single_scale,...
   struct('out','Output_SE_ucm_non_nms_SS_repeat_rescale','legend','SE ucm RESCALED repeat','style',{{'LineStyle','-.'}}),... % nms=false
 ];
+
+
+% SE+sPb
+data_SE_sPb_nms=struct('out','Output_sf_sPb_nms','legend','(SE nms+sPb)-UCM','style',{{}}); % non-max-suppressed E as input to sPb % 'SE + sPb'
+data_SE_sPb_nnms=struct('out','Output_sf_sPb_nnms','legend','(SE nonnms+sPb)-UCM','style',{{}}); % not-nms
+data_SE_sPb=data_SE_sPb_nnms; % not-nms performs slightly worse, but it is fair to compare with us, since we cannot apply watershed on top of thinned edges
 
 % summary
 data_SE=[data_SE_nms_single_scale data_SE_no_nms_single_scale data_SE_nms_multiscale data_SE_no_nms_multiscale]; % edge detector output; not a segmentation

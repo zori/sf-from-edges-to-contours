@@ -15,8 +15,6 @@ votings=[bpr_votings vpr_votings ri_votings];
 % sketchbook - last stuff I've worked on
 votings={'conic_VPR_normalised_ws'};
 votings={'line_centre_VPR_normalised_ws'};
-votings={'contour_bpr_3'};
-votings={'line_lls_VPR_normalised_ws'};
 fmt='doubleSize';
 dbg=false; % if true, will pause during computation for a few locations
 
