@@ -12,7 +12,7 @@ names.tikis.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/101085.mat
 names.hawaii.im='/BS/kostadinova/work/BSR/BSDS500/data/images/val/101087.jpg';
 names.hawaii.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/101087.mat';
 
-% bear
+% bear on tree (difficult image)
 names.bear.im='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/100039.jpg';
 names.bear.gt='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtruth/100039.mat';
 

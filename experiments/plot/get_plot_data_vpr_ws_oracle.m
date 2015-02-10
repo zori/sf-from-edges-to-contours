@@ -8,14 +8,14 @@ data_oracle_region_bdry_fair_segs_vpr_norm_ws=[struct('out','Output_oracle_regio
 % 1-of-3) line
 data_oracle_line_vpr_norm_ws=struct('out','Output_oracle_line_VPR_normalised_ws','legend','o. l. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}});
 % 2-of-3) line_centre
-data_arc_oracle_line_centre_vpr_norm_ws=struct('out','Output_oracle_line_centre_VPR_normalised_ws','legend','o. l.c. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}});
+data_oracle_arc_line_centre_vpr_norm_ws=struct('out','Output_oracle_line_centre_VPR_normalised_ws','legend','o. l.c. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}});
 data_oracle_mixed_voting_line_centre_vpr_norm_ws=[struct('out','Output_oracle_mixed_voting_line_centre_vpr_norm_ws_rescaled','legend','o. m. l.c. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}})]; % rescaled
 data_oracle_region_bdry_line_centre_vpr_norm_ws=[struct('out','Output_oracle_region_bdry_line_centre_VPR_normalised_ws','legend','o. region bdry l.c. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}})];
 % summary
-data_oracle_line_centre_vpr_norm_ws=[data_arc_oracle_line_centre_vpr_norm_ws data_oracle_mixed_voting_line_centre_vpr_norm_ws data_oracle_region_bdry_line_centre_vpr_norm_ws];
+data_oracle_line_centre_vpr_norm_ws=[data_oracle_arc_line_centre_vpr_norm_ws data_oracle_mixed_voting_line_centre_vpr_norm_ws data_oracle_region_bdry_line_centre_vpr_norm_ws];
 % 3-of-3) line_lls
-data_arc_oracle_line_lls_vpr_norm_ws=[struct('out','Output_oracle_line_lls_vpr_norm_ws_rescaled','legend','o. l.lls. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}})]; % rescaled;
-data_oracle_mixed_voting_line_lls_vpr_norm_ws=[struct('out','Output_oracle_mixed_voting_line_lls_vpr_norm_ws_rescaled','legend','o. m. l.lls. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}})]; % rescaled;
+data_arc_oracle_line_lls_vpr_norm_ws=[struct('out','Output_oracle_line_lls_VPR_normalised_ws_rescaled','legend','o. l.lls. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}})]; % rescaled;
+data_oracle_mixed_voting_line_lls_vpr_norm_ws=[struct('out','Output_oracle_mixed_voting_scope_line_lls_VPR_normalised_ws_rescaled','legend','o. m. l.lls. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}})]; % rescaled;
 % summary
 data_oracle_line_lls_vpr_norm_ws=[data_arc_oracle_line_lls_vpr_norm_ws data_oracle_mixed_voting_line_lls_vpr_norm_ws];
 % conic
