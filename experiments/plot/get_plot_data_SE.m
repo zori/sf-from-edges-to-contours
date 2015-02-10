@@ -13,7 +13,7 @@ data_SE_no_nms_multiscale=struct('out','Output_SE_no_nms_multiscale','legend','S
 % data_SE_ucm_irreproducible_baseline is our baseline
 % TODO how was this generated?
 data_SE_ucm_irreproducible_baseline=struct('out','Output_sf_ucm','legend','SE ucm','style',{{'LineStyle','--'}}); % multiscale, model.opts.nms=1 % UPDATE: these options are impossible - multiscale would give better performance, and nms "breaks" the watershed
-data_SE_ucm_no_nms_single_scale=struct('out','Output_SE_ucm_repeat','legend','SE ucm SS','style',{{}});
+data_SE_ucm_no_nms_single_scale=struct('out','Output_SE_ucm_repeat','legend','SE ucm SS','style',{{}}); % this should have been the real baseline
 data_SE_ucm_no_nms_multiscale=struct('out','Output_SF_ucm_non-nms_multiscale_repeat','legend','SE UCM MS','style',{{}});
 
 data_SE_ucm_uneffected_by_averaging=[ % as could be expected, the following are identical
@@ -23,7 +23,6 @@ data_SE_ucm_uneffected_by_averaging=[ % as could be expected, the following are 
 
 data_rescaled_comparison=[ % this shows that rescaling doesn't change the shape of the curve, just extends it to cover as much of the recall range as possible
   data_SE_ucm_no_nms_single_scale,...
-  data_SE_no_nms_single_scale,...
   struct('out','Output_SE_ucm_non_nms_SS_repeat_rescale','legend','SE ucm RESCALED repeat','style',{{'LineStyle','-.'}}),... % nms=false
 ];
 

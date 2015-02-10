@@ -70,8 +70,8 @@ data_oracle_all=[...
 dataOurs=data_vpr_vote_range;
 
 % TODO check the results
-dataOurs=[data_line_RI dataOracle_line_RI];
-dataOurs=data_SE_no_nms_single_scale; % make sure they are the same
+dataOurs=[data_line_centre_vpr_norm_ws data_oracle_line_centre_vpr_norm_ws];
+dataOurs=[data_line_lls_vpr_norm_ws data_oracle_line_lls_vpr_norm_ws];
 
 % checked
 % does region boundary have a positive influence?
@@ -79,6 +79,9 @@ dataOurs=[data_merge_vpr_norm_ws data_oracle_merge_vpr_norm_ws]; % unconclusive:
 dataOurs=[data_fairer_merge_RI data_oracle_fairer_merge_RI]; % 3 experiments identical, oracles slight, but unconclusive difference
 dataOurs=data_voting_scope_contour_bpr_3;
 dataOurs=[data_line_centre_vpr_norm_ws data_line_centre_VPR_norm_ws_pb];
+
+dataOurs=[data_SE_ucm_no_nms_single_scale data_SE_ucm_no_nms_multiscale]; % the 'real' baseline - SS vs MS
+dataOurs=[data_line_RI dataOracle_line_RI];
 
 % dataOurs=data_thesis;
 % 
