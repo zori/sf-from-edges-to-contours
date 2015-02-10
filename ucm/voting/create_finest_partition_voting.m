@@ -2,12 +2,12 @@
 % Oct 2014
 % 8.3.0.532 (R2014a)
 function [sf_wt,votes,vote_fcn,c] = create_finest_partition_voting(pb,vote_fcn,DBG)
+% both voting and averaging on watershed arc (subdivided contour)
 % the extra output args - votes,vote_fcn,c - are only for hard_negatives_mining
 ws=watershed(pb);
 sz=size(pb);
 
-% c_subdivided=fit_contour(double(ws==0));
-c=fit_contour(double(ws==0),false); % not subdivided, get region boundaries
+c=fit_contour(double(ws==0)); % subdivided, watershed arcs
 % remove empty fields
 c=rmfield(c,{'edge_equiv_ids','regions_v_left','regions_v_right','regions_e_left','regions_e_right','regions_c_left','regions_c_right'});
 nEdges=numel(c.edge_x_coords);
