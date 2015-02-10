@@ -18,7 +18,7 @@ dataRSRI=[... % a.k.a. RIMC - Rand Ind. Monte Carlo
 
 data_line_RI=[
   struct('out','Output_line_RI','legend','l. RI','style',{{}}),... % watershed arc
-  struct('out','Output_line_centre_RI','legend','l.c. RI','style',{{}}),... % watershed arc
+  struct('out','Output_line_centre_RI_rescaled','legend','l.c. RI','style',{{}}),... % watershed arc % better use the rescaled % 'Output_line_centre_RI'
   struct('out','Output_region_bdry_line_centre_RI','legend','region bdry l.c. RI','style',{{}}),... % region bdry
   struct('out','Output_mixed_voting_scope_line_RI_rescaled','legend','mixed l. RI','style',{{}}),... % mixed
   struct('out','Output_mixed_voting_scope_line_centre_RI_rescaled','legend','mixed l.c. RI','style',{{}}),... % mixed
@@ -43,7 +43,7 @@ dataOracleRSRI=[ % oracle - using the GT patches instead of the leaves of the SF
 
 dataOracle_line_RI=[
   struct('out','Output_oracle_line_RI','legend','o. l. RI','style',{{'LineStyle','-.'}}),... % watershed arc
-  struct('out','Output_oracle_line_centre_RI','legend','o. l.c. RI','style',{{'LineStyle','-.'}}),... % watershed arc
+  struct('out','Output_oracle_line_centre_RI_rescaled','legend','o. l.c. RI','style',{{'LineStyle','-.'}}),... % watershed arc % better use the rescaled 'Output_oracle_line_centre_RI'
   struct('out','Output_oracle_region_bdry_line_centre_RI','legend','o. region bdry l.c. RI','style',{{'LineStyle','-.'}}),... % region bdry
   struct('out','Output_oracle_mixed_voting_scope_line_RI_rescaled','legend','o. mixed l. RI','style',{{'LineStyle','-.'}}),... % mixed
   struct('out','Output_oracle_mixed_voting_scope_line_centre_RI_rescaled','legend','o. mixed l.c. RI','style',{{'LineStyle','-.'}}),... % mixed
