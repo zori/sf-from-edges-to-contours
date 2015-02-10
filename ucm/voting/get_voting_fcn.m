@@ -1,7 +1,7 @@
 % Zornitsa Kostadinova
 % Oct 2014
 % 8.3.0.532 (R2014a)
-function [cfp_fcn,E] = get_voting_fcn(I,model,voting,DBG,T,gts)
+function [cfp_fcn,E] = get_voting_fcn(I,model,voting,DBG,is_hard_negative_mining,T,gts)
 opts=model.opts;
 ri=opts.imWidth/2; % patch radius 16
 rg=opts.gtWidth/2; % patch radius 8
@@ -31,7 +31,7 @@ else
   coords2forest_location_fcn=@(x,y) coords2forestLocation(x,y,ind,opts,p,length(model.fids));
   get_hs_fcn=@(x,y) get_tree_patches(x,y,coords2forest_location_fcn,model);
   if exist('T','var') && ~isempty(T)  % needs to have the patches saved
-    process_location_fcn=@(x,y,w) processLocation(x,y,model,T,I,true,rg,p,chnsReg,chnsSim,ind,E,contours2ucm(E),w);
+    process_location_fcn=@(x,y,w) processLocation(x,y,model,T,I,~is_hard_negative_mining,rg,p,chnsReg,chnsSim,ind,E,contours2ucm(E),w);
   else
     process_location_fcn=@(varargin) disp([]); % NO-OP function, in case there is no T input
   end
@@ -73,8 +73,6 @@ switch voting
     patch_score_fcn=@(S,G) bpr(S,G,px_max_dist);
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
     process_ws_patch_fcn=@(x) (x); % the identity function
-    % There are two options to do the seg2bdry imageSize
-    % (3:2:end,3:2:end); or (1:2:end-2,1:2:end-2);
     process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
   case {'line_centre_bpr_3' 'line_centre_bpr_4'}
     px_max_dist=str2double(voting(end)); % maximal pixel distance for BPR matching
@@ -82,16 +80,12 @@ switch voting
     patch_score_fcn=@(S,G) bpr(S,G,px_max_dist);
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_centre_patch(px,py,rg,varargin{1:2});
     process_ws_patch_fcn=@(x) (x); % the identity function
-    % There are two options to do the seg2bdry imageSize
-    % (3:2:end,3:2:end); or (1:2:end-2,1:2:end-2);
     process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
   case 'contour_bpr_3'
     px_max_dist=3;
     patch_score_fcn=@(S,G) bpr(S,G,px_max_dist);
     get_ws_patch_fcn=@(px,py,varargin) create_contour_patch(px,py,rg,varargin{:});
     process_ws_patch_fcn=@(x) (x); % the identity function
-    % There are two options to do the seg2bdry imageSize
-    % (3:2:end,3:2:end); or (1:2:end-2,1:2:end-2);
     process_hs_fcn=@(G) seg2bdry(G,'imageSize'); % for when the ws output is boundary
 
   % % vpr
@@ -168,7 +162,7 @@ end
 ws_fcn=@(px,py,varargin) process_ws(px,py,varargin,get_ws_patch_fcn,process_ws_patch_fcn);
 hs_fcn=@(x,y) process_hs(x,y,get_hs_fcn,process_hs_fcn);
 vote_fcn=@(x,y,ws_args,dbg) vote(x,y,rg,ws_fcn,ws_args,hs_fcn,patch_score_fcn,process_location_fcn,crop_ws_patch_fcn,dbg);
-cfp_fcn=@(pb) create_finest_partition_mixed_voting_scope(pb,vote_fcn,DBG);
+cfp_fcn=@(pb) create_finest_partition_voting(pb,vote_fcn,DBG);
 end
 
 % ----------------------------------------------------------------------

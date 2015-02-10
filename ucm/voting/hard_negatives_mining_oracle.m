@@ -6,6 +6,7 @@
 
 % TODO here it's also possible to investigate difference between sf_wt and ucm2; see also demo_midmasters_talk.m
 
+dbg=true;
 for ind=inds(1:100)'
   x=xs(ind); y=ys(ind);
   for k=vi
@@ -17,7 +18,6 @@ for ind=inds(1:100)'
 %     show_patch_fcn(data(k).mean,'crop of the mean of votes');
 %     show_patch_fcn(data(k).sf_wt,'crop of the finest partition');
 %     show_patch_fcn(data(k).ucm2,'crop of the ucm2');
-    dbg=true;
     if c.is_e(y,x)
       data(k).vote_fcn(x,y,{c,c.is_e(y,x),sz},dbg); % will pause after displaying the patches
     else
