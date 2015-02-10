@@ -5,11 +5,18 @@ function data = get_plot_data(experiments_to_plot)
 % directories, labels and line styles for the precomputed results
 % structure is defined in this manner to allow easy rearrangement of order of
 % curves (in the legend)
-% dataSfUcm is our baseline
-dataSfUcm=struct('out','Output_sf_ucm','legend','SE ucm','style',{{'LineStyle','--'}}); % multiscale, model.opts.nms=1
+
+% include definitions from other files
+get_plot_data_bpr;
+get_plot_data_vpr;
+get_plot_data_ri;
+get_plot_data_region_bdry;
+get_plot_data_SE;
+get_thesis_plot_data;
+
 dataBest=[...
   struct('out','Output_sf_segs','legend','SE watershed','style',{{}}),...
-  dataSfUcm,...
+  data_SE_ucm_irreproducible_baseline,...
   struct('out','Output_sf_sPb_nms','legend','SE + sPb','style',{{'LineStyle','--'}}),... % non-max-suppressed E as input to sPb
   struct('out','Output_BSDS_downloaded','legend','gPb+ucm','style',{{}})...
   struct('out','Output_sf_edges','legend','SE','style',{{}}),... % TODO: plotOpts.metrics='bdry';
@@ -38,12 +45,6 @@ data_SE_ucm_new_baseline=[... % new baseline - evaluate SF on a pixel (or smalle
 ];
 % TODO add a proper baseline
 
-% include other definitions
-get_plot_data_bpr;
-get_plot_data_vpr;
-get_plot_data_ri;
-get_plot_data_region_bdry;
-
 % summary
 data_all=[...
   data_bpr,...
@@ -55,9 +56,35 @@ data_oracle_all=[...
   data_oracle_vpr,...
   data_oracle_ri,...
   ];
-%
 
-dataOurs=data_all;
+% % programmatically add an empty 'style' field
+% if ~isfield(dataOurs,'style')
+%   for k=1:length(dataOurs)
+%     dataOurs(k).style={};
+%   end
+% end
+
+% this shows that it is important to have our votes averaged on the region
+% boundaries of the watershed; this way we "globalise" the decision of a single
+% location, by transfering the vote to the whole "edge"
+dataOurs=data_vpr_vote_range;
+
+% TODO check the results
+dataOurs=[data_line_RI dataOracle_line_RI];
+dataOurs=data_SE_no_nms_single_scale; % make sure they are the same
+
+% checked
+% does region boundary have a positive influence?
+dataOurs=[data_merge_vpr_norm_ws data_oracle_merge_vpr_norm_ws]; % unconclusive: one of the oracles, supposedly buggy, performs better than the rest; regular experiments seem identical
+dataOurs=[data_fairer_merge_RI data_oracle_fairer_merge_RI]; % 3 experiments identical, oracles slight, but unconclusive difference
+dataOurs=data_voting_scope_contour_bpr_3;
+dataOurs=[data_line_centre_vpr_norm_ws data_line_centre_VPR_norm_ws_pb];
+
+% dataOurs=data_thesis;
+% 
+% % % TODO
+% dataOurs=struct('out','Output_region_bdry_linear_least_squares_VPR_normalised_ws','legend','r.b. lower-order-term (conic) VPR norm ws','style',{{}}); % the conic fitting code, without x.^2 and y.^2 terms (but with the mixed x.*y term; otherwise - no intersection :( )
+
 
 switch experiments_to_plot
   case 'best'
@@ -74,14 +101,14 @@ switch experiments_to_plot
       ];
     % initial experiments with metrics and input types
     data=[...
-      dataSfUcm,...
+      data_SE_ucm_irreproducible_baseline,...
       struct('out','Output_VprBdry01','legend','VPR bdry01','style',{{'Marker','x'}}),... % unsuitable: struct('out','Output_VprBdry12','legend','VPR bdry12','style',{{'Marker','x'}}),...
       struct('out','Output_VprSegsUnnormalised','legend','VPR unnorm. segs','style',{{'Marker','x'}}),...
       struct('out','Output_RSRI_bdry01','legend','RSRI bdry01','style',{{'Marker','x'}}),...
       struct('out','Output_RSRI_segs','legend','RSRI segs','style',{{'Marker','x'}}),...
       ];
     % best performing from the above - RSRI_segs, improved in dataOurs
-    data=[dataSfUcm,dataOurs];
+    data=[data_SE_ucm_irreproducible_baseline,dataOurs];
   case 'mid-masters'
     data_baseline=[...
       struct('out','Output_sf_ucm','legend','baseline (SE+ucm)','style',{{'LineStyle','-.','Marker','d'}});
