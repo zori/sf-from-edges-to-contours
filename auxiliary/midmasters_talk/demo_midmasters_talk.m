@@ -51,7 +51,7 @@ z_SE_ucm_seg.high=threshold_ucm2(z_SE_ucm,0.6); % 4 segments
 z_gPb_owt_ucm_seg.low=threshold_ucm2(z_gPb_owt_ucm,0.1); % ~ 30 segments
 z_gPb_owt_ucm_seg.high=threshold_ucm2(z_gPb_owt_ucm,0.3); % 4 segments
 
-% % TODO: investigate UCM / finest partition (i.e. sf_wt) (generated in create_finest_partition_voting.m)
+% % TODO: investigate UCM / finest partition (i.e. sf_wt) (generated in create_finest_partition_voting or any of the 3 files that allow for a choice of voting scope - 1) watershed arc, 2) mixed, or 3)region boundary)
 % sf_wt=imread('zebra-finest-partition.png'); % this is saved while computing SE_ucm(I,model,fmt);
 % U=z_SE_ucm; U=U(1:2:end-2,1:2:end-2); % to get an 'imageSize' - same resolution as sf_wt
 % rgb_loc=cat(3,~~U,zeros(size(sf_wt)),~~(1-(double(sf_wt)./255))); initFig; im(rgb_loc); % red arcs (a few of them) - added by the UCM algorithm, blue arcs - removed by the UCM algorithm (but had some votes on them);magenta edges - had votes on them in the weighted watershed (finest partition) and "made it" to the final UCM
@@ -69,6 +69,8 @@ for k=1:gtsz, initFig;im(~gt{k}.Boundaries); end
 % colour of its pixels
 for k=1:gtsz, initFig;im(mean_colour_segmentation(I,gt{k}.Segmentation)); end
 initFig;im(E)
+cmap=fademap;
+initFig;im(E);colormap(cmap) % dispalys the edges 'jet' colour-coded
 % % this is poor visualisation, since the ws segments are labeled in increasing
 % % order, so the contrast between neighbouring segments is low
 % initFig;im(z_SE_ws)
