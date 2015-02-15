@@ -39,4 +39,8 @@ names.head.gt='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtru
 % polar bear - example of normal, strong edges; "easy" image
 names.polar_bear.im='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Images/100007.jpg';
 names.polar_bear.gt='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Groundtruth/100007.mat';
+
+% old man with a hat
+names.old_man.im='/BS/kostadinova/work/BSR/BSDS500/data/images/val/189080.jpg';
+names.old_man.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/189080.mat';
 end
