@@ -23,7 +23,8 @@ function ucm2 = ucm_weighted(I,model,voting,fmt,DBG,varargin)
 %  ucm2         - Ultrametric Contour Map
 %
 % See also contours2ucm
-[cfp_fcn,E]=get_voting_fcn(I,model,voting,DBG,varargin{:});
+is_hard_negative_mining=false;
+[cfp_fcn,E]=get_voting_fcn(I,model,voting,DBG,is_hard_negative_mining,varargin{:});
 if ~exist('fmt','var'), fmt='imageSize'; end
 ucm2=contours2ucm(E,fmt,cfp_fcn);
 end
