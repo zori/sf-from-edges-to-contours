@@ -51,21 +51,26 @@ E4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
 % h=show_patch_fcn(E,'SRF decision patch');
 % Superpixelization (over-segmentation patch)
 ws=watershed(E);
-ws_bw=(ws==0);
-h=show_patch_fcn(ws_bw,'WS patch'); % watershed, superpixels patch
-% % that was a coloured representation of the watershed patch
-% spxPatch=cropPatch(ws_padded,px,py,rg);
-% h=initFig; imcc(spxPatch); title('Superpixels patch');
+% watershed / superpixels patch
+% B&W patch
+% ws_bw=(ws==0);
+% h=show_patch_fcn(ws_bw,'WS patch');
+% colour-coded
+ws_patch=cropPatch(ws,x,y,rg);
+h=initFig; imcc(ws_patch); title('WS patch colour-coded');
+% put 'x' in the middle of the square
+% copied from pshow()
+r=size(ws_patch,1)./2; hold on; plot(r,r,'x');
 
 % Ultrametric Contour Map patch
 h=show_patch_fcn(ucm,'UCM patch');
 
-ucm_bw=(ucm~=0);
-% TODO in hard_negative_demo all the following is yellow (overlap) on the bear img
-% what is going on here in patchesDemo (when input is the zebra image) - no
-% overlap, messy red, green; might explain why the WS patch is wrong, i.e. BUG in patchesDemo?
-rgb_loc=cat(3,ws_bw,ucm_bw,zeros(size(ws_bw)));
-h=initFig; im(rgb_loc);
+% ucm_bw=(ucm~=0);
+% % TODO in hard_negative_demo all the following is yellow (overlap) on the bear img
+% % what is going on here in patchesDemo (when input is the zebra image) - no
+% % overlap, messy red, green; might explain why the WS patch is wrong, i.e. BUG in patchesDemo?
+% rgb_loc=cat(3,ws_bw,ucm_bw,zeros(size(ws_bw)));
+% h=initFig; im(rgb_loc);
 
 % TODO use a global var 'h' and a function cleanUpFigs to close old figs
 % remove all figures that were not created on this iteration
