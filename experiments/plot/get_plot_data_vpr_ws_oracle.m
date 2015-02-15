@@ -2,8 +2,8 @@
 % Feb 2015
 % 8.3.0.532 (R2014a)
 % merge
-data_oracle_fairer_merge_vpr_norm_ws=[struct('out','Output_oracle_fairer_merge_VPR_normalised_ws','legend','o. fairer s. VPR norm ws','style',{{'Marker','x'}})];
-data_oracle_region_bdry_fairer_merge_vpr_norm_ws=[struct('out','Output_oracle_region_bdry_fairer_merge_VPR_normalised_ws','legend','o. region bdry fairer s. VPR norm ws','style',{{'Marker','x'}})];
+data_oracle_fairer_merge_vpr_norm_ws=[struct('out','Output_oracle_fairer_merge_VPR_normalised_ws','legend','o. fairer s. VPR norm ws','style',{{'LineStyle','-.','Marker','x'}})];
+data_oracle_region_bdry_fairer_merge_vpr_norm_ws=[struct('out','Output_oracle_region_bdry_fairer_merge_VPR_normalised_ws','legend','o. region bdry fairer s. VPR norm ws','style',{{'LineStyle','-.','Marker','x'}})];
 data_oracle_region_bdry_fair_segs_vpr_norm_ws=[struct('out','Output_oracle_region_bdry_fair_segs_VPR_normalised_ws','legend','o. region bdry fs. VPR norm ws','style',{{'LineStyle','-.','Marker','x'}})];
 % 1-of-3) line
 data_oracle_line_vpr_norm_ws=struct('out','Output_oracle_line_VPR_normalised_ws','legend','o. l. VPR norm ws','style',{{'LineStyle','-.','Marker','*'}});
