@@ -25,9 +25,9 @@ li=zeros(16,16); li(:,8)=1; % 16x16 vertical line
 
 names=im_gt_filenames; % load real images filenames
 
-ns=[names.tikis names.hawaii names.zebras2 names.old_man];
+ns=[names.tikis names.hawaii names.zebras2 names.old_man names.elephants names.leopard names.corrida];
 
-% populate test_data(3), ... test_data(6) dynamically
+% populate test_data(3), ... test_data(9) dynamically
 for n=1:length(ns)
   test_data(2+n).I=imread(ns(n).im);
   test_data(2+n).gt=load_segmentations(ns(n).gt);

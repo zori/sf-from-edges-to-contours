@@ -43,4 +43,13 @@ names.polar_bear.gt='/BS/kostadinova/work/video_segm_evaluation/BSDS500/test/Gro
 % old man with a hat
 names.old_man.im='/BS/kostadinova/work/BSR/BSDS500/data/images/val/189080.jpg';
 names.old_man.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/189080.mat';
+
+% leopard
+names.leopard.im='/BS/kostadinova/work/BSR/BSDS500/data/images/val/160068.jpg';
+names.leopard.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/160068.mat';
+
+% corrida
+names.corrida.im='/BS/kostadinova/work/BSR/BSDS500/data/images/val/145086.jpg';
+names.corrida.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/145086.mat';
+
 end
