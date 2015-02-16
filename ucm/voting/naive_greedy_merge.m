@@ -1,12 +1,9 @@
 % Zornitsa Kostadinova
-% Sep 2014
+% Feb 2015
 % 8.3.0.532 (R2014a)
-function merged_ws_patch = greedy_merge(spx_ws_patch,hs,dbg,k)
-% this is now "fairer" greedy merge - 2 iterations after the naive greedy merge
-%
-% Don't switch over the watershed and the hs (tree or oracle patch)!
-% Distinction is important.
-% if max(ws_patch(:))<max(hs(:)), tmp=ws_patch; ws_patch=hs; hs=tmp; end
+function merged_ws_patch = naive_greedy_merge(spx_ws_patch,hs,dbg,k)
+% that was the original way to do greedy merge, which was overly greedy -
+% adapts itself excessively to the tree leaf segmentation (hs)
 
 if ~exist('dbg','var'), dbg=false; end
 
@@ -30,16 +27,7 @@ if hs_nsegs~=1 && ws_nsegs>hs_nsegs % hs_nsegs>=2; ws_nsegs>=3
   assert(length(u)>1);
   % 'fair' segments merge - make sure there remain at least two different segment labels around the central pixel
   if length(unique(I(u)))==1
-    m=max(I);
-    % randomly choose to which segment (out of those around the centre pixel)
-    % to re-assign a new label
-    
-    % I1=I;I2=I;I3=I;
-    % I1(u(1))=3; merged_ws_patch_opt1=I1(spx_ws_patch); initFig;imcc(merged_ws_patch_opt1);
-    % I2(u(2))=3; merged_ws_patch_opt2=I2(spx_ws_patch); initFig;imcc(merged_ws_patch_opt2);
-    % I3(u(3))=3; merged_ws_patch_opt3=I3(spx_ws_patch); initFig;imcc(merged_ws_patch_opt3);
-    u_ix=randi(length(u));
-    I(u(u_ix))=m+1;
+    ; % here the "fair greedy merge would have kicked-in; a good place for breakpoints to compare the two "flavours" of the patch segments merge algorithm
   end
   merged_ws_patch=I(spx_ws_patch);
 else
@@ -48,6 +36,6 @@ end
 if dbg % for debug output, plot the greedily merged patches
   assert(~~exist('k','var'));
   % initFig;imcc(spx_ws_patch);
-  initFig; imcc(merged_ws_patch); title(['WS patch - "fairer" greedy merge with hs ' num2str(k)]);
+  initFig; imcc(merged_ws_patch); title(['WS patch - naive greedy merge with hs ' num2str(k)]);
 end
 end
