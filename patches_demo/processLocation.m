@@ -7,7 +7,8 @@ if show_I, show_I_location(I,x,y); end
 [coordsPad_fcn,imPad_fcn]=get_pad_fcns(p);
 [px,py]=coordsPad_fcn(x,y);
 IPadded=imPadSym(I,p);
-initFig; imagesc(cropPatch(IPadded,px,py,rg)); hold on; plot(rg,rg,'x'); axis('image'); title('Selected image patch');
+selected_patch=cropPatch(IPadded,px,py,rg);
+pshow(selected_patch); title('Selected image patch');
 
 [treeIds,leafIds,x1,y1]=coords2forestLocation(x,y,ind,model.opts,p,length(model.fids));
 nTreesEval=size(treeIds,3);
@@ -57,10 +58,11 @@ ws=watershed(E);
 % h=show_patch_fcn(ws_bw,'WS patch');
 % colour-coded
 ws_patch=cropPatch(ws,x,y,rg);
-h=initFig; imcc(ws_patch); title('WS patch colour-coded');
-% put 'x' in the middle of the square
-% copied from pshow()
-r=size(ws_patch,1)./2; hold on; plot(r,r,'x');
+h=pshow(ws_patch,true); title('WS patch with contours colour-coded');
+
+% segmentation with implicit boundary, based on the watershed patch
+seg=spx2seg(ws_patch);
+h=pshow(seg,true); title('WS segments colour-coded');
 
 % Ultrametric Contour Map patch
 h=show_patch_fcn(ucm,'UCM patch');
