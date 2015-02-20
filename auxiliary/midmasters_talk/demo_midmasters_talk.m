@@ -1,12 +1,14 @@
-function demo_midmasters_talk(model)
+assert(~~exist('model','var'));
 imF='/home/kostadinova/downloads/video_segm_extras_keep/imgs/zebra_classic_bw.png';
 imF='/home/kostadinova/downloads/video_segm_extras_keep/imgs/dalmatians.jpg';
 names=im_gt_filenames; % load real images filenames
-demo_subject=names.starfish;
+demo_subject=names.koala; % starfish;
 I=imread(demo_subject.im);
 gt=load(demo_subject.gt);
 gt=gt.groundTruth;
 gtsz=length(gt);
+
+cmap=fademap;
 
 % % crop
 % sz=[size(I,1) size(I,2)];
@@ -69,7 +71,6 @@ for k=1:gtsz, initFig;im(~gt{k}.Boundaries); end
 % colour of its pixels
 for k=1:gtsz, initFig;im(mean_colour_segmentation(I,gt{k}.Segmentation)); end
 initFig;im(E)
-cmap=fademap;
 initFig;im(E);colormap(cmap) % dispalys the edges 'jet' colour-coded
 % % this is poor visualisation, since the ws segments are labeled in increasing
 % % order, so the contrast between neighbouring segments is low
@@ -84,7 +85,8 @@ initFig;im(z_E_ws_red);
 
 initFig;im(z_SE_ucm)
 initFig;im(z_gPb_owt_ucm)
-initFig;imagesc(z_gPb_owt_ucm) % heatmap
+initFig;imagesc(z_gPb_owt_ucm); axis('image'); % heatmap
+initFig;im(z_gPb_owt_ucm); colormap(cmap);
 
 % initFig;imcc(z_SE_ucm_seg.low)
 % initFig;imcc(z_SE_ucm_seg.high)
@@ -98,8 +100,11 @@ initFig;im(mean_colour_segmentation(I,z_SE_ucm_seg.high))
 initFig;im(mean_colour_segmentation(I,z_gPb_owt_ucm_seg.low))
 initFig;im(mean_colour_segmentation(I,z_gPb_owt_ucm_seg.high))
 
+% and explicit boundary
+initFig;im(mean_colour_segmentation_explicit(I,z_gPb_owt_ucm_seg.low))
+initFig;im(mean_colour_segmentation_explicit(I,z_gPb_owt_ucm_seg.high))
+
 % to save as png (the better format for importing images into latex)
 % saveas(gcf,'/home/kostadinova/downloads/foo.png');
 % imwrite(~gt{3}.Boundaries,'/home/kostadinova/downloads/starfish_bdry_detail.png');
 % imwrite(mean_colour_segmentation(I,gt{3}.Segmentation),'/home/kostadinova/downloads/starfish_segm_detail.png');
-end
