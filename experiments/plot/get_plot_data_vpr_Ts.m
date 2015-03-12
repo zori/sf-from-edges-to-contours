@@ -1,7 +1,8 @@
 % Zornitsa Kostadinova
 % Feb 2015
 % 8.3.0.532 (R2014a)
-data_fairer_merge_vpr_norm_Ts=[struct('out','Output_fairer_merge_VPR_normalised_trees','legend','fairer s. VPR norm Ts','style',{{'Marker','x'}})];
+% UPDATE: 2015-02-21 rescaled
+data_fairer_merge_vpr_norm_Ts=[struct('out','Output_fairer_merge_VPR_normalised_trees_rescaled','legend','fairer s. VPR norm Ts','style',{{'Marker','x'}})]; % 'Output_fairer_merge_VPR_normalised_trees'
 data_region_bdry_fairer_merge_vpr_norm_Ts=[struct('out','Output_region_bdry_fairer_merge_VPR_normalised_trees','legend','region bdry fairer s. VPR norm Ts','style',{{'Marker','x'}})];
 dataVPRnormTs=[... % VPR normalised on the side of the trees
   struct('out','Output_segs_VPR_normalised_trees','legend','s. VPR norm Ts','style',{{'Marker','x'}}),...
@@ -14,8 +15,9 @@ dataVPRnormTs=[... % VPR normalised on the side of the trees
 %   struct('out','Output_line_VPR_normalised_trees_pb','legend','l. VPR norm Ts .*pb','style',{{'LineStyle','--','Marker','x'}}),...
 %   ];
 
-data_oracle_fairer_merge_vpr_norm_Ts=[struct('out','Output_oracle_fairer_merge_VPR_normalised_trees','legend','o. fairer s. VPR norm Ts','style',{{'Marker','x'}})];
-data_oracle_region_bdry_fairer_merge_vpr_norm_Ts=[struct('out','Output_oracle_region_bdry_fairer_merge_VPR_normalised_trees','legend','o. region bdry fairer s. VPR norm Ts','style',{{'Marker','x'}})];
+% UPDATE: 2015-02-21 rescaled
+data_oracle_fairer_merge_vpr_norm_Ts=[struct('out','Output_oracle_fairer_merge_VPR_normalised_trees_rescaled','legend','o. fairer s. VPR norm Ts','style',{{'LineStyle','--','Marker','x'}})]; % 'Output_oracle_fairer_merge_VPR_normalised_trees'
+data_oracle_region_bdry_fairer_merge_vpr_norm_Ts=[struct('out','Output_oracle_region_bdry_fairer_merge_VPR_normalised_trees','legend','o. region bdry fairer s. VPR norm Ts','style',{{'LineStyle','--','Marker','x'}})];
 dataOracleVPRnormTs=[...
   struct('out','Output_oracle_segs_VPR_normalised_trees','legend','o. s. VPR norm Ts','style',{{'Marker','x'}}),...
   data_oracle_fairer_merge_vpr_norm_Ts,...

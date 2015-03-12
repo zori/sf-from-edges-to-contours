@@ -19,8 +19,8 @@ data_oracle_mixed_voting_line_lls_vpr_norm_ws=[struct('out','Output_oracle_mixed
 % summary
 data_oracle_line_lls_vpr_norm_ws=[data_arc_oracle_line_lls_vpr_norm_ws data_oracle_mixed_voting_line_lls_vpr_norm_ws];
 % conic
-data_oracle_conic_vpr_norm_ws=[
-  struct('out','Output_oracle_conic_VPR_normalised_ws','legend','o. c. VPR norm ws','style',{{'LineStyle','-.'}}),...
+data_oracle_conic_vpr_norm_ws=[ % UPDATE: 2015-02-17 rescaled the 'watershed arc' method, and ``dirty fix'' version; small improvement: 0.65 -> 0.67
+  struct('out','Output_oracle_conic_VPR_normalised_ws_rescaled','legend','o. c. VPR norm ws','style',{{'LineStyle','-.'}}),... % Output_oracle_conic_VPR_normalised_ws
   struct('out','Output_oracle_region_bdry_conic_VPR_normalised_ws','legend','o. region bdry c. VPR norm ws','style',{{'LineStyle','-.'}}),...
   ];
   
@@ -28,6 +28,7 @@ data_oracle_vote_range_vpr_norm_ws=[... % the 'c' is computed in the 'region bou
   struct('out','Output_oracle_votes0_line_centre_VPR_normalised_ws','legend','o. vote.0 region bdry l.c. VPR norm ws','style',{{'LineStyle','-.','Marker','x'}}),... % vote is cast only on a single pixel; vertices with no internal edge pixels of the c. (contours)-structure are set to 0
   struct('out','Output_oracle_votespb_line_centre_VPR_normalised_ws','legend','o. vote.Pb region bdry l.c. VPR norm ws','style',{{'LineStyle','-.','Marker','x'}}),... % vote is cast only on a single pixel; vertices with no internal edge pixels of the c. (contours)-structure are filled in from the pb
   ];
+data_oracle_naive_greedy_merge=struct('out','Output_oracle_naive_greedy_merge_VPR_normalised_ws_rescaled','legend','o. naive greedy merge VPR norm ws','style',{{'LineStyle','-.','Marker','x'}});
 data_oracle_merge_vpr_norm_ws=[
   data_oracle_region_bdry_fair_segs_vpr_norm_ws,... % slightly better than the rest 0.76
   data_oracle_region_bdry_fairer_merge_vpr_norm_ws,... % 0.75

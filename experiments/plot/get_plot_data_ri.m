@@ -17,12 +17,14 @@ dataRSRI=[... % a.k.a. RIMC - Rand Ind. Monte Carlo
 % ];
 
 data_line_RI=[
-  struct('out','Output_line_RI','legend','l. RI','style',{{}}),... % watershed arc
+  struct('out','Output_line_RI_rescaled','legend','l. RI','style',{{}}),... % watershed arc % Output_line_RI
   struct('out','Output_line_centre_RI_rescaled','legend','l.c. RI','style',{{}}),... % watershed arc % better use the rescaled % 'Output_line_centre_RI'
   struct('out','Output_region_bdry_line_centre_RI','legend','region bdry l.c. RI','style',{{}}),... % region bdry
   struct('out','Output_mixed_voting_scope_line_RI_rescaled','legend','mixed l. RI','style',{{}}),... % mixed
   struct('out','Output_mixed_voting_scope_line_centre_RI_rescaled','legend','mixed l.c. RI','style',{{}}),... % mixed
   ];
+
+data_naive_merge_RI=struct('out','Output_naive_greedy_merge_RI_rescaled','legend','naive greedy merge RI','style',{{'Marker','x'}});
 
 data_region_bdry_fairer_merge_RI=[
   struct('out','Output_region_bdry_fairer_merge_RI','legend','region bdry fairer s. RI','style',{{'Marker','x'}}),...
@@ -42,22 +44,29 @@ dataOracleRSRI=[ % oracle - using the GT patches instead of the leaves of the SF
   ];
 
 dataOracle_line_RI=[
-  struct('out','Output_oracle_line_RI','legend','o. l. RI','style',{{'LineStyle','-.'}}),... % watershed arc
+  struct('out','Output_oracle_line_RI_rescaled','legend','o. l. RI','style',{{'LineStyle','-.'}}),... % watershed arc % Output_oracle_line_RI
   struct('out','Output_oracle_line_centre_RI_rescaled','legend','o. l.c. RI','style',{{'LineStyle','-.'}}),... % watershed arc % better use the rescaled 'Output_oracle_line_centre_RI'
   struct('out','Output_oracle_region_bdry_line_centre_RI','legend','o. region bdry l.c. RI','style',{{'LineStyle','-.'}}),... % region bdry
   struct('out','Output_oracle_mixed_voting_scope_line_RI_rescaled','legend','o. mixed l. RI','style',{{'LineStyle','-.'}}),... % mixed
   struct('out','Output_oracle_mixed_voting_scope_line_centre_RI_rescaled','legend','o. mixed l.c. RI','style',{{'LineStyle','-.'}}),... % mixed
   ];
 
-data_oracle_region_bdry_fairer_merge_RI=[...
+data_oracle_naive_merge_RI=struct('out','Output_oracle_naive_greedy_merge_RI_rescaled','legend','o. naive greedy merge RI','style',{{'LineStyle','-.','Marker','x'}});
+
+data_oracle_region_bdry_fairer_merge_RI=[
   struct('out','Output_oracle_region_bdry_fairer_merge_RI','legend','o. region bdry fairer s. RI','style',{{'LineStyle','-.','Marker','x'}}),...
   struct('out','Output_oracle_region_bdry_fairer_merge_RIMC','legend','o. region bdry fairer s. RIMC','style',{{'LineStyle','-.','Marker','x'}}),...
   ];
-data_oracle_fairer_merge_RI=[...
+data_oracle_fairer_merge_RI=[
   struct('out','Output_oracle_fairer_merge_RI','legend','o. fairer s. RI','style',{{'LineStyle','-.','Marker','x'}}),...
   data_oracle_region_bdry_fairer_merge_RI
   ];
 
+data_merge_RI=[data_naive_merge_RI data_fairer_merge_RI];
+data_oracle_merge_RI=[data_oracle_naive_merge_RI data_oracle_fairer_merge_RI];
+
+dataRI=[data_merge_RI data_line_RI];
+dataOracleRI=[data_oracle_merge_RI dataOracle_line_RI];
 % summary
-data_ri=[dataRSRI data_line_RI data_fairer_merge_RI];
-data_oracle_ri=[dataOracleRSRI dataOracle_line_RI data_oracle_fairer_merge_RI];
+data_ri=[dataRSRI dataRI];
+data_oracle_ri=[dataOracleRSRI dataOracleRI];

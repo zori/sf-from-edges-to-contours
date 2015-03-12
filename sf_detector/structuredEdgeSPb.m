@@ -6,6 +6,6 @@ function ucm2 = structuredEdgeSPb(I,model,fmt)
 % slow detection because of the spectral NCuts
 % TODO try nms or nnms as options for the model
 E=edgesDetect(I,model);
-sf_sPb=globalPb(I,'',1.0,E);
-ucm2=contours2ucm(sf_sPb,fmt);
+[sf_sPb_orient, sf_sPb_thin]=globalPb(I,'',1.0,E);
+ucm2=contours2ucm(sf_sPb_orient,fmt);
 end

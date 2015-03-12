@@ -1,3 +1,8 @@
+% Zornitsa Kostadinova
+% Dec 2014
+% 8.3.0.532 (R2014a)
+model_name='modelBSDS500_patches';
+load_model_and_trees;
 assert(~~exist('model','var'));
 imF='/home/kostadinova/downloads/video_segm_extras_keep/imgs/zebra_classic_bw.png';
 imF='/home/kostadinova/downloads/video_segm_extras_keep/imgs/dalmatians.jpg';
@@ -7,6 +12,12 @@ I=imread(demo_subject.im);
 gt=load(demo_subject.gt);
 gt=gt.groundTruth;
 gtsz=length(gt);
+
+% thresholds
+th.SE.low=0.2;
+th.SE.high=0.6;
+th.gPb.low=0.1;
+th.gPb.high=0.3;
 
 cmap=fademap;
 
@@ -27,6 +38,8 @@ Ec=edge(rgb2gray(I),'canny');
 z_SE_ws=SE_ws(I,model);
 ws_mask=z_SE_ws==0;
 E_ws = E .* ws_mask;
+
+[gPb_orient, gPb_thin] = globalPb(I);
 % r_ws_pixels=I(:,:,1).*uint8(ws_mask);
 % g_non_ws_pixels=I(:,:,2).*uint8(~ws_mask);
 % b_non_ws_pixels=I(:,:,3).*uint8(~ws_mask);
@@ -47,11 +60,11 @@ z_gPb_owt_ucm=gPb_owt_ucm(I,fmt);
 % segmentations
 % low threshold - oversegmentation, high recall
 % high threshold - undersegmentation, high precision
-z_SE_ucm_seg.low=threshold_ucm2(z_SE_ucm,0.2); % ~ 60 segments
-z_SE_ucm_seg.high=threshold_ucm2(z_SE_ucm,0.6); % 4 segments
+z_SE_ucm_seg.low=threshold_ucm2(z_SE_ucm,th.SE.low); % ~ 60 segments
+z_SE_ucm_seg.high=threshold_ucm2(z_SE_ucm,th.SE.high); % 4 segments
 
-z_gPb_owt_ucm_seg.low=threshold_ucm2(z_gPb_owt_ucm,0.1); % ~ 30 segments
-z_gPb_owt_ucm_seg.high=threshold_ucm2(z_gPb_owt_ucm,0.3); % 4 segments
+z_gPb_owt_ucm_seg.low=threshold_ucm2(z_gPb_owt_ucm,th.gPb.low); % ~ 30 segments
+z_gPb_owt_ucm_seg.high=threshold_ucm2(z_gPb_owt_ucm,th.gPb.high); % 4 segments
 
 % % TODO: investigate UCM / finest partition (i.e. sf_wt) (generated in create_finest_partition_voting or any of the 3 files that allow for a choice of voting scope - 1) watershed arc, 2) mixed, or 3)region boundary)
 % sf_wt=imread('zebra-finest-partition.png'); % this is saved while computing SE_ucm(I,model,fmt);
@@ -72,6 +85,23 @@ for k=1:gtsz, initFig;im(~gt{k}.Boundaries); end
 for k=1:gtsz, initFig;im(mean_colour_segmentation(I,gt{k}.Segmentation)); end
 initFig;im(E)
 initFig;im(E);colormap(cmap) % dispalys the edges 'jet' colour-coded
+
+% gPb edge detector
+initFig;im(gPb_thin)
+% initFig;im(gPb_thin);colormap(cmap)
+% to save the image
+f=figure('visible','off'), imshow(gPb_thin,'Border','tight'); colormap(cmap);
+figure(f); % will put the figure on the foreground
+% then :( manually click on the figure File -> Save as (choose .png format)
+
+E_edge_map=E>th.SE.low;
+initFig;im(E_edge_map)
+
+% edge map on a certain threshold
+gPb_edge_map_high=gPb_thin>th.gPb.high;
+initFig;im(gPb_edge_map_high)
+% imwrite(1-gPb_edge_map_high,'/home/kostadinova/downloads/edge_map.png');
+
 % % this is poor visualisation, since the ws segments are labeled in increasing
 % % order, so the contrast between neighbouring segments is low
 % initFig;im(z_SE_ws)

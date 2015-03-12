@@ -51,7 +51,7 @@ G_ODS_plotStyle=struct2cell2(G_ODS_plotStyle);
 if (exist(fullfile(outDirA,'eval_bdry_globalthr.txt'),'file'))
     
     %%% Global statistics %%%
-    prvals = dlmread(fullfile(outDirA,'eval_bdry_globalthr.txt')); % thresh,r,p,f global values across all image for each threshold
+    prvals = dlmread(fullfile(outDirA,'eval_bdry_globalthr.txt')); % thresh,R,P,F global values across all images for each threshold
     prvals = prvals( (prvals(:,2)>=0.01) ,:); %only those threshold numbers for recall > 0.01
 
     evalRes = dlmread(fullfile(outDirA,'eval_bdry_globossods.txt')); %bestT,bestR,bestP,bestF,R_max,P_max,F_max,Area_PR

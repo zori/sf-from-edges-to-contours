@@ -2,6 +2,15 @@
 % Feb 2015
 % 8.3.0.532 (R2014a)
 
+data_SE_ucm_degraded_baseline=[... % new baseline - evaluate SF on a pixel (or smaller patch); rescaled ucm2s
+  struct('out','Output_ucm_bdry_sz_1_mid_1x1_rescaled','legend','1x1 mid','style',{{'Marker','x'}}),...
+  struct('out','Output_ucm_bdry_sz_1_ul_1x1_rescaled','legend','1x1 ul','style',{{'Marker','x'}}),...
+  struct('out','Output_ucm_bdry_sz_1_ul_2x2_rescaled','legend','2x2 ul','style',{{'Marker','x'}}),...
+  struct('out','Output_ucm_bdry_sz_1_ul_4x4_rescaled','legend','4x4 ul','style',{{'Marker','x'}}),...
+  struct('out','Output_ucm_bdry_sz_1_ul_8x8_rescaled','legend','8x8 ul','style',{{'Marker','x'}}),...
+  struct('out','Output_ucm_bdry_sz_1_ul_16x16_orig_rescaled','legend','16x16=orig','style',{{'Marker','x'}}),...
+];
+% TODO add a proper baseline
 
 % edge detection results, i.e., just BPR plot, no VPR, or any region-based metrics
 data_SE_nms_single_scale=struct('out','Output_SE_nms_single_scale','legend','SE thinned SS','style',{{}});
@@ -16,11 +25,12 @@ data_SE_watershed=struct('out','Output_sf_segs','legend','SE watershed','style',
 
 
 % segmentations
-% data_SE_ucm_irreproducible_baseline is our baseline
 % TODO how was this generated?
 data_SE_ucm_irreproducible_baseline=struct('out','Output_sf_ucm','legend','SE ucm','style',{{'LineStyle','--'}}); % multiscale, model.opts.nms=1 % UPDATE: these options are impossible - multiscale would give better performance, and nms "breaks" the watershed
-data_SE_ucm_no_nms_single_scale=struct('out','Output_SE_ucm_repeat','legend','SE ucm SS','style',{{}}); % this should have been the real baseline
-data_SE_ucm_no_nms_multiscale=struct('out','Output_SF_ucm_non-nms_multiscale_repeat','legend','SE UCM MS','style',{{}});
+data_SE_ucm_no_nms_single_scale=struct('out','Output_SE_ucm_repeat','legend','(SE SS)-UCM','style',{{}}); % this should have been the real baseline
+data_SE_ucm_no_nms_multiscale=struct('out','Output_SE_ucm_non-nms_multiscale_repeat','legend','(SE MS)-UCM','style',{{}});
+% data_SE_ucm_irreproducible_baseline is our baseline
+data_SE_ucm_baseline=data_SE_ucm_irreproducible_baseline;
 
 data_SE_ucm_uneffected_by_averaging=[ % as could be expected, the following are identical
   data_SE_ucm_no_nms_single_scale,... % nms=false SS

@@ -55,7 +55,11 @@ if D>0
     segs=bwlabel(~patch,4);
     u=unique(segs); u=u(u>0); usz=length(u); m=zeros(size(u));
     for k=1:usz
-      m(k)=mean(d(segs==u(k)));
+      labels_mask=segs==u(k);
+      m(k)=mean(d(labels_mask));
+      % TODO this is a lame fix: if there is a single isolated locked pixel between the arms
+      % of the hyperbola, assign high score to avoid erroneously choosing that
+      if sum(labels_mask(:))<=1, m(k)=Inf; end
     end
     [~,l]=min(m);
     patch=mark_transitions(patch,segs==l);
@@ -63,7 +67,7 @@ if D>0
   % initFig;im(edge_patch);
   % initFig;im(patch);
 else
-  ; % not a hyperbola
+  ; % warning('not hyperb.'); % not a hyperbola
 end
 if all(patch(:)==0)
   % warning('no conic intersection; fitting a line');

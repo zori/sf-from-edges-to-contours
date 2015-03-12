@@ -32,8 +32,8 @@ data_voting_scope_contour_bpr_3=[data_contour_bpr_3 data_oracle_contour_bpr_3];
 data_line_bpr_3_4=[dataLineBPR(3:4) dataOracleLineBPR]; % these are good values; when having to choose, go for max_dist=3px
 % why are we still worse than the baseline?; this motivates the hard-negative mining
 data_line_bpr_3=[
-  dataLineBPR(3),...
-  struct('out','Output_line_bpr_3','legend','l. BPR3','style',{{}}),... % this is experiment of dataLineBPR(3) REPEATED
+  dataLineBPR(3),... % F=.67 TODO how did we get a .01 higher then when we repeated? is it SUCH an approximation?
+  struct('out','Output_line_bpr_3','legend','l. BPR3','style',{{}}),... % F=.66 repeat: this is experiment of dataLineBPR(3) REPEATED (but got lower score ?!?!)
   ];
 data_line_centre_bpr_3=[...
   struct('out','Output_line_centre_bpr_3','legend','l.c. BPR3','style',{{}}),...

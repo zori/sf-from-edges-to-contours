@@ -52,4 +52,12 @@ names.leopard.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/160068.m
 names.corrida.im='/BS/kostadinova/work/BSR/BSDS500/data/images/val/145086.jpg';
 names.corrida.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/145086.mat';
 
+% koala
+names.koala.im='/BS/kostadinova/work/BSR/BSDS500/data/images/val/69015.jpg';
+names.koala.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/69015.mat';
+
+% eagle
+names.eagle.im='/BS/kostadinova/work/BSR/BSDS500/data/images/val/42049.jpg';
+names.eagle.gt='/BS/kostadinova/work/BSR/BSDS500/data/groundTruth/val/42049.mat';
+
 end

@@ -53,16 +53,16 @@ E4=Es4(1+rg:szOrig(1)+rg,1+rg:szOrig(2)+rg,:);
 % Superpixelization (over-segmentation patch)
 ws=watershed(E);
 % watershed / superpixels patch
-% B&W patch
+% % B&W patch
 % ws_bw=(ws==0);
-% h=show_patch_fcn(ws_bw,'WS patch');
+% h=show_patch_fcn(ws_bw,'WS patch (B&W)');
 % colour-coded
 ws_patch=cropPatch(ws,x,y,rg);
-h=pshow(ws_patch,true); title('WS patch with contours colour-coded');
+h=pshow(ws_patch,true); title('WS patch with regions colour-coded');
 
-% segmentation with implicit boundary, based on the watershed patch
-seg=spx2seg(ws_patch);
-h=pshow(seg,true); title('WS segments colour-coded');
+% % segmentation with implicit boundary, based on the watershed patch
+% seg=spx2seg(ws_patch);
+% h=pshow(seg,true); title('WS segments colour-coded');
 
 % Ultrametric Contour Map patch
 h=show_patch_fcn(ucm,'UCM patch');

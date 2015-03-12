@@ -8,8 +8,8 @@ function plot_results(LOG)
 
 % flag to indicate whether we are plotting the best curves or our experiments -
 % the weighted (voted) ucms
-experiments={'best','ours','all','mid-masters'};
-experiments_to_plot=experiments{2};
+experiments={'best','ours','all','mid-masters','masters-thesis'};
+experiments_to_plot=experiments{5};
 
 if nargin==0
   LOG.evalDir='/BS/kostadinova/work/video_segm_evaluation';
@@ -26,6 +26,8 @@ data=get_plot_data(experiments_to_plot);
 % avg human agreement (on BPR)
 % R=0.7 P=0.9 Human [F = 0.79]
 plot_human=true;
+plot_human=false;
+Init_figure_no(1), Plotisofigregpr(); hold on;
 if plot_human
   Init_figure_no(1), Plotisofigregpr(); hold on;
   colour_green_house=[0 129 0]./256;
@@ -56,14 +58,16 @@ l=l(:,1:cnt);
 for f=1:fsz
   figure(fhs(f));
   l1=l(f,:);
-  if f==1 && plot_human, l1=[{'human [F=0.79]'} l1]; end
+  if f==1 && plot_human, l1=[{'human [F=0.79]'} l1]; end % according to the Arbelaez11 paper, it might be F=0.80
   if exist('fhSf','var') && exist('legendSf','var') && isequal(f,fhSf), l1=[l1 {legendSf}]; end
   if f==4 % ncluster precision
     legend_location='southeast';
   else
     legend_location='southwest';
   end
-  legend(cell(l1),'Location',legend_location); % 'FontSize',20,'FontWeight','bold'); % for presentations and papers
+  % legend(cell(l1),'Location',legend_location);
+  legend(cell(l1),'Location',legend_location,'FontSize',20,'FontWeight','bold'); % for presentations and papers
+  % legend(cell(l1),'Location',legend_location,'FontSize',16,'FontWeight','bold'); % for the oracles example (9 curves) presentations and papers
   % legend('boxoff'); % remove the legend border % not good when the background is the isocurves
   figTitle=get(get(gca,'Title'),'String');
   fileName=strrep(figTitle,' ','_');

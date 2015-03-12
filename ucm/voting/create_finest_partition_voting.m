@@ -53,6 +53,8 @@ for e=1:nEdges
   for p=1:numel(c.edge_x_coords{e})
     y=c.edge_x_coords{e}(p); x=c.edge_y_coords{e}(p);
     sf_wt(y,x)=W;
+    % NO!, instead, vote on a pixel
+    %sf_wt(y,x)=mean(votes{y,x});
   end
   v1=c.vertices(c.edges(e,1),:);
   v2=c.vertices(c.edges(e,2),:);

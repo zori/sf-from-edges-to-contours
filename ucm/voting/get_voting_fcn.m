@@ -96,6 +96,11 @@ switch voting
     %     get_ws_patch_fcn=crop_ws_patch_fcn;
     %     process_ws_patch_fcn=@spx2seg;
     %     process_hs_fcn=@(x) (x);
+  case 'naive_greedy_merge_VPR_normalised_ws'
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(naive_greedy_merge(S,G),G,@vpr_s);
+    get_ws_patch_fcn=crop_ws_patch_fcn;
+    process_ws_patch_fcn=@spx2seg;
+    process_hs_fcn=@(x) (x);
   case 'fairer_merge_VPR_normalised_ws'
     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr_s);
     get_ws_patch_fcn=crop_ws_patch_fcn;
@@ -134,6 +139,39 @@ switch voting
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_poly_patch(px,py,n,rg,varargin{1:2});
     process_ws_patch_fcn=@thin_bdry2seg;
     process_hs_fcn=@(x) (x);
+  % % vpr unnormalised
+  case 'naive_greedy_merge_VPR_unnorm'
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(naive_greedy_merge(S,G),G,@vpr);
+    get_ws_patch_fcn=crop_ws_patch_fcn;
+    process_ws_patch_fcn=@spx2seg;
+    process_hs_fcn=@(x) (x);
+  case 'fairer_merge_VPR_unnorm'
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@vpr);
+    get_ws_patch_fcn=crop_ws_patch_fcn;
+    process_ws_patch_fcn=@spx2seg;
+    process_hs_fcn=@(x) (x);
+  case 'line_VPR_unnorm'
+    patch_score_fcn=@vpr;
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@thin_bdry2seg;
+    process_hs_fcn=@(x) (x);
+  case 'line_centre_VPR_unnorm' % line fitting for proper region boundaries
+    patch_score_fcn=@vpr;
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_centre_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@thin_bdry2seg;
+    process_hs_fcn=@(x) (x);
+  case 'line_lls_VPR_unnorm' % linear least squares fit (minimisation); based on conic_VPR_normalised_ws
+    patch_score_fcn=@vpr;
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_lls_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@thin_bdry2seg;
+    process_hs_fcn=@(x) (x);
+  case 'conic_VPR_unnorm'
+    patch_score_fcn=@vpr;
+    get_ws_patch_fcn=@(px,py,varargin) create_fitted_conic_patch(px,py,rg,varargin{1:2});
+    process_ws_patch_fcn=@thin_bdry2seg;
+    process_hs_fcn=@(x) (x);
+  
+  
   % % ri
   case 'line_RI'
     patch_score_fcn=@RI;
@@ -144,6 +182,11 @@ switch voting
     patch_score_fcn=@RI;
     get_ws_patch_fcn=@(px,py,varargin) create_fitted_line_centre_patch(px,py,rg,varargin{1:2});
     process_ws_patch_fcn=@thin_bdry2seg;
+    process_hs_fcn=@(x) (x);
+  case 'naive_greedy_merge_RI'
+    patch_score_fcn=@(S,G) greedy_merge_patch_score(naive_greedy_merge(S,G),G,@RI);
+    get_ws_patch_fcn=crop_ws_patch_fcn;
+    process_ws_patch_fcn=@spx2seg;
     process_hs_fcn=@(x) (x);
   case 'fairer_merge_RI'
     patch_score_fcn=@(S,G) greedy_merge_patch_score(greedy_merge(S,G),G,@RI);
@@ -163,6 +206,7 @@ ws_fcn=@(px,py,varargin) process_ws(px,py,varargin,get_ws_patch_fcn,process_ws_p
 hs_fcn=@(x,y) process_hs(x,y,get_hs_fcn,process_hs_fcn);
 vote_fcn=@(x,y,ws_args,dbg) vote(x,y,rg,ws_fcn,ws_args,hs_fcn,patch_score_fcn,process_location_fcn,crop_ws_patch_fcn,dbg);
 cfp_fcn=@(pb) create_finest_partition_voting(pb,vote_fcn,DBG);
+%cfp_fcn=@(pb) create_finest_partition_region_bdry_voting_scope(pb,vote_fcn,DBG);
 end
 
 % ----------------------------------------------------------------------
