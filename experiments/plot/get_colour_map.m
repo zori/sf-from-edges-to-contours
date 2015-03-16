@@ -29,10 +29,9 @@ switch experiments
       ]./256;
   case 'masters-thesis'
     colours = [
-      255,0,0; % red
+      0, 100, 0; % baseline - green
       255,0,0; % red
       177,89,40; % brown
-      0, 100, 0; % baseline - green
       46, 19, 221; % dark blue % fst
       255,0,0; % red
       0, 0, 0; % black

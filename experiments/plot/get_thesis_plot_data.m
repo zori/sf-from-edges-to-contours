@@ -188,6 +188,7 @@ data_thesis=[
   struct('out','Output_sf_ucm','legend','SE-UCM','style',{{'LineStyle','--'}}),...
   struct('out','Output_SE_no_nms_single_scale','legend','SE single scale','style',{{'LineStyle','--'}})...
   ];
-% data_thesis=data_oracle;
+
+data_thesis=data_voting_scope_vpr_norm_ws;
 % data_thesis=data_vpr_line_centre;
 
